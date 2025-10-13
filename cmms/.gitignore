@@ -1,0 +1,30 @@
+# Entorno virtual
+venv_cmms/
+venv/
+env/
+
+# Django
+*.log
+*.pot
+*.pyc
+__pycache__/
+db.sqlite3
+media/
+
+# Variables de entorno
+.env
+
+# Archivos de respaldo
+*.bak
+
+# Visual Studio Code
+.vscode/
+
+# Python
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
