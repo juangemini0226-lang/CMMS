@@ -26,4 +26,9 @@ urlpatterns = [
     # API JSON
     path('api/arbol/', views.api_arbol_activos, name='api_arbol_activos'),
     path('api/generar-tag/', views.api_generar_tag, name='api_generar_tag'),
+
+    path('seleccionar-familia/', views.seleccionar_familia, name='seleccionar_familia'),
+    path('seleccionar-activo/<int:familia_id>/', views.seleccionar_activo, name='seleccionar_activo'),
+    path('dependencias/<int:activo_id>/', views.lista_dependencias, name='lista_dependencias'),
+    
 ]

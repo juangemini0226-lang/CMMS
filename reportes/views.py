@@ -1,25 +1,23 @@
+from django.shortcuts import render
 from django.http import HttpResponse
-from django.template.loader import render_to_string
-from weasyprint import HTML
-from activos.models import NodoActivo, Organizacion
-from datetime import datetime
+from .forms import SeleccionReporteForm
+from .utils import generar_reporte_activos, generar_reporte_taxonomia
 
-def reporte_activos_pdf(request):
-    organizacion = Organizacion.objects.first()
-    nivel_id = request.GET.get('nivel')
-    estado = request.GET.get('estado')
-    activos = NodoActivo.objects.filter(organizacion=organizacion)
-    if nivel_id:
-        activos = activos.filter(nivel_jerarquia_id=nivel_id)
-    if estado:
-        activos = activos.filter(estado=estado)
-    context = {
-        'activos': activos,
-        'organizacion': organizacion,
-        'fecha_actual': datetime.now().strftime('%d/%m/%Y'),
-    }
-    html_string = render_to_string("reportes/reporte_activos.html", context)
-    response = HttpResponse(content_type='application/pdf')
-    response['Content-Disposition'] = 'attachment; filename="reporte_activos.pdf"'
-    HTML(string=html_string).write_pdf(response)
-    return response
+def seleccionar_reporte_view(request):
+    if request.method == 'POST':
+        form = SeleccionReporteForm(request.POST)
+        if form.is_valid():
+            tipo = form.cleaned_data['tipo_reporte']
+            if tipo == 'activos':
+                pdf = generar_reporte_activos()
+                nombre = 'reporte_activos.pdf'
+            else:
+                pdf = generar_reporte_taxonomia()
+                nombre = 'reporte_taxonomia.pdf'
+
+            response = HttpResponse(pdf, content_type='application/pdf')
+            response['Content-Disposition'] = f'inline; filename="{nombre}"'
+            return response
+    else:
+        form = SeleccionReporteForm()
+    return render(request, 'reportes/seleccionar_reporte.html', {'form': form})

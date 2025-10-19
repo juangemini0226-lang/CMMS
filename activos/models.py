@@ -109,10 +109,25 @@ class CampoPersonalizado(models.Model):
 # ========================================
 # MÓDULO 2: JERARQUÍA DE ACTIVOS
 # ========================================
+class FamiliaActivo(models.Model):
+    nombre = models.CharField(max_length=200, unique=True, verbose_name="Nombre de la Familia")
+    descripcion = models.TextField(blank=True, verbose_name="Descripción")
+    
+    class Meta:
+        verbose_name = "Familia de Activo"
+        verbose_name_plural = "Familias de Activos"
+        ordering = ['nombre']
+    
+    def __str__(self):
+        return self.nombre
+
+
 
 class NodoActivo(TreeNode):
     """Nodo genérico que puede ser cualquier nivel de la jerarquía (Planta, Área, Sistema, Equipo, etc.)"""
-    
+    familia = models.ForeignKey(FamiliaActivo, on_delete=models.PROTECT,
+                               null=True, blank=True, verbose_name="Familia del Activo",
+                               related_name='activos')
     ESTADOS = [
         ('activo', 'Activo'),
         ('inactivo', 'Inactivo'),
@@ -196,7 +211,21 @@ class NodoActivo(TreeNode):
         if not self.tag and self.nivel_jerarquia.requiere_tag:
             self.tag = self.generar_tag()
         super().save(*args, **kwargs)
+
+class DependenciaActivo(models.Model):
+    activo_padre = models.ForeignKey(NodoActivo, on_delete=models.CASCADE,
+                                    related_name='dependencias',
+                                    verbose_name="Activo Padre")
+    nombre = models.CharField(max_length=200, verbose_name="Nombre de la Dependencia")
+    descripcion = models.TextField(blank=True, verbose_name="Descripción")
+
+    class Meta:
+        verbose_name = "Dependencia de Activo"
+        verbose_name_plural = "Dependencias de Activos"
     
+    def __str__(self):
+        return f"{self.activo_padre} - {self.nombre}"
+
     def generar_tag(self):
         """Genera TAG automático según configuración del nivel"""
         formato = self.nivel_jerarquia.formato_tag or "{PREFIJO}-{CODIGO}-{SECUENCIA}"

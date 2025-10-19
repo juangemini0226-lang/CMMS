@@ -3,18 +3,68 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse, HttpResponse
 from django.contrib import messages
 from django.db.models import Count, Q
-from .models import (
-    Organizacion, NivelJerarquia, NodoActivo, 
-    ClaseEquipoISO14224, PlantillaActivo, DocumentoActivo
-)
+from .models import (Organizacion, NivelJerarquia, NodoActivo, ClaseEquipoISO14224, PlantillaActivo, 
+                     DocumentoActivo)
 from .utils.manejador_excel import ImportadorExcelActivos
 import json
+
+from .models import FamiliaActivo, NodoActivo, DependenciaActivo
+from .forms import SeleccionFamiliaForm, SeleccionActivoForm, DependenciaActivoForm
+
 
 # ========================================
 # VISTAS PRINCIPALES
 # ========================================
 
 @login_required
+
+def seleccionar_familia(request):
+    if request.method == 'POST':
+        form = SeleccionFamiliaForm(request.POST)
+        if form.is_valid():
+            familia = form.cleaned_data['familia']
+            return redirect('activos:seleccionar_activo', familia_id=familia.id)
+    else:
+        form = SeleccionFamiliaForm()
+    return render(request, 'activos/seleccionar_familia.html', {'form': form})
+
+
+def seleccionar_activo(request, familia_id):
+    familia = get_object_or_404(FamiliaActivo, pk=familia_id)
+    if request.method == 'POST':
+        form = SeleccionActivoForm(familia=familia, data=request.POST)
+        if form.is_valid():
+            activo = form.cleaned_data['activo']
+            return redirect('activos:lista_dependencias', activo_id=activo.id)
+    else:
+        form = SeleccionActivoForm(familia=familia)
+    return render(request, 'activos/seleccionar_activo.html', {'form': form, 'familia': familia})
+
+    
+def lista_dependencias(request, activo_id):
+    activo = get_object_or_404(NodoActivo, pk=activo_id)
+    dependencias = DependenciaActivo.objects.filter(activo_padre=activo)
+    
+    if request.method == 'POST':
+        form = DependenciaActivoForm(request.POST)
+        if form.is_valid():
+            dependencia = form.save(commit=False)
+            dependencia.activo_padre = activo
+            dependencia.save()
+            return redirect('activos:lista_dependencias', activo_id=activo.id)
+    else:
+        form = DependenciaActivoForm()
+
+    return render(request, 'activos/lista_dependencias.html', {
+        'activo': activo,
+        'dependencias': dependencias,
+        'form': form
+    })
+
+
+
+
+
 def dashboard_activos(request):
     """Dashboard principal de activos"""
     # Obtener organización del usuario (ajustar según tu modelo de usuario)
