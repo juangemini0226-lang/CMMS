@@ -1,0 +1,145 @@
+{% extends 'activos/base_activos.html' %}
+{% load activos_extras %}
+
+{% block title %}Árbol de Activos{% endblock %}
+
+{% block content %}
+<div class="breadcrumb">
+    <a href="{% url 'activos:dashboard_activos' %}">Dashboard</a> / Árbol de Activos
+</div>
+
+<div class="card">
+    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+        <span>Árbol de Activos - {{ organizacion.nombre }}</span>
+        <div>
+            <a href="{% url 'activos:crear_activo' %}" class="btn btn-primary btn-sm">+ Nuevo Activo</a>
+            <a href="{% url 'activos:exportar_excel' %}" class="btn btn-success btn-sm">Exportar Excel</a>
+        </div>
+    </div>
+    
+    <!-- Filtros -->
+    <form method="get" style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+            <div>
+                <label style="display: block; margin-bottom: 5px; font-size: 14px; font-weight: 600;">Buscar</label>
+                <input type="text" name="q" value="{{ busqueda }}" placeholder="Nombre, código o TAG" 
+                       style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 5px;">
+            </div>
+            
+            <div>
+                <label style="display: block; margin-bottom: 5px; font-size: 14px; font-weight: 600;">Nivel</label>
+                <select name="nivel" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 5px;">
+                    <option value="">Todos los niveles</option>
+                    {% for nivel in niveles %}
+                    <option value="{{ nivel.id }}" {% if nivel_seleccionado == nivel.id|stringformat:"s" %}selected{% endif %}>
+                        {{ nivel.nombre_nivel }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div>
+                <label style="display: block; margin-bottom: 5px; font-size: 14px; font-weight: 600;">Estado</label>
+                <select name="estado" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 5px;">
+                    <option value="">Todos los estados</option>
+                    <option value="activo" {% if estado_seleccionado == "activo" %}selected{% endif %}>Activo</option>
+                    <option value="inactivo" {% if estado_seleccionado == "inactivo" %}selected{% endif %}>Inactivo</option>
+                    <option value="mantenimiento" {% if estado_seleccionado == "mantenimiento" %}selected{% endif %}>En mantenimiento</option>
+                    <option value="fuera_servicio" {% if estado_seleccionado == "fuera_servicio" %}selected{% endif %}>Fuera de servicio</option>
+                </select>
+            </div>
+            
+            <div style="display: flex; align-items: flex-end;">
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Filtrar</button>
+            </div>
+        </div>
+    </form>
+    
+    <!-- Árbol de activos -->
+    <div style="overflow-x: auto;">
+        <table>
+            <thead>
+                <tr>
+                    <th>TAG / Código</th>
+                    <th>Nombre</th>
+                    <th>Nivel</th>
+                    <th>Estado</th>
+                    <th>Criticidad</th>
+                    <th>Ruta</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+           <tbody>
+    {% for activo in activos %}
+    {% with padding=activo.tree_depth|multiply:20 %}
+    <tr>
+        <td>
+            <strong>{{ activo.tag|default:activo.codigo }}</strong>
+        </td>
+        <td>
+            {% if activo.tree_depth == 0 %}
+                {{ activo.nombre }}
+            {% elif activo.tree_depth == 1 %}
+                <span style="padding-left: 20px;">└─ {{ activo.nombre }}</span>
+            {% elif activo.tree_depth == 2 %}
+                <span style="padding-left: 40px;">└─ {{ activo.nombre }}</span>
+            {% elif activo.tree_depth == 3 %}
+                <span style="padding-left: 60px;">└─ {{ activo.nombre }}</span>
+            {% elif activo.tree_depth == 4 %}
+                <span style="padding-left: 80px;">└─ {{ activo.nombre }}</span>
+            {% elif activo.tree_depth == 5 %}
+                <span style="padding-left: 100px;">└─ {{ activo.nombre }}</span>
+            {% else %}
+                <span style="padding-left: 120px;">└─ {{ activo.nombre }}</span>
+            {% endif %}
+        </td>
+        <td>
+            <span class="badge badge-info">{{ activo.nivel_jerarquia.nombre_nivel }}</span>
+        </td>
+        <td>
+            {% if activo.estado == 'activo' %}
+                <span class="badge badge-success">Activo</span>
+            {% elif activo.estado == 'mantenimiento' %}
+                <span class="badge badge-warning">Mantenimiento</span>
+            {% else %}
+                <span class="badge badge-danger">{{ activo.get_estado_display }}</span>
+            {% endif %}
+        </td>
+        <td>
+            {% if activo.criticidad == 'alta' %}
+                <span class="badge badge-danger">Alta</span>
+            {% elif activo.criticidad == 'media' %}
+                <span class="badge badge-warning">Media</span>
+            {% elif activo.criticidad == 'baja' %}
+                <span class="badge badge-success">Baja</span>
+            {% else %}
+                <span style="color: #999;">-</span>
+            {% endif %}
+        </td>
+        <td style="font-size: 12px; color: #666;">
+            {{ activo.obtener_ruta_completa }}
+        </td>
+        <td>
+            <a href="{% url 'activos:detalle_activo' activo.id %}" 
+               style="color: #e52d27; text-decoration: none; margin-right: 10px;">Ver</a>
+            <a href="{% url 'activos:editar_activo' activo.id %}" 
+               style="color: #0066cc; text-decoration: none; margin-right: 10px;">Editar</a>
+            <a href="{% url 'activos:crear_activo_hijo' activo.id %}" 
+               style="color: #28a745; text-decoration: none;">+ Hijo</a>
+        </td>
+    </tr>
+    {% endwith %}
+    {% empty %}
+    <tr>
+        <td colspan="7" style="text-align: center; padding: 40px; color: #999;">
+            No hay activos registrados. 
+            <a href="{% url 'activos:crear_activo' %}" style="color: #e52d27;">Crear el primero</a>
+        </td>
+    </tr>
+    {% endfor %}
+</tbody>
+
+        </table>
+    </div>
+</div>
+{% endblock %}

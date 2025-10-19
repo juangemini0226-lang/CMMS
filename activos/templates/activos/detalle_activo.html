@@ -1,0 +1,190 @@
+{% extends 'activos/base_activos.html' %}
+
+{% block title %}{{ activo.nombre }}{% endblock %}
+
+{% block content %}
+<div class="breadcrumb">
+    <a href="{% url 'activos:dashboard_activos' %}">Dashboard</a> / 
+    <a href="{% url 'activos:vista_arbol_activos' %}">Activos</a> / 
+    {{ activo.nombre }}
+</div>
+
+<div class="card">
+    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+            <h2 style="margin: 0;">{{ activo.nombre }}</h2>
+            <p style="margin: 5px 0 0; color: #666; font-size: 14px;">
+                {{ activo.obtener_ruta_completa }}
+            </p>
+        </div>
+        <div>
+            <a href="{% url 'activos:editar_activo' activo.id %}" class="btn btn-primary btn-sm">Editar</a>
+            <a href="{% url 'activos:crear_activo_hijo' activo.id %}" class="btn btn-success btn-sm">+ Agregar Hijo</a>
+        </div>
+    </div>
+    
+    <!-- Información Principal -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 30px;">
+        <div>
+            <h3 style="margin-bottom: 15px; color: #333;">Información Básica</h3>
+            <table style="width: 100%;">
+                <tr>
+                    <td style="padding: 10px 0; font-weight: 600; width: 40%;">TAG:</td>
+                    <td style="padding: 10px 0;">
+                        <span style="background: #e52d27; color: white; padding: 5px 15px; border-radius: 5px; font-weight: bold;">
+                            {{ activo.tag|default:"N/A" }}
+                        </span>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 10px 0; font-weight: 600;">Código:</td>
+                    <td style="padding: 10px 0;">{{ activo.codigo }}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 10px 0; font-weight: 600;">Nivel:</td>
+                    <td style="padding: 10px 0;">
+                        <span class="badge badge-info">{{ activo.nivel_jerarquia.nombre_nivel }}</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 10px 0; font-weight: 600;">Estado:</td>
+                    <td style="padding: 10px 0;">
+                        {% if activo.estado == 'activo' %}
+                            <span class="badge badge-success">Activo</span>
+                        {% elif activo.estado == 'mantenimiento' %}
+                            <span class="badge badge-warning">En Mantenimiento</span>
+                        {% else %}
+                            <span class="badge badge-danger">{{ activo.get_estado_display }}</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 10px 0; font-weight: 600;">Criticidad:</td>
+                    <td style="padding: 10px 0;">
+                        {% if activo.criticidad == 'alta' %}
+                            <span class="badge badge-danger">Alta</span>
+                        {% elif activo.criticidad == 'media' %}
+                            <span class="badge badge-warning">Media</span>
+                        {% elif activo.criticidad == 'baja' %}
+                            <span class="badge badge-success">Baja</span>
+                        {% else %}
+                            <span style="color: #999;">No especificada</span>
+                        {% endif %}
+                    </td>
+                </tr>
+            </table>
+        </div>
+        
+        <div>
+            <h3 style="margin-bottom: 15px; color: #333;">Datos Técnicos</h3>
+            <table style="width: 100%;">
+                <tr>
+                    <td style="padding: 10px 0; font-weight: 600; width: 40%;">Fabricante:</td>
+                    <td style="padding: 10px 0;">{{ activo.fabricante|default:"N/A" }}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 10px 0; font-weight: 600;">Modelo:</td>
+                    <td style="padding: 10px 0;">{{ activo.modelo|default:"N/A" }}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 10px 0; font-weight: 600;">N° de Serie:</td>
+                    <td style="padding: 10px 0;">{{ activo.numero_serie|default:"N/A" }}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 10px 0; font-weight: 600;">Fecha Instalación:</td>
+                    <td style="padding: 10px 0;">{{ activo.fecha_instalacion|date:"d/m/Y"|default:"N/A" }}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 10px 0; font-weight: 600;">Ubicación Física:</td>
+                    <td style="padding: 10px 0;">{{ activo.ubicacion_fisica|default:"N/A" }}</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+    
+    <!-- Descripción -->
+    {% if activo.descripcion %}
+    <div style="margin-bottom: 30px;">
+        <h3 style="margin-bottom: 15px; color: #333;">Descripción</h3>
+        <p style="line-height: 1.6; color: #555;">{{ activo.descripcion }}</p>
+    </div>
+    {% endif %}
+    
+    <!-- Activos Hijos -->
+    {% if hijos %}
+    <div style="margin-bottom: 30px;">
+        <h3 style="margin-bottom: 15px; color: #333;">Activos Hijos ({{ hijos.count }})</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>TAG / Código</th>
+                    <th>Nombre</th>
+                    <th>Nivel</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for hijo in hijos %}
+                <tr>
+                    <td><strong>{{ hijo.tag|default:hijo.codigo }}</strong></td>
+                    <td>{{ hijo.nombre }}</td>
+                    <td><span class="badge badge-info">{{ hijo.nivel_jerarquia.nombre_nivel }}</span></td>
+                    <td>
+                        {% if hijo.estado == 'activo' %}
+                            <span class="badge badge-success">Activo</span>
+                        {% else %}
+                            <span class="badge badge-warning">{{ hijo.get_estado_display }}</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="{% url 'activos:detalle_activo' hijo.id %}" style="color: #e52d27; text-decoration: none;">Ver</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+    
+    <!-- Documentos -->
+    <div>
+        <h3 style="margin-bottom: 15px; color: #333;">Documentos Adjuntos ({{ documentos.count }})</h3>
+        {% if documentos %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Tipo</th>
+                    <th>Subido por</th>
+                    <th>Fecha</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for doc in documentos %}
+                <tr>
+                    <td>{{ doc.nombre }}</td>
+                    <td><span class="badge badge-info">{{ doc.get_tipo_documento_display }}</span></td>
+                    <td>{{ doc.subido_por.username }}</td>
+                    <td>{{ doc.subido_el|date:"d/m/Y H:i" }}</td>
+                    <td>
+                        <a href="{{ doc.archivo.url }}" target="_blank" style="color: #0066cc; text-decoration: none;">Descargar</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p style="color: #999; text-align: center; padding: 20px;">No hay documentos adjuntos</p>
+        {% endif %}
+    </div>
+    
+    <div style="margin-top: 30px; padding-top: 20px; border-top: 2px solid #f0f0f0;">
+        <p style="color: #999; font-size: 13px;">
+            <strong>Creado por:</strong> {{ activo.creado_por.username }} el {{ activo.creado_el|date:"d/m/Y H:i" }}<br>
+            <strong>Última actualización:</strong> {{ activo.actualizado_el|date:"d/m/Y H:i" }}
+        </p>
+    </div>
+</div>
+{% endblock %}

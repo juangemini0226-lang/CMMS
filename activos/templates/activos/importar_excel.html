@@ -1,0 +1,58 @@
+{% extends 'activos/base_activos.html' %}
+
+{% block title %}Importar Activos desde Excel{% endblock %}
+
+{% block content %}
+<div class="breadcrumb">
+    <a href="{% url 'activos:dashboard_activos' %}">Dashboard</a> / Importar Excel
+</div>
+
+<div class="card">
+    <div class="card-header">
+        Importar Activos desde Excel
+    </div>
+    
+    <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin-bottom: 20px; border-radius: 5px;">
+        <strong>⚠️ Importante:</strong> El archivo Excel debe seguir el formato específico. 
+        <a href="{% url 'activos:descargar_plantilla_excel' %}" style="color: #e52d27; text-decoration: underline;">
+            Descarga la plantilla aquí
+        </a>
+    </div>
+    
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        
+        <div class="form-group">
+            <label>Archivo Excel *</label>
+            <input type="file" name="archivo_excel" accept=".xlsx,.xls" required 
+                   style="padding: 20px; border: 2px dashed #ddd; border-radius: 8px; width: 100%; cursor: pointer;">
+        </div>
+        
+        <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <h3 style="margin-bottom: 15px; color: #333;">Formato del Archivo</h3>
+            <p style="margin-bottom: 15px;">El archivo debe contener las siguientes columnas:</p>
+            <ul style="line-height: 2; color: #555;">
+                <li><strong>nivel:</strong> Número del nivel de jerarquía (1, 2, 3, etc.)</li>
+                <li><strong>nombre:</strong> Nombre del activo</li>
+                <li><strong>codigo:</strong> Código único del activo</li>
+                <li><strong>padre:</strong> Código del activo padre (vacío si es raíz)</li>
+                <li><strong>descripcion:</strong> Descripción (opcional)</li>
+                <li><strong>fabricante:</strong> Fabricante (opcional)</li>
+                <li><strong>modelo:</strong> Modelo (opcional)</li>
+                <li><strong>serie:</strong> Número de serie (opcional)</li>
+            </ul>
+        </div>
+        
+        <div style="background: #d1ecf1; border-left: 4px solid #0c5460; padding: 15px; margin-bottom: 20px; border-radius: 5px;">
+            <strong>💡 Consejo:</strong> Los activos deben importarse en orden jerárquico, de nivel superior a inferior. 
+            Primero las plantas, luego las áreas, luego los sistemas, y finalmente los equipos.
+        </div>
+        
+        <div style="margin-top: 30px; display: flex; gap: 15px;">
+            <button type="submit" class="btn btn-primary">Importar Activos</button>
+            <a href="{% url 'activos:descargar_plantilla_excel' %}" class="btn btn-success">Descargar Plantilla</a>
+            <a href="{% url 'activos:vista_arbol_activos' %}" class="btn btn-secondary">Cancelar</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

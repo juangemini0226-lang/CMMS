@@ -1,0 +1,58 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CMMS - Iniciar Sesión</title>
+    <link rel="stylesheet" href="{% static 'accounts/css/style.css' %}">
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-left">
+            <img src="{% static 'accounts/images/Logo.svg' %}" alt="Estra Logo" class="logo">
+            <h1>Sistema de Gestión de Mantenimiento</h1>
+            <p>CMMS - Computerized Maintenance Management System</p>
+            <p style="margin-top: 20px; font-size: 14px;">Optimiza la gestión de tus activos y mantenimientos con nuestra plataforma integral</p>
+        </div>
+        
+        <div class="login-right">
+            <h2>Bienvenido</h2>
+            <p class="subtitle">Ingresa tus credenciales para acceder al sistema</p>
+            
+            <form method="post">
+                {% csrf_token %}
+                
+                {% if form.errors %}
+                    <ul class="errorlist">
+                        {% for field, errors in form.errors.items %}
+                            {% for error in errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+                
+                <div class="form-group">
+                    <label for="id_username">Usuario</label>
+                    {{ form.username }}
+                </div>
+                
+                <div class="form-group">
+                    <label for="id_password">Contraseña</label>
+                    {{ form.password }}
+                </div>
+                
+                <div class="form-options">
+                    <label class="remember-me">
+                        <input type="checkbox" name="remember"> Recordarme
+                    </label>
+                    <a href="#" class="forgot-password">¿Olvidaste tu contraseña?</a>
+                </div>
+                
+                <button type="submit" class="btn-login">Iniciar Sesión</button>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

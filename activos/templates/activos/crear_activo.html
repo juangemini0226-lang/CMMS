@@ -1,0 +1,151 @@
+{% extends 'activos/base_activos.html' %}
+
+{% block title %}Crear Activo{% endblock %}
+
+{% block content %}
+<div class="breadcrumb">
+    <a href="{% url 'activos:dashboard_activos' %}">Dashboard</a> / 
+    <a href="{% url 'activos:vista_arbol_activos' %}">Activos</a> / 
+    Crear Activo
+</div>
+
+<div class="card">
+    <div class="card-header">
+        Crear Nuevo Activo
+        {% if padre %}
+        <span style="color: #666; font-size: 16px; font-weight: normal;">
+            (Hijo de: {{ padre.nombre }})
+        </span>
+        {% endif %}
+    </div>
+    
+    <form method="post" id="form-crear-activo">
+        {% csrf_token %}
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            <div class="form-group">
+                <label>Nivel de Jerarquía *</label>
+                <select name="nivel_jerarquia" id="nivel_jerarquia" required>
+                    <option value="">Seleccione un nivel</option>
+                    {% for nivel in niveles %}
+                    <option value="{{ nivel.id }}" 
+                            data-requiere-tag="{{ nivel.requiere_tag }}"
+                            data-formato-tag="{{ nivel.formato_tag }}"
+                            data-prefijo-tag="{{ nivel.prefijo_tag }}">
+                        {{ nivel.nombre_nivel }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>Código *</label>
+                <input type="text" name="codigo" id="codigo" required 
+                       placeholder="Ej: EQ001">
+            </div>
+            
+            <div class="form-group">
+                <label>Nombre *</label>
+                <input type="text" name="nombre" required 
+                       placeholder="Nombre descriptivo del activo">
+            </div>
+            
+            <div class="form-group">
+                <label>TAG (Generado automáticamente)</label>
+                <input type="text" id="tag_preview" readonly 
+                       style="background: #f0f0f0; cursor: not-allowed;"
+                       placeholder="Se generará automáticamente">
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label>Descripción</label>
+            <textarea name="descripcion" rows="3" 
+                      placeholder="Descripción detallada del activo"></textarea>
+        </div>
+        
+        <h3 style="margin: 30px 0 15px; color: #333; border-bottom: 2px solid #f0f0f0; padding-bottom: 10px;">
+            Datos Técnicos
+        </h3>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            <div class="form-group">
+                <label>Fabricante</label>
+                <input type="text" name="fabricante" placeholder="Nombre del fabricante">
+            </div>
+            
+            <div class="form-group">
+                <label>Modelo</label>
+                <input type="text" name="modelo" placeholder="Modelo del equipo">
+            </div>
+            
+            <div class="form-group">
+                <label>Número de Serie</label>
+                <input type="text" name="numero_serie" placeholder="Número de serie único">
+            </div>
+            
+            <div class="form-group">
+                <label>Estado</label>
+                <select name="estado">
+                    <option value="activo">Activo</option>
+                    <option value="inactivo">Inactivo</option>
+                    <option value="mantenimiento">En mantenimiento</option>
+                    <option value="fuera_servicio">Fuera de servicio</option>
+                    <option value="retirado">Retirado</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>Criticidad</label>
+                <select name="criticidad">
+                    <option value="">Sin especificar</option>
+                    <option value="alta">Alta</option>
+                    <option value="media">Media</option>
+                    <option value="baja">Baja</option>
+                </select>
+            </div>
+        </div>
+        
+        <div style="margin-top: 30px; display: flex; gap: 15px;">
+            <button type="submit" class="btn btn-primary">Crear Activo</button>
+            <a href="{% url 'activos:vista_arbol_activos' %}" class="btn btn-secondary">Cancelar</a>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Vista previa del TAG
+    document.getElementById('codigo').addEventListener('input', generarTagPreview);
+    document.getElementById('nivel_jerarquia').addEventListener('change', generarTagPreview);
+    
+    function generarTagPreview() {
+        const nivelSelect = document.getElementById('nivel_jerarquia');
+        const codigo = document.getElementById('codigo').value;
+        const tagPreview = document.getElementById('tag_preview');
+        
+        if (!nivelSelect.value || !codigo) {
+            tagPreview.value = '';
+            return;
+        }
+        
+        const option = nivelSelect.options[nivelSelect.selectedIndex];
+        const requiereTag = option.dataset.requiereTag === 'True';
+        const formatoTag = option.dataset.formatoTag;
+        const prefijoTag = option.dataset.prefijoTag;
+        
+        if (requiereTag && formatoTag) {
+            // Simulación simple del formato
+            let tag = formatoTag.replace('{PREFIJO}', prefijoTag || '');
+            tag = tag.replace('{CODIGO}', codigo);
+            tag = tag.replace('{SECUENCIA}', '001'); // Placeholder
+            tag = tag.replace('{PADRE}', '{% if padre %}{{ padre.codigo }}{% endif %}');
+            
+            tagPreview.value = tag;
+        } else {
+            tagPreview.value = 'No se genera TAG para este nivel';
+        }
+    }
+</script>
+{% endblock %}

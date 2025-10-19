@@ -1,0 +1,119 @@
+{% extends 'activos/base_activos.html' %}
+
+{% block title %}Configurar Jerarquía{% endblock %}
+
+{% block content %}
+<div class="breadcrumb">
+    <a href="{% url 'activos:dashboard_activos' %}">Dashboard</a> / Configurar Jerarquía
+</div>
+
+<div class="card">
+    <div class="card-header">
+        Configuración de Jerarquía - {{ organizacion.nombre }}
+    </div>
+    
+    <div style="background: #d1ecf1; border-left: 4px solid #0c5460; padding: 15px; margin-bottom: 20px; border-radius: 5px;">
+        <strong>ℹ️ Información:</strong> La jerarquía define los niveles organizacionales de tus activos. 
+        Puedes personalizarla según las necesidades de tu empresa, siguiendo o no la norma ISO 14224.
+    </div>
+    
+    {% if niveles %}
+    <h3 style="margin-bottom: 15px; color: #333;">Niveles Configurados</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Nivel</th>
+                <th>Nombre</th>
+                <th>ISO 14224</th>
+                <th>Es Nivel Equipo</th>
+                <th>Requiere TAG</th>
+                <th>Prefijo TAG</th>
+                <th>Formato TAG</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for nivel in niveles %}
+            <tr>
+                <td><strong>{{ nivel.numero_nivel }}</strong></td>
+                <td>{{ nivel.nombre_nivel }}</td>
+                <td>
+                    {% if nivel.corresponde_iso_14224 %}
+                        <span class="badge badge-info">Nivel {{ nivel.corresponde_iso_14224 }}</span>
+                    {% else %}
+                        <span style="color: #999;">-</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if nivel.es_nivel_equipo %}
+                        <span class="badge badge-success">Sí</span>
+                    {% else %}
+                        <span style="color: #999;">No</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if nivel.requiere_tag %}
+                        <span class="badge badge-success">Sí</span>
+                    {% else %}
+                        <span style="color: #999;">No</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if nivel.prefijo_tag %}
+                        <code style="background: #f0f0f0; padding: 2px 8px; border-radius: 3px;">{{ nivel.prefijo_tag }}</code>
+                    {% else %}
+                        <span style="color: #999;">-</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if nivel.formato_tag %}
+                        <code style="background: #f0f0f0; padding: 2px 8px; border-radius: 3px; font-size: 11px;">{{ nivel.formato_tag }}</code>
+                    {% else %}
+                        <span style="color: #999;">-</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div style="text-align: center; padding: 40px; color: #999;">
+        <p style="font-size: 18px; margin-bottom: 15px;">No hay niveles de jerarquía configurados</p>
+        <p>Para configurar la jerarquía, accede al panel de administración</p>
+        <a href="{% url 'admin:activos_niveljerarquia_add' %}" class="btn btn-primary" style="margin-top: 20px;">
+            Ir al Admin
+        </a>
+    </div>
+    {% endif %}
+    
+    <div style="margin-top: 30px; padding-top: 20px; border-top: 2px solid #f0f0f0;">
+        <h3 style="margin-bottom: 15px; color: #333;">Ejemplo de Jerarquía ISO 14224</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Nivel</th>
+                    <th>Nombre Sugerido</th>
+                    <th>Descripción</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td>1</td><td>Industria</td><td>Tipo de industria (Petróleo, Gas, etc.)</td></tr>
+                <tr><td>2</td><td>Negocio</td><td>Línea de negocio</td></tr>
+                <tr><td>3</td><td>Instalación</td><td>Tipo de instalación</td></tr>
+                <tr><td>4</td><td>Planta</td><td>Planta industrial</td></tr>
+                <tr><td>5</td><td>Sección/Sistema</td><td>Sistema principal</td></tr>
+                <tr style="background: #fff3cd;"><td>6</td><td>Equipo</td><td><strong>Clase de equipo (Nivel principal)</strong></td></tr>
+                <tr><td>7</td><td>Subunidad</td><td>Subsistema del equipo</td></tr>
+                <tr><td>8</td><td>Componente</td><td>Elemento mantenible</td></tr>
+                <tr><td>9</td><td>Parte</td><td>Pieza individual</td></tr>
+            </tbody>
+        </table>
+    </div>
+    
+    <div style="margin-top: 30px;">
+        <a href="{% url 'admin:activos_niveljerarquia_changelist' %}" class="btn btn-primary">
+            Gestionar Niveles en Admin
+        </a>
+        <a href="{% url 'activos:dashboard_activos' %}" class="btn btn-secondary">Volver</a>
+    </div>
+</div>
+{% endblock %}

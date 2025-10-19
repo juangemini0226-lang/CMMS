@@ -1,0 +1,94 @@
+{% extends 'activos/base_activos.html' %}
+
+{% block title %}Editar {{ activo.nombre }}{% endblock %}
+
+{% block content %}
+<div class="breadcrumb">
+    <a href="{% url 'activos:dashboard_activos' %}">Dashboard</a> / 
+    <a href="{% url 'activos:vista_arbol_activos' %}">Activos</a> / 
+    <a href="{% url 'activos:detalle_activo' activo.id %}">{{ activo.nombre }}</a> / 
+    Editar
+</div>
+
+<div class="card">
+    <div class="card-header">
+        Editar Activo: {{ activo.nombre }}
+    </div>
+    
+    <form method="post">
+        {% csrf_token %}
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            <div class="form-group">
+                <label>Nombre *</label>
+                <input type="text" name="nombre" value="{{ activo.nombre }}" required>
+            </div>
+            
+            <div class="form-group">
+                <label>TAG</label>
+                <input type="text" value="{{ activo.tag }}" readonly 
+                       style="background: #f0f0f0; cursor: not-allowed;">
+                <small style="color: #666; font-size: 12px;">El TAG se genera automáticamente</small>
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label>Descripción</label>
+            <textarea name="descripcion" rows="3">{{ activo.descripcion }}</textarea>
+        </div>
+        
+        <h3 style="margin: 30px 0 15px; color: #333; border-bottom: 2px solid #f0f0f0; padding-bottom: 10px;">
+            Datos Técnicos
+        </h3>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            <div class="form-group">
+                <label>Fabricante</label>
+                <input type="text" name="fabricante" value="{{ activo.fabricante }}">
+            </div>
+            
+            <div class="form-group">
+                <label>Modelo</label>
+                <input type="text" name="modelo" value="{{ activo.modelo }}">
+            </div>
+            
+            <div class="form-group">
+                <label>Número de Serie</label>
+                <input type="text" name="numero_serie" value="{{ activo.numero_serie }}">
+            </div>
+            
+            <div class="form-group">
+                <label>Estado</label>
+                <select name="estado">
+                    <option value="activo" {% if activo.estado == 'activo' %}selected{% endif %}>Activo</option>
+                    <option value="inactivo" {% if activo.estado == 'inactivo' %}selected{% endif %}>Inactivo</option>
+                    <option value="mantenimiento" {% if activo.estado == 'mantenimiento' %}selected{% endif %}>En mantenimiento</option>
+                    <option value="fuera_servicio" {% if activo.estado == 'fuera_servicio' %}selected{% endif %}>Fuera de servicio</option>
+                    <option value="retirado" {% if activo.estado == 'retirado' %}selected{% endif %}>Retirado</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>Criticidad</label>
+                <select name="criticidad">
+                    <option value="">Sin especificar</option>
+                    <option value="alta" {% if activo.criticidad == 'alta' %}selected{% endif %}>Alta</option>
+                    <option value="media" {% if activo.criticidad == 'media' %}selected{% endif %}>Media</option>
+                    <option value="baja" {% if activo.criticidad == 'baja' %}selected{% endif %}>Baja</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>Ubicación Física</label>
+                <input type="text" name="ubicacion_fisica" value="{{ activo.ubicacion_fisica }}" 
+                       placeholder="Ej: Planta 1, Piso 2, Sala de máquinas">
+            </div>
+        </div>
+        
+        <div style="margin-top: 30px; display: flex; gap: 15px;">
+            <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+            <a href="{% url 'activos:detalle_activo' activo.id %}" class="btn btn-secondary">Cancelar</a>
+        </div>
+    </form>
+</div>
+{% endblock %}
