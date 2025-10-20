@@ -1,20 +1,88 @@
-{% extends 'base.html' %}
-{% block content %}
-<div class="container mt-5">
-  <h2>Dependencias para el Activo: {{ activo.nombre }}</h2>
-  <ul>
-    {% for d in dependencias %}
-      <li>{{ d.nombre }} - {{ d.descripcion }}</li>
-    {% empty %}
-      <li>No hay dependencias registradas.</li>
-    {% endfor %}
-  </ul>
+{% extends 'activos/base_activos.html' %}
 
-  <h4>Agregar Nueva Dependencia</h4>
-  <form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit" class="btn btn-success mt-2">Agregar</button>
-  </form>
+{% block title %}Dependencias de {{ activo.nombre }}{% endblock %}
+
+{% block content %}
+<div class="breadcrumb">
+    <a href="{% url 'activos:dashboard_activos' %}">Dashboard</a> /
+    <a href="{% url 'activos:vista_arbol_activos' %}">Activos</a> /
+    <a href="{% url 'activos:detalle_activo' activo.id %}">{{ activo.nombre }}</a> /
+    Dependencias
+</div>
+
+<div class="card">
+    <div class="card-header" style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: space-between; align-items: center;">
+        <div>
+            <h2 style="margin: 0;">Dependencias de {{ activo.nombre }}</h2>
+            <p style="margin: 5px 0 0; color: #666; font-size: 14px;">Familia: {{ activo.familia|default:'No asignada' }}</p>
+        </div>
+        <div style="display: flex; gap: 10px; align-items: center;">
+            {% if activo.familia %}
+                <a href="{% url 'activos:seleccionar_activo' activo.familia.id %}" class="btn btn-outline-secondary btn-sm">Cambiar activo</a>
+            {% endif %}
+            <a href="{% url 'activos:detalle_activo' activo.id %}" class="btn btn-secondary btn-sm">Volver al activo</a>
+        </div>
+    </div>
+
+    <div style="padding: 20px;">
+        {% if requiere_familia %}
+            <div class="alert alert-warning" style="margin-bottom: 20px;">
+                Este activo aún no tiene una familia asignada. Asignar una familia facilita el filtrado de dependencias en la jerarquía.
+            </div>
+        {% endif %}
+
+        <div class="alert alert-info" style="margin-bottom: 20px;">
+            <div style="display: flex; flex-wrap: wrap; gap: 15px;">
+                <div><strong>Código:</strong> {{ activo.codigo }}</div>
+                <div><strong>TAG:</strong> {{ activo.tag|default:'No asignado' }}</div>
+                <div><strong>Ubicación:</strong> {{ activo.ubicacion_fisica|default:'Sin ubicación registrada' }}</div>
+                <div><strong>Padre:</strong> {% if padre_activo %}{{ padre_activo.nombre }}{% else %}Nivel superior{% endif %}</div>
+            </div>
+        </div>
+
+        <h3 style="margin-bottom: 15px;">Componentes registrados</h3>
+        {% if dependencias %}
+            <ul style="list-style: disc; padding-left: 25px;">
+                {% for dependencia in dependencias %}
+                    <li style="margin-bottom: 8px;">
+                        <strong>{{ dependencia.nombre }}</strong>
+                        {% if dependencia.descripcion %}
+                            <span style="color: #666;">- {{ dependencia.descripcion }}</span>
+                        {% endif %}
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p style="color: #999;">Todavía no se han registrado dependencias para este activo.</p>
+        {% endif %}
+
+        <hr style="margin: 30px 0;">
+
+        <h3 style="margin-bottom: 15px;">Agregar nueva dependencia</h3>
+        {% if form.errors %}
+            <div class="alert alert-error" style="margin-bottom: 20px;">
+                {% for field in form %}
+                    {% for error in field.errors %}
+                        <div>{{ error }}</div>
+                    {% endfor %}
+                {% endfor %}
+                {% for error in form.non_field_errors %}
+                    <div>{{ error }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+        <form method="post" style="max-width: 600px;">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="id_nombre">Nombre de la dependencia</label>
+                {{ form.nombre }}
+            </div>
+            <div class="form-group">
+                <label for="id_descripcion">Descripción</label>
+                {{ form.descripcion }}
+            </div>
+            <button type="submit" class="btn btn-primary">Agregar dependencia</button>
+        </form>
+    </div>
 </div>
 {% endblock %}

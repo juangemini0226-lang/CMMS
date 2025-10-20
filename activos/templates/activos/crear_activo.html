@@ -46,13 +46,28 @@
             
             <div class="form-group">
                 <label>Nombre *</label>
-                <input type="text" name="nombre" required 
+                <input type="text" name="nombre" required
                        placeholder="Nombre descriptivo del activo">
             </div>
-            
+
+            <div class="form-group">
+                <label>Familia del Activo</label>
+                <select name="familia" class="form-select">
+                    <option value="">Seleccione una familia</option>
+                    {% for familia in familias %}
+                        <option value="{{ familia.id }}">{{ familia.nombre }}</option>
+                    {% endfor %}
+                </select>
+                {% if familias %}
+                    <small style="color: #666; font-size: 12px;">La familia ayuda a filtrar los activos de nivel 6</small>
+                {% else %}
+                    <small style="color: #b31217; font-size: 12px; font-weight: 600;">Aún no hay familias registradas. Cree una desde el menú "Familias" para asociar este activo.</small>
+                {% endif %}
+            </div>
+
             <div class="form-group">
                 <label>TAG (Generado automáticamente)</label>
-                <input type="text" id="tag_preview" readonly 
+                <input type="text" id="tag_preview" readonly
                        style="background: #f0f0f0; cursor: not-allowed;"
                        placeholder="Se generará automáticamente">
             </div>
@@ -73,8 +88,7 @@
                 <label>Fabricante</label>
                 <input type="text" name="fabricante" placeholder="Nombre del fabricante">
             </div>
-            
-            <div class="form-group">
+        <div class="form-group">
                 <label>Modelo</label>
                 <input type="text" name="modelo" placeholder="Modelo del equipo">
             </div>
@@ -104,6 +118,11 @@
                     <option value="baja">Baja</option>
                 </select>
             </div>
+
+            <div class="form-group">
+                <label>Ubicación Física</label>
+                <input type="text" name="ubicacion_fisica" placeholder="Ej: Planta 1, Línea A">
+            </div>
         </div>
         
         <div style="margin-top: 30px; display: flex; gap: 15px;">
@@ -116,6 +135,7 @@
 
 {% block extra_js %}
 <script>
+
     // Vista previa del TAG
     document.getElementById('codigo').addEventListener('input', generarTagPreview);
     document.getElementById('nivel_jerarquia').addEventListener('change', generarTagPreview);

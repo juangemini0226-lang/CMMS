@@ -1,0 +1,79 @@
+{% extends 'activos/base_activos.html' %}
+
+{% block title %}Familias de activos{% endblock %}
+
+{% block content %}
+<div class="breadcrumb">
+    <a href="{% url 'activos:dashboard_activos' %}">Dashboard</a> /
+    Familias de activos
+</div>
+
+<div class="card">
+    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+        <span>Familias de activos{% if organizacion %} · {{ organizacion.nombre }}{% endif %}</span>
+        <a href="{% url 'activos:seleccionar_familia' %}" class="btn btn-primary btn-sm">Gestionar dependencias</a>
+    </div>
+    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 30px; padding: 20px;">
+        <div>
+            <h3 style="margin-bottom: 15px; color: #333;">Resumen de familias</h3>
+            {% if familias %}
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Familia</th>
+                            <th>Activos vinculados</th>
+                            <th>Dependencias registradas</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for familia in familias %}
+                            <tr>
+                                <td>
+                                    <strong>{{ familia.nombre }}</strong>
+                                    {% if familia.descripcion %}<br><span style="color: #666;">{{ familia.descripcion }}</span>{% endif %}
+                                </td>
+                                <td>{{ familia.total_activos }}</td>
+                                <td>{{ familia.total_dependencias }}</td>
+                                <td style="text-align: right;">
+                                    <a href="{% url 'activos:seleccionar_activo' familia.id %}" class="btn btn-secondary btn-sm">Ver activos</a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p style="color: #999;">Todavía no hay familias registradas. Utiliza el formulario para crear la primera.</p>
+            {% endif %}
+        </div>
+        <div>
+            <h3 style="margin-bottom: 15px; color: #333;">Crear nueva familia</h3>
+            <p style="margin-bottom: 15px; color: #555;">Agrupa tus activos por tipo para facilitar su búsqueda y la asignación de dependencias específicas.</p>
+            <form method="post" class="card" style="padding: 20px; box-shadow: none; border: 1px solid #f0f0f0;">
+                {% csrf_token %}
+                {% if form.errors %}
+                    <div class="alert alert-error" style="margin-bottom: 15px;">
+                        {% for field in form %}
+                            {% for error in field.errors %}
+                                <div>{{ error }}</div>
+                            {% endfor %}
+                        {% endfor %}
+                        {% for error in form.non_field_errors %}
+                            <div>{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+                <div class="form-group">
+                    <label for="id_nombre">Nombre</label>
+                    {{ form.nombre }}
+                </div>
+                <div class="form-group">
+                    <label for="id_descripcion">Descripción</label>
+                    {{ form.descripcion }}
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Guardar familia</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

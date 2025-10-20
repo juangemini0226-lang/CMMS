@@ -110,14 +110,31 @@ class CampoPersonalizado(models.Model):
 # MÓDULO 2: JERARQUÍA DE ACTIVOS
 # ========================================
 class FamiliaActivo(models.Model):
-    nombre = models.CharField(max_length=200, unique=True, verbose_name="Nombre de la Familia")
+    organizacion = models.ForeignKey(
+        Organizacion,
+        on_delete=models.CASCADE,
+        related_name='familias_activos',
+        null=True,
+        blank=True,
+        verbose_name="Organización",
+    )
+    nombre = models.CharField(max_length=200, verbose_name="Nombre de la Familia")
     descripcion = models.TextField(blank=True, verbose_name="Descripción")
-    
+
     class Meta:
         verbose_name = "Familia de Activo"
         verbose_name_plural = "Familias de Activos"
         ordering = ['nombre']
-    
+        constraints = [
+            models.UniqueConstraint(
+                fields=['organizacion', 'nombre'],
+                name='unique_familia_por_organizacion'
+            ),
+        ]
+        indexes = [
+            models.Index(fields=['organizacion', 'nombre']),
+        ]
+
     def __str__(self):
         return self.nombre
 
@@ -125,9 +142,14 @@ class FamiliaActivo(models.Model):
 
 class NodoActivo(TreeNode):
     """Nodo genérico que puede ser cualquier nivel de la jerarquía (Planta, Área, Sistema, Equipo, etc.)"""
-    familia = models.ForeignKey(FamiliaActivo, on_delete=models.PROTECT,
-                               null=True, blank=True, verbose_name="Familia del Activo",
-                               related_name='activos')
+    familia = models.ForeignKey(
+        FamiliaActivo,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        verbose_name="Familia del Activo",
+        related_name='activos'
+    )
     ESTADOS = [
         ('activo', 'Activo'),
         ('inactivo', 'Inactivo'),
@@ -212,6 +234,53 @@ class NodoActivo(TreeNode):
             self.tag = self.generar_tag()
         super().save(*args, **kwargs)
 
+    def generar_tag(self):
+        """Genera el TAG del activo respetando el formato configurado"""
+        formato = self.nivel_jerarquia.formato_tag or "{PREFIJO}-{CODIGO}-{SECUENCIA}"
+        prefijo = self.nivel_jerarquia.prefijo_tag or ''
+
+        ultimo_nodo = NodoActivo.objects.filter(
+            organizacion=self.organizacion,
+            nivel_jerarquia=self.nivel_jerarquia,
+            tag__isnull=False
+        ).order_by('-id').first()
+
+        secuencia = 1
+        if ultimo_nodo and ultimo_nodo.tag:
+            import re
+            match = re.search(r'(\d+)$', ultimo_nodo.tag)
+            if match:
+                secuencia = int(match.group(1)) + 1
+
+        codigos_padres = []
+        actual = self.parent
+        while actual:
+            codigos_padres.insert(0, actual.codigo)
+            actual = actual.parent
+
+        tag = formato.format(
+            PREFIJO=prefijo,
+            CODIGO=self.codigo,
+            SECUENCIA=str(secuencia).zfill(3),
+            PADRE='-'.join(codigos_padres) if codigos_padres else ''
+        )
+
+        return tag
+
+    def obtener_ruta_completa(self):
+        """Retorna la ruta completa del activo (Planta > Área > Sistema > Equipo)"""
+        ruta = []
+        actual = self
+        while actual:
+            ruta.insert(0, actual.nombre)
+            actual = actual.parent
+        return ' > '.join(ruta)
+
+    def obtener_nivel_nombre(self):
+        """Retorna el nombre del nivel asociado al activo"""
+        return self.nivel_jerarquia.nombre_nivel
+
+
 class DependenciaActivo(models.Model):
     activo_padre = models.ForeignKey(NodoActivo, on_delete=models.CASCADE,
                                     related_name='dependencias',
@@ -222,58 +291,16 @@ class DependenciaActivo(models.Model):
     class Meta:
         verbose_name = "Dependencia de Activo"
         verbose_name_plural = "Dependencias de Activos"
-    
+        ordering = ['activo_padre', 'nombre']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['activo_padre', 'nombre'],
+                name='unique_dependencia_por_activo'
+            ),
+        ]
+
     def __str__(self):
         return f"{self.activo_padre} - {self.nombre}"
-
-    def generar_tag(self):
-        """Genera TAG automático según configuración del nivel"""
-        formato = self.nivel_jerarquia.formato_tag or "{PREFIJO}-{CODIGO}-{SECUENCIA}"
-        prefijo = self.nivel_jerarquia.prefijo_tag
-        
-        # Obtener secuencia
-        ultimo_nodo = NodoActivo.objects.filter(
-            organizacion=self.organizacion,
-            nivel_jerarquia=self.nivel_jerarquia,
-            tag__isnull=False
-        ).order_by('-id').first()
-        
-        secuencia = 1
-        if ultimo_nodo and ultimo_nodo.tag:
-            import re
-            match = re.search(r'(\d+)$', ultimo_nodo.tag)
-            if match:
-                secuencia = int(match.group(1)) + 1
-        
-        # Construir códigos de padres
-        codigos_padres = []
-        actual = self.parent
-        while actual:
-            codigos_padres.insert(0, actual.codigo)
-            actual = actual.parent
-        
-        # Generar TAG
-        tag = formato.format(
-            PREFIJO=prefijo,
-            CODIGO=self.codigo,
-            SECUENCIA=str(secuencia).zfill(3),
-            PADRE='-'.join(codigos_padres) if codigos_padres else ''
-        )
-        
-        return tag
-    
-    def obtener_ruta_completa(self):
-        """Retorna ruta completa: Planta > Área > Sistema > Equipo"""
-        ruta = []
-        actual = self
-        while actual:
-            ruta.insert(0, actual.nombre)
-            actual = actual.parent
-        return ' > '.join(ruta)
-    
-    def obtener_nivel_nombre(self):
-        """Retorna el nombre del nivel (Planta, Área, etc.)"""
-        return self.nivel_jerarquia.nombre_nivel
 
 
 # ========================================

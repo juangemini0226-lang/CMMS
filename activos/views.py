@@ -2,14 +2,28 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse, HttpResponse
 from django.contrib import messages
+from django.db import IntegrityError
 from django.db.models import Count, Q
-from .models import (Organizacion, NivelJerarquia, NodoActivo, ClaseEquipoISO14224, PlantillaActivo, 
-                     DocumentoActivo)
+
+from .models import (
+    Organizacion,
+    NivelJerarquia,
+    NodoActivo,
+    ClaseEquipoISO14224,
+    PlantillaActivo,
+    DocumentoActivo,
+    FamiliaActivo,
+    DependenciaActivo,
+)
 from .utils.manejador_excel import ImportadorExcelActivos
 import json
 
-from .models import FamiliaActivo, NodoActivo, DependenciaActivo
-from .forms import SeleccionFamiliaForm, SeleccionActivoForm, DependenciaActivoForm
+from .forms import (
+    SeleccionFamiliaForm,
+    SeleccionActivoForm,
+    DependenciaActivoForm,
+    FamiliaActivoForm,
+)
 
 
 # ========================================
@@ -17,53 +31,166 @@ from .forms import SeleccionFamiliaForm, SeleccionActivoForm, DependenciaActivoF
 # ========================================
 
 @login_required
+def gestionar_familias(request):
+    organizacion = Organizacion.objects.first()
+    if not organizacion:
+        messages.error(request, 'Debe configurar una organización antes de gestionar familias de activos.')
+        return redirect('activos:dashboard_activos')
 
-def seleccionar_familia(request):
+    familias = FamiliaActivo.objects.filter(
+        Q(organizacion=organizacion) | Q(organizacion__isnull=True)
+    ).annotate(
+        total_activos=Count('activos', distinct=True),
+        total_dependencias=Count('activos__dependencias', distinct=True),
+    ).order_by('nombre')
+
     if request.method == 'POST':
-        form = SeleccionFamiliaForm(request.POST)
+        form = FamiliaActivoForm(request.POST)
+        if form.is_valid():
+            familia = form.save(commit=False)
+            familia.organizacion = organizacion
+            familia.save()
+            messages.success(request, f'Familia "{familia.nombre}" creada correctamente.')
+            return redirect('activos:gestionar_familias')
+    else:
+        form = FamiliaActivoForm()
+
+    context = {
+        'form': form,
+        'familias': familias,
+        'organizacion': organizacion,
+    }
+    return render(request, 'activos/gestionar_familias.html', context)
+
+
+@login_required
+def seleccionar_familia(request):
+    organizacion = Organizacion.objects.first()
+    if not organizacion:
+        messages.error(request, 'Debe configurar una organización antes de seleccionar familias.')
+        return redirect('activos:dashboard_activos')
+
+    familias_disponibles = FamiliaActivo.objects.filter(
+        Q(organizacion=organizacion) | Q(organizacion__isnull=True)
+    ).order_by('nombre')
+
+    if request.method == 'POST':
+        form = SeleccionFamiliaForm(request.POST, organizacion=organizacion)
         if form.is_valid():
             familia = form.cleaned_data['familia']
             return redirect('activos:seleccionar_activo', familia_id=familia.id)
     else:
-        form = SeleccionFamiliaForm()
-    return render(request, 'activos/seleccionar_familia.html', {'form': form})
+        form = SeleccionFamiliaForm(organizacion=organizacion)
 
+    if not familias_disponibles.exists() and request.method != 'POST':
+        messages.info(
+            request,
+            'No hay familias registradas aún. Cree una nueva desde el menú "Familias".',
+        )
 
+    return render(
+        request,
+        'activos/seleccionar_familia.html',
+        {
+            'form': form,
+            'familias_disponibles': familias_disponibles,
+            'organizacion': organizacion,
+        },
+    )
+
+@login_required
 def seleccionar_activo(request, familia_id):
-    familia = get_object_or_404(FamiliaActivo, pk=familia_id)
+    organizacion = Organizacion.objects.first()
+    if not organizacion:
+        messages.error(request, 'Debe configurar una organización antes de gestionar dependencias.')
+        return redirect('activos:dashboard_activos')
+
+    familia = get_object_or_404(
+        FamiliaActivo.objects.filter(
+            Q(organizacion=organizacion) | Q(organizacion__isnull=True)
+        ),
+        pk=familia_id,
+    )
+    total_activos_familia = NodoActivo.objects.filter(
+        familia=familia,
+        organizacion=organizacion,
+    ).count()
+    search_query = request.GET.get('q', '').strip()
+
     if request.method == 'POST':
-        form = SeleccionActivoForm(familia=familia, data=request.POST)
+        form = SeleccionActivoForm(
+            familia=familia,
+            organizacion=organizacion,
+            search_query=search_query,
+            data=request.POST,
+        )
         if form.is_valid():
             activo = form.cleaned_data['activo']
             return redirect('activos:lista_dependencias', activo_id=activo.id)
     else:
-        form = SeleccionActivoForm(familia=familia)
-    return render(request, 'activos/seleccionar_activo.html', {'form': form, 'familia': familia})
+        form = SeleccionActivoForm(
+            familia=familia,
+            organizacion=organizacion,
+            search_query=search_query,
+        )
 
-    
+    activos_disponibles = form.fields['activo'].queryset
+    if (
+        not activos_disponibles.exists()
+        and request.method != 'POST'
+        and not search_query
+        and total_activos_familia == 0
+    ):
+        messages.info(
+            request,
+            'La familia seleccionada aún no tiene activos asociados. Registre activos de esta familia para continuar.',
+        )
+
+    return render(
+        request,
+        'activos/seleccionar_activo.html',
+        {
+            'form': form,
+            'familia': familia,
+            'activos_disponibles': activos_disponibles,
+            'search_query': search_query,
+            'total_activos_familia': total_activos_familia,
+        },
+    )
+
+@login_required
 def lista_dependencias(request, activo_id):
-    activo = get_object_or_404(NodoActivo, pk=activo_id)
-    dependencias = DependenciaActivo.objects.filter(activo_padre=activo)
-    
+    organizacion = Organizacion.objects.first()
+    if not organizacion:
+        messages.error(request, 'Debe configurar una organización antes de gestionar dependencias.')
+        return redirect('activos:dashboard_activos')
+
+    activo = get_object_or_404(NodoActivo, pk=activo_id, organizacion=organizacion)
+    dependencias = activo.dependencias.order_by('nombre')
+    padre_activo = getattr(activo, 'parent', None)
+
     if request.method == 'POST':
         form = DependenciaActivoForm(request.POST)
         if form.is_valid():
             dependencia = form.save(commit=False)
             dependencia.activo_padre = activo
-            dependencia.save()
-            return redirect('activos:lista_dependencias', activo_id=activo.id)
+            try:
+                dependencia.save()
+            except IntegrityError:
+                form.add_error('nombre', 'Ya existe una dependencia con este nombre para el activo.')
+            else:
+                messages.success(request, 'Dependencia registrada correctamente')
+                return redirect('activos:lista_dependencias', activo_id=activo.id)
     else:
         form = DependenciaActivoForm()
 
     return render(request, 'activos/lista_dependencias.html', {
         'activo': activo,
         'dependencias': dependencias,
-        'form': form
+        'form': form,
+        'requiere_familia': activo.familia is None,
+        'padre_activo': padre_activo,
     })
-
-
-
-
 
 def dashboard_activos(request):
     """Dashboard principal de activos"""
@@ -179,11 +306,16 @@ def vista_arbol_activos(request):
     return render(request, 'activos/arbol_activos.html', context)
 
 
+
 @login_required
 def crear_activo(request, padre_id=None):
     """Crear nuevo activo"""
     organizacion = Organizacion.objects.first()  # Ajustar según tu lógica
-    
+
+    if not organizacion:
+        messages.error(request, 'Debe configurar una organización antes de crear activos.')
+        return redirect('activos:dashboard_activos')
+
     padre = None
     if padre_id:
         padre = get_object_or_404(NodoActivo, id=padre_id, organizacion=organizacion)
@@ -193,6 +325,16 @@ def crear_activo(request, padre_id=None):
         nivel_id = request.POST.get('nivel_jerarquia')
         nivel = get_object_or_404(NivelJerarquia, id=nivel_id, organizacion=organizacion)
         
+        familia = None
+        familia_id = request.POST.get('familia')
+        if familia_id:
+            familia = get_object_or_404(
+                FamiliaActivo.objects.filter(
+                    Q(organizacion=organizacion) | Q(organizacion__isnull=True)
+                ),
+                id=familia_id,
+            )
+
         activo = NodoActivo.objects.create(
             organizacion=organizacion,
             nivel_jerarquia=nivel,
@@ -205,20 +347,26 @@ def crear_activo(request, padre_id=None):
             numero_serie=request.POST.get('numero_serie', ''),
             estado=request.POST.get('estado', 'activo'),
             criticidad=request.POST.get('criticidad', ''),
+            ubicacion_fisica=request.POST.get('ubicacion_fisica', ''),
+            familia=familia,
             creado_por=request.user
         )
-        
+
         messages.success(request, f'Activo "{activo.nombre}" creado exitosamente')
         return redirect('activos:detalle_activo', activo_id=activo.id)
-    
+
     niveles = NivelJerarquia.objects.filter(organizacion=organizacion)
-    
+    familias = FamiliaActivo.objects.filter(
+        Q(organizacion=organizacion) | Q(organizacion__isnull=True)
+    ).order_by('nombre')
+
     context = {
         'padre': padre,
         'niveles': niveles,
         'organizacion': organizacion,
+        'familias': familias,
     }
-    
+
     return render(request, 'activos/crear_activo.html', context)
 
 
@@ -235,15 +383,17 @@ def detalle_activo(request, activo_id):
     # Obtener hijos
     hijos = activo.children.all()
     
-    # Obtener documentos
+    # Obtener documentos y dependencias
     documentos = activo.documentos.all()
-    
+    dependencias = activo.dependencias.order_by('nombre')
+
     context = {
         'activo': activo,
         'hijos': hijos,
         'documentos': documentos,
+        'dependencias': dependencias,
     }
-    
+
     return render(request, 'activos/detalle_activo.html', context)
 
 
@@ -251,9 +401,14 @@ def detalle_activo(request, activo_id):
 def editar_activo(request, activo_id):
     """Editar activo existente"""
     organizacion = Organizacion.objects.first()  # Ajustar según tu lógica
+
+    if not organizacion:
+        messages.error(request, 'Debe configurar una organización antes de editar activos.')
+        return redirect('activos:dashboard_activos')
+
     activo = get_object_or_404(
-        NodoActivo, 
-        id=activo_id, 
+        NodoActivo,
+        id=activo_id,
         organizacion=organizacion
     )
     
@@ -266,19 +421,32 @@ def editar_activo(request, activo_id):
         activo.estado = request.POST.get('estado')
         activo.criticidad = request.POST.get('criticidad', '')
         activo.ubicacion_fisica = request.POST.get('ubicacion_fisica', '')
-        
+        familia_id = request.POST.get('familia')
+        if familia_id:
+            activo.familia = get_object_or_404(
+                FamiliaActivo.objects.filter(
+                    Q(organizacion=organizacion) | Q(organizacion__isnull=True)
+                ),
+                id=familia_id,
+            )
+        else:
+            activo.familia = None
+
         activo.save()
-        
+
         messages.success(request, 'Activo actualizado exitosamente')
         return redirect('activos:detalle_activo', activo_id=activo.id)
-    
+
+    familias = FamiliaActivo.objects.filter(
+        Q(organizacion=organizacion) | Q(organizacion__isnull=True)
+    ).order_by('nombre')
+
     context = {
         'activo': activo,
+        'familias': familias,
     }
-    
+
     return render(request, 'activos/editar_activo.html', context)
-
-
 @login_required
 def eliminar_activo(request, activo_id):
     """Eliminar activo"""

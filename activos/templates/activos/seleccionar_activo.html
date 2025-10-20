@@ -1,12 +1,74 @@
-{% extends 'base.html' %}
+{% extends 'activos/base_activos.html' %}
+
+{% block title %}Seleccionar activo{% endblock %}
+
 {% block content %}
-<div class="container mt-5">
-  <h2>Seleccione Activo para la Familia: {{ familia.nombre }}</h2>
-  <form method="post">
-    {% csrf_token %}
-    {{ form.activo.label_tag }}
-    {{ form.activo }}
-    <button type="submit" class="btn btn-primary mt-3">Siguiente</button>
-  </form>
+<div class="breadcrumb">
+    <a href="{% url 'activos:dashboard_activos' %}">Dashboard</a> /
+    <a href="{% url 'activos:seleccionar_familia' %}">Familias</a> /
+    {{ familia.nombre }}
+</div>
+
+<div class="card" style="max-width: 800px; margin: 0 auto;">
+    <div class="card-header">
+        Seleccione un activo específico de la familia {{ familia.nombre }}
+    </div>
+    <div style="padding: 20px;">
+        <form method="get" class="form-inline" style="display: flex; gap: 10px; margin-bottom: 20px;">
+            <input type="text" name="q" value="{{ search_query }}" class="form-control" placeholder="Buscar por nombre, código o TAG" style="flex: 1;">
+            <button type="submit" class="btn btn-secondary">Buscar</button>
+            {% if search_query %}
+                <a href="{% url 'activos:seleccionar_activo' familia.id %}" class="btn btn-link">Limpiar</a>
+            {% endif %}
+        </form>
+        {% if activos_disponibles %}
+            <p style="margin-bottom: 20px; color: #555;">
+                Se muestran {{ activos_disponibles|length }} de {{ total_activos_familia }} activo{{ total_activos_familia|pluralize:"s" }} asociados a la familia.
+                {% if search_query %}
+                    <span style="display: block; font-size: 13px; color: #888;">Filtro aplicado: "{{ search_query }}".</span>
+                {% endif %}
+            </p>
+        {% elif total_activos_familia > 0 and search_query %}
+            <div class="alert alert-info" style="margin-bottom: 20px;">
+                No se encontraron activos que coincidan con "{{ search_query }}" dentro de la familia.
+            </div>
+        {% else %}
+            <div class="alert alert-warning" style="margin-bottom: 20px;">Esta familia aún no tiene activos asociados. Cree o edite un activo para asignarlo a la familia antes de gestionar sus dependencias.</div>
+        {% endif %}
+        <form method="post">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="id_activo">Activo</label>
+                {{ form.activo }}
+            </div>
+            <button type="submit" class="btn btn-primary" {% if not activos_disponibles %}disabled title="No hay activos disponibles en esta familia"{% endif %}>Gestionar dependencias</button>
+        </form>
+        {% if activos_disponibles %}
+            <hr style="margin: 30px 0 20px;">
+            <h3 style="font-size: 16px; margin-bottom: 15px;">Activos disponibles</h3>
+            <div class="table-responsive">
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Código</th>
+                            <th>TAG</th>
+                            <th>Ubicación</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for activo_item in activos_disponibles %}
+                            <tr>
+                                <td>{{ activo_item.nombre }}</td>
+                                <td>{{ activo_item.codigo }}</td>
+                                <td>{{ activo_item.tag|default:'—' }}</td>
+                                <td>{{ activo_item.ubicacion_fisica|default:'Sin ubicación' }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% endif %}
+    </div>
 </div>
 {% endblock %}

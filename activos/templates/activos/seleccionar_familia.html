@@ -1,12 +1,31 @@
-{% extends 'base.html' %}
+{% extends 'activos/base_activos.html' %}
+
+{% block title %}Seleccionar familia{% endblock %}
+
 {% block content %}
-<div class="container mt-5">
-  <h2>Seleccione Familia</h2>
-  <form method="post">
-    {% csrf_token %}
-    {{ form.familia.label_tag }}
-    {{ form.familia }}
-    <button type="submit" class="btn btn-primary mt-3">Siguiente</button>
-  </form>
+<div class="breadcrumb">
+    <a href="{% url 'activos:dashboard_activos' %}">Dashboard</a> /
+    Familias de activos
+</div>
+
+<div class="card" style="max-width: 600px; margin: 0 auto;">
+    <div class="card-header">
+        Seleccione una familia de activos
+    </div>
+    <div style="padding: 20px;">
+        {% if familias_disponibles %}
+            <p style="margin-bottom: 20px; color: #555;">Elija la familia que agrupa los activos específicos que desea gestionar.</p>
+        {% else %}
+            <div class="alert alert-warning" style="margin-bottom: 20px;">Aún no se han creado familias. Diríjase a <strong>Familias</strong> para registrar la primera.</div>
+        {% endif %}
+        <form method="post">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="id_familia">Familia</label>
+                {{ form.familia }}
+            </div>
+            <button type="submit" class="btn btn-primary">Continuar</button>
+        </form>
+    </div>
 </div>
 {% endblock %}

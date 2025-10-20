@@ -41,6 +41,17 @@
                     <td style="padding: 10px 0;">{{ activo.codigo }}</td>
                 </tr>
                 <tr>
+                    <td style="padding: 10px 0; font-weight: 600;">Familia:</td>
+                    <td style="padding: 10px 0;">
+                        {% if activo.familia %}
+                            <span class="badge badge-secondary">{{ activo.familia.nombre }}</span>
+                        {% else %}
+                            <span style="color: #999;">No asignada</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                <tr>
+                <tr>
                     <td style="padding: 10px 0; font-weight: 600;">Nivel:</td>
                     <td style="padding: 10px 0;">
                         <span class="badge badge-info">{{ activo.nivel_jerarquia.nombre_nivel }}</span>
@@ -102,13 +113,30 @@
         </div>
     </div>
     
-    <!-- Descripción -->
+   <!-- Descripción -->
     {% if activo.descripcion %}
     <div style="margin-bottom: 30px;">
         <h3 style="margin-bottom: 15px; color: #333;">Descripción</h3>
         <p style="line-height: 1.6; color: #555;">{{ activo.descripcion }}</p>
     </div>
     {% endif %}
+
+    <!-- Dependencias -->
+    <div style="margin-bottom: 30px;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h3 style="margin-bottom: 15px; color: #333;">Dependencias vinculadas</h3>
+            <a href="{% url 'activos:lista_dependencias' activo.id %}" class="btn btn-outline-primary btn-sm">Gestionar dependencias</a>
+        </div>
+        {% if dependencias %}
+            <ul style="padding-left: 20px;">
+                {% for dependencia in dependencias %}
+                    <li><strong>{{ dependencia.nombre }}</strong>{% if dependencia.descripcion %} - {{ dependencia.descripcion }}{% endif %}</li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p style="color: #999;">Este activo no tiene dependencias registradas todavía.</p>
+        {% endif %}
+    </div>
     
     <!-- Activos Hijos -->
     {% if hijos %}
