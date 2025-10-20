@@ -260,28 +260,18 @@ def vista_arbol_activos(request):
     # Obtener filtros
     nivel_id = request.GET.get('nivel')
     estado = request.GET.get('estado')
-    busqueda = request.GET.get('q')
+    busqueda = (request.GET.get('q') or '').strip()
     
     # Query base
-    activos = NodoActivo.objects.filter(
-        organizacion=organizacion
-    ).select_related(
-        'nivel_jerarquia', 'parent'
-    ).with_tree_fields()
-    
+    activos = (
+        NodoActivo.objects.filter(organizacion=organizacion)
+        .select_related('nivel_jerarquia', 'parent')
+        .with_tree_fields()
+    )
+
     # Aplicar filtros
     if nivel_id:
-        activos = NodoActivo.objects.filter(organizacion=organizacion,
-        nivel_jerarquia_id=nivel_id
-    ).select_related(
-        'nivel_jerarquia', 'parent'
-    )
-    else:
-        activos = NodoActivo.objects.filter(
-        organizacion=organizacion
-    ).select_related(
-        'nivel_jerarquia', 'parent'
-    ).with_tree_fields()
+        activos = activos.filter(nivel_jerarquia_id=nivel_id)
     if estado:
         activos = activos.filter(estado=estado)
     if busqueda:
@@ -374,29 +364,66 @@ def crear_activo(request, padre_id=None):
 def detalle_activo(request, activo_id):
     """Detalle de un activo"""
     organizacion = Organizacion.objects.first()  # Ajustar según tu lógica
+
+    if not organizacion:
+        messages.error(request, 'Debe configurar una organización antes de consultar activos.')
+        return redirect('activos:dashboard_activos')
+
     activo = get_object_or_404(
-        NodoActivo, 
-        id=activo_id, 
+        NodoActivo,
+        id=activo_id,
         organizacion=organizacion
     )
-    
+
     # Obtener hijos
-    hijos = activo.children.all()
-    
+    hijos = activo.children.select_related('nivel_jerarquia').all()
+    hijos_count = hijos.count()
+
     # Obtener documentos y dependencias
-    documentos = activo.documentos.all()
+    documentos = activo.documentos.select_related('subido_por').all()
+    documentos_count = documentos.count()
     dependencias = activo.dependencias.order_by('nombre')
+    dependencias_count = dependencias.count()
+
+    criticidad_badges = {
+        'alta': ('Alta', 'danger'),
+        'media': ('Media', 'warning'),
+        'baja': ('Baja', 'success'),
+    }
+
+    estado_badges = {
+        'activo': ('Activo', 'success'),
+        'mantenimiento': ('En Mantenimiento', 'warning'),
+    }
+
+    criticidad_label, criticidad_badge = criticidad_badges.get(
+        activo.criticidad,
+        ('No especificada', None),
+    )
+
+    estado_label, estado_badge = estado_badges.get(
+        activo.estado,
+        (activo.get_estado_display(), 'danger'),
+    )
 
     context = {
         'activo': activo,
         'hijos': hijos,
         'documentos': documentos,
         'dependencias': dependencias,
+        'has_dependencias': dependencias_count > 0,
+        'has_hijos': hijos_count > 0,
+        'has_documentos': documentos_count > 0,
+        'documentos_count': documentos_count,
+        'hijos_count': hijos_count,
+        'dependencias_count': dependencias_count,
+        'criticidad_label': criticidad_label,
+        'criticidad_badge': criticidad_badge,
+        'estado_label': estado_label,
+        'estado_badge': estado_badge,
     }
 
     return render(request, 'activos/detalle_activo.html', context)
-
-
 @login_required
 def editar_activo(request, activo_id):
     """Editar activo existente"""
@@ -447,6 +474,7 @@ def editar_activo(request, activo_id):
     }
 
     return render(request, 'activos/editar_activo.html', context)
+
 @login_required
 def eliminar_activo(request, activo_id):
     """Eliminar activo"""
