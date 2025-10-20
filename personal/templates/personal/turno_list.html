@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'personal/css/personal.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="personal-layout" id="turno-app">
+    <div class="personal-header">
+        <div>
+            <h1>Planificación de turnos</h1>
+            <p class="text-muted">Organiza turnos con visibilidad rápida de técnicos asignados y su disponibilidad.</p>
+        </div>
+        <div class="personal-actions">
+            <a href="{% url 'personal:tecnico_list' %}" class="personal-button neutral">👷 Técnicos</a>
+            <a href="{% url 'personal:ausencia_list' %}" class="personal-button secondary">🗓️ Ausencias</a>
+            {% if perms.personal.add_turno %}
+            <a href="{% url 'personal:turno_create' %}" class="personal-button">➕ Crear turno</a>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="personal-card">
+        {% if turnos %}
+        <table class="personal-table">
+            <thead>
+                <tr>
+                    <th>Turno</th>
+                    <th>Horario</th>
+                    <th>Técnicos asignados</th>
+                    <th>Creado por</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for turno in turnos %}
+                <tr>
+                    <td>
+                        
+                        {% if turno.descripcion %}
+                        <div class="text-muted" style="font-size: 0.85rem;">{{ turno.descripcion|truncatewords:14 }}</div>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {{ turno.fecha_inicio|date:"d M Y H:i" }}<br>
+                        <small class="text-muted">hasta {{ turno.fecha_fin|date:"d M Y H:i" }}</small>
+                    </td>
+                    <td>
+                        <div class="tag-list">
+                            {% for tecnico in turno.tecnicos.all %}
+                            <span>{{ tecnico.user.get_full_name|default:tecnico.user.username }}</span>
+                            {% empty %}
+                            <span>Sin asignaciones</span>
+                            {% endfor %}
+                        </div>
+                    </td>
+                    <td>{{ turno.creado_por.get_full_name|default:turno.creado_por.username }}</td>
+                    <td>
+                        <div class="table-actions">
+                            {% if perms.personal.change_turno %}
+                            <a href="{% url 'personal:turno_update' turno.pk %}">Editar</a>
+                            {% endif %}
+                            {% if perms.personal.delete_turno %}
+                            <a href="{% url 'personal:turno_delete' turno.pk %}" class="danger">Eliminar</a>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty-state">
+            <h3>📅 Todavía no has planificado turnos</h3>
+            <p>Genera turnos para coordinar tus recursos y visualizar la carga operativa.</p>
+            {% if perms.personal.add_turno %}
+            <a href="{% url 'personal:turno_create' %}" class="personal-button">➕ Crear turno</a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="personal-card" id="agenda-widget" style="display:none;">
+        <h2 style="margin-bottom:16px; color:var(--text-primary);">Resumen rápido</h2>
+        <div style="display:grid; gap:18px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));">
+            <div style="background:var(--surface-muted); padding:18px; border-radius:var(--radius-md);">
+                <strong style="font-size:1.25rem;" id="turnos-semana">0</strong>
+                <p class="text-muted">Turnos próximos 7 días</p>
+            </div>
+            <div style="background:var(--surface-muted); padding:18px; border-radius:var(--radius-md);">
+                <strong style="font-size:1.25rem;" id="ausencias-mes">0</strong>
+                <p class="text-muted">Ausencias activas últimos 30 días</p>
+            </div>
+        </div>
+        <div id="agenda-detalle" style="margin-top:20px;">
+            <h3 style="margin-bottom:10px; color:var(--text-primary);">Próximos turnos</h3>
+            <ul id="agenda-turnos" style="list-style:none; padding:0; margin:0; display:grid; gap:8px;"></ul>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', async () => {
+    try {
+        const response = await fetch('{% url "personal:agenda_resumen" %}');
+        if (!response.ok) {
+            return;
+        }
+        const data = await response.json();
+        const widget = document.getElementById('agenda-widget');
+        widget.style.display = 'block';
+        const turnos = data.turnos || [];
+        const ausencias = data.ausencias || [];
+        document.getElementById('turnos-semana').textContent = turnos.length;
+        document.getElementById('ausencias-mes').textContent = ausencias.length;
+        const lista = document.getElementById('agenda-turnos');
+        if (turnos.length === 0) {
+            lista.innerHTML = '<li class="text-muted">Sin turnos próximos registrados.</li>';
+        } else {
+            lista.innerHTML = '';
+            turnos.slice(0, 5).forEach((turno) => {
+                const item = document.createElement('li');
+                item.style.padding = '12px 14px';
+                item.style.borderRadius = '12px';
+                item.style.background = 'var(--surface-muted)';
+                item.innerHTML = `<strong style="color:${turno.color}">${turno.title}</strong><br>` +
+                    `<small class="text-muted">${new Date(turno.start).toLocaleString()} · ${turno.tecnicos.join(', ') || 'Sin asignar'}</small>`;
+                lista.appendChild(item);
+            });
+        }
+    } catch (error) {
+        console.warn('No se pudo cargar el resumen de agenda', error);
+    }
+});
+</script>
+{% endblock %}

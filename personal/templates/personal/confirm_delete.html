@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'personal/css/personal.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="personal-layout">
+    <div class="personal-header">
+        <div>
+            <h1>¿Eliminar elemento?</h1>
+            <p class="text-muted">Esta acción no puede deshacerse. Se eliminará de manera permanente.</p>
+        </div>
+        <div class="personal-actions">
+            <a href="{{ request.META.HTTP_REFERER|default:'#' }}" class="personal-button neutral">↩️ Cancelar</a>
+        </div>
+    </div>
+    <div class="personal-card">
+        <form method="post" style="display:flex; flex-direction:column; gap:18px;">
+            {% csrf_token %}
+            <p style="font-size:1rem; color:var(--text-primary);">Confirma que deseas eliminar <strong>{{ object }}</strong>.</p>
+            <div style="display:flex; gap:12px;">
+                <button type="submit" class="personal-button" style="background:var(--danger); box-shadow:0 10px 20px rgba(220, 38, 38, 0.25);">🗑️ Sí, eliminar</button>
+                <a href="{{ request.META.HTTP_REFERER|default:'#' }}" class="personal-button neutral" style="background:#cbd5f5; color:#1f2933;">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'personal/css/personal.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="personal-layout">
+    <div class="personal-header">
+        <div>
+            <h1>Ausencias y licencias</h1>
+            <p class="text-muted">Visualiza y controla ausencias para ajustar la planificación operativa.</p>
+        </div>
+        <div class="personal-actions">
+            <a href="{% url 'personal:tecnico_list' %}" class="personal-button neutral">👷 Técnicos</a>
+            <a href="{% url 'personal:turno_list' %}" class="personal-button secondary">📅 Turnos</a>
+            {% if perms.personal.add_ausencia %}
+            <a href="{% url 'personal:ausencia_create' %}" class="personal-button">➕ Registrar ausencia</a>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="personal-card">
+        {% if ausencias %}
+        <table class="personal-table">
+            <thead>
+                <tr>
+                    <th>Técnico</th>
+                    <th>Tipo</th>
+                    <th>Fechas</th>
+                    <th>Estado</th>
+                    <th>Turno relacionado</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for ausencia in ausencias %}
+                <tr>
+                    <td>{{ ausencia.tecnico }}</td>
+                    <td>{{ ausencia.get_tipo_display }}</td>
+                    <td>
+                        {{ ausencia.fecha_inicio|date:"d M Y" }}<br>
+                        <small class="text-muted">hasta {{ ausencia.fecha_fin|date:"d M Y" }}</small>
+                    </td>
+                    <td><span class="status-pill {{ ausencia.estado }}">{{ ausencia.get_estado_display }}</span></td>
+                    <td>
+                        {% if ausencia.turno_relacionado %}
+                        {{ ausencia.turno_relacionado.nombre }}
+                        {% else %}
+                        <span class="text-muted">Sin turno asociado</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="table-actions">
+                            {% if perms.personal.change_ausencia %}
+                            <a href="{% url 'personal:ausencia_update' ausencia.pk %}">Editar</a>
+                            {% endif %}
+                            {% if perms.personal.delete_ausencia %}
+                            <a href="{% url 'personal:ausencia_delete' ausencia.pk %}" class="danger">Eliminar</a>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty-state">
+            <h3>🧭 Ninguna ausencia registrada</h3>
+            <p>Controla licencias, vacaciones o permisos especiales de tus técnicos.</p>
+            {% if perms.personal.add_ausencia %}
+            <a href="{% url 'personal:ausencia_create' %}" class="personal-button">➕ Registrar ausencia</a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

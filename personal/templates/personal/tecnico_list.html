@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'personal/css/personal.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="personal-layout">
+    <div class="personal-header">
+        <div>
+            <h1>Talento Operativo</h1>
+            <p class="text-muted">Gestiona perfiles, habilidades y disponibilidad de los técnicos operativos.</p>
+        </div>
+        <div class="personal-actions">
+            <a href="{% url 'personal:turno_list' %}" class="personal-button secondary">📅 Ver turnos</a>
+            <a href="{% url 'personal:ausencia_list' %}" class="personal-button neutral">🗓️ Ausencias</a>
+            {% if perms.personal.add_tecnicooperativo %}
+            <a href="{% url 'personal:tecnico_create' %}" class="personal-button">➕ Nuevo técnico</a>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="personal-card">
+        {% if tecnicos %}
+        <table class="personal-table">
+            <thead>
+                <tr>
+                    <th>Técnico</th>
+                    <th>Organización</th>
+                    <th>Especialidad</th>
+                    <th>Contacto</th>
+                    <th>Estado</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for tecnico in tecnicos %}
+                <tr>
+                    <td>
+                        <strong>{{ tecnico.user.get_full_name|default:tecnico.user.username }}</strong><br>
+                        <small class="text-muted">ID: {{ tecnico.numero_identificacion }}</small>
+                    </td>
+                    <td>{{ tecnico.perfil.organizacion }}</td>
+                    <td>
+                        {{ tecnico.especialidad }}
+                        {% if tecnico.notas %}
+                        <div class="text-muted" style="font-size: 0.85rem;">{{ tecnico.notas|truncatewords:12 }}</div>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="tag-list">
+                            <span>📞 {{ tecnico.telefono_contacto }}</span>
+                            {% if tecnico.correo_corporativo %}
+                            <span>✉️ {{ tecnico.correo_corporativo }}</span>
+                            {% endif %}
+                        </div>
+                    </td>
+                    <td>
+                        <span class="status-pill {{ tecnico.estado }}">{{ tecnico.get_estado_display }}</span>
+                    </td>
+                    <td>
+                        <div class="table-actions">
+                            {% if perms.personal.change_tecnicooperativo %}
+                            <a href="{% url 'personal:tecnico_update' tecnico.pk %}">Editar</a>
+                            {% endif %}
+                            {% if perms.personal.delete_tecnicooperativo %}
+                            <a href="{% url 'personal:tecnico_delete' tecnico.pk %}" class="danger">Eliminar</a>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty-state">
+            <h3>👷‍♂️ Aún no hay técnicos registrados</h3>
+            <p>Agrega tu primer técnico operativo para comenzar a planificar turnos y ausencias.</p>
+            {% if perms.personal.add_tecnicooperativo %}
+            <a href="{% url 'personal:tecnico_create' %}" class="personal-button">➕ Registrar técnico</a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

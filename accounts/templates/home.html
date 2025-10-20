@@ -7,12 +7,16 @@
         <p style="font-size: 18px; color: #666; margin-bottom: 15px;">Estás autenticado como <strong>{{ user.username }}</strong></p>
         <p style="color: #999; margin-bottom: 30px;">Sistema de gestión de mantenimiento para Estra</p>
         
-        <div style="display: flex; gap: 15px;">
-            <a href="{% url 'activos:dashboard_activos' %}" 
+        <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+            <a href="{% url 'activos:dashboard_activos' %}
                style="display: inline-block; padding: 15px 30px; background: #e52d27; color: white; text-decoration: none; border-radius: 8px; font-weight: 600;">
                 📦 Gestión de Activos
             </a>
-            <a href="{% url 'admin:index' %}" 
+             <a href="{% url 'personal:tecnico_list' %}"
+               style="display: inline-block; padding: 15px 30px; background: #0ea5e9; color: white; text-decoration: none; border-radius: 8px; font-weight: 600;">
+                👷 Gestión de Personal
+            </a>
+            <a href="{% url 'admin:index' %}"
                style="display: inline-block; padding: 15px 30px; background: #0066cc; color: white; text-decoration: none; border-radius: 8px; font-weight: 600;">
                 ⚙️ Administración
             </a>
