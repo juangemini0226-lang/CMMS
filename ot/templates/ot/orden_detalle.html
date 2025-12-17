@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+{% block content %}
+<style>
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 12px;
+    }
+    .card {
+        background: white;
+        border-radius: 14px;
+        padding: 16px;
+        border: 1px solid #e5e7eb;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+    }
+    .item {
+        margin-bottom: 8px;
+    }
+    .item span {
+        color: #6b7280;
+        display: block;
+        font-size: 0.9rem;
+    }
+    .estado-form textarea, .estado-form select {
+        width: 100%;
+        padding: 10px 12px;
+        border-radius: 12px;
+        border: 1px solid #d1d5db;
+        margin-top: 6px;
+    }
+    .estado-form button {
+        background: linear-gradient(135deg, #e52d27, #b31217);
+        color: white;
+        border: none;
+        padding: 10px 16px;
+        border-radius: 12px;
+        cursor: pointer;
+        font-weight: 700;
+        margin-top: 10px;
+    }
+    .timeline {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    .timeline li {
+        padding: 12px 0;
+        border-bottom: 1px solid #e5e7eb;
+    }
+    .timeline li:last-child { border-bottom: none; }
+    .pill {
+        display: inline-block;
+        padding: 6px 10px;
+        border-radius: 999px;
+        font-weight: 600;
+        background: #eef2ff;
+        color: #4338ca;
+    }
+</style>
+
+<div class="page-toolbar">
+    <div>
+        <h1>{{ orden.codigo }} · {{ orden.titulo }}</h1>
+        <p class="meta">Estado: {{ orden.get_estado_display }} · Prioridad: {{ orden.get_prioridad_display }}</p>
+    </div>
+    <div class="toolbar-actions">
+        <a class="back-button" href="{% url 'ot:orden_list' %}">← Regresar</a>
+        <a class="back-button" href="{% url 'ot:orden_editar' orden.pk %}">✏️ Editar datos</a>
+    </div>
+</div>
+
+{% if messages %}
+    <div class="card" style="border-color:#c7d2fe; background:#eef2ff;">
+        <ul style="margin:0; padding-left:18px;">
+            {% for message in messages %}
+                <li>{{ message }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+{% endif %}
+
+<div class="info-grid">
+    <div class="card">
+        <div class="item">
+            <span>Equipo o activo</span>
+            <strong>{{ orden.equipo }}</strong>
+        </div>
+        <div class="item">
+            <span>Responsable</span>
+            <strong>{{ orden.responsable|default:"Sin asignar" }}</strong>
+        </div>
+        <div class="item">
+            <span>Vínculo con novedad</span>
+            {% if orden.novedad_origen %}
+                <strong>{{ orden.novedad_origen.titulo }}</strong> · {{ orden.novedad_origen.fecha }}
+            {% else %}
+                <strong>Sin novedad asociada</strong>
+            {% endif %}
+        </div>
+        <div class="item">
+            <span>Programación</span>
+            <strong>
+                {% if orden.fecha_programada %}Fecha inicio: {{ orden.fecha_programada }}{% else %}No definida{% endif %}
+                {% if orden.fecha_cierre_compromiso %} · Cierre: {{ orden.fecha_cierre_compromiso }}{% endif %}
+            </strong>
+        </div>
+        <div class="item">
+            <span>Descripción</span>
+            <p>{{ orden.descripcion|default:"Sin descripción" }}</p>
+        </div>
+    </div>
+
+    <div class="card estado-form">
+        <h3>Actualizar estado y trazabilidad</h3>
+        <form method="post" action="{% url 'ot:orden_actualizar_estado' orden.pk %}">
+            {% csrf_token %}
+            <label for="{{ estado_form.estado.id_for_label }}">{{ estado_form.estado.label }}</label>
+            {{ estado_form.estado }}
+            <label for="{{ estado_form.nota.id_for_label }}">{{ estado_form.nota.label }}</label>
+            {{ estado_form.nota }}
+            <button type="submit">Guardar movimiento</button>
+        </form>
+    </div>
+
+    <div class="card" style="grid-column: 1 / -1;">
+        <div style="display:flex; justify-content: space-between; align-items: center;">
+            <h3>Eventos y trazabilidad</h3>
+            <span class="pill">{{ eventos|length }} registros</span>
+        </div>
+        {% if eventos %}
+        <ul class="timeline">
+            {% for evento in eventos %}
+            <li>
+                <div style="display:flex; justify-content: space-between; align-items: center;">
+                    <strong>{{ evento.get_estado_display }}</strong>
+                    <span class="meta">{{ evento.creado_el }}</span>
+                </div>
+                <div class="meta">Registrado por: {{ evento.creado_por|default:"-" }}</div>
+                {% if evento.descripcion %}<p>{{ evento.descripcion }}</p>{% endif %}
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+            <p class="meta">Sin eventos aún. Cada cambio de estado guardará un registro.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

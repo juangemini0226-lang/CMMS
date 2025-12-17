@@ -1,0 +1,264 @@
+{% extends "base.html" %}
+{% block content %}
+<style>
+    .resumen-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 12px;
+        margin-bottom: 18px;
+    }
+    .resumen-card {
+        background: white;
+        border-radius: 14px;
+        padding: 14px;
+        border: 1px solid #e5e7eb;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+    }
+    .board {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 16px;
+    }
+    .column {
+        background: #ffffff;
+        border: 1px solid #e5e7eb;
+        border-radius: 14px;
+        padding: 14px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+    }
+    .col-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+    .pill {
+        padding: 6px 10px;
+        border-radius: 999px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .pill-pill {
+        background-color: var(--pill-color, #e5e7eb);
+        color: var(--pill-text, #111827);
+    }
+    .card {
+        background: #f9fafb;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 12px;
+        margin-bottom: 10px;
+    }
+    .card h4 { margin-bottom: 4px; }
+    .meta { color: #6b7280; font-size: 0.9rem; }
+    .tag {
+        display: inline-block;
+        background: #eef2ff;
+        color: #4338ca;
+        padding: 4px 8px;
+        border-radius: 999px;
+        font-size: 0.8rem;
+        margin-right: 4px;
+    }
+    .acciones {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+        margin-top: 10px;
+        flex-wrap: wrap;
+    }
+    .acciones a {
+        text-decoration: none;
+        font-weight: 600;
+        color: #b31217;
+    }
+    .acciones form {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+    }
+    .acciones select, .acciones button {
+        padding: 6px 10px;
+        border-radius: 10px;
+        border: 1px solid #d1d5db;
+    }
+    .acciones button {
+        background: linear-gradient(135deg, #e52d27, #b31217);
+        color: white;
+        border: none;
+        cursor: pointer;
+    }
+    .filtros {
+        background: white;
+        padding: 12px;
+        border-radius: 14px;
+        border: 1px solid #e5e7eb;
+        box-shadow: 0 8px 18px rgba(0,0,0,0.04);
+        margin-bottom: 16px;
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+    .filtros input, .filtros select {
+        padding: 10px 12px;
+        border-radius: 12px;
+        border: 1px solid #d1d5db;
+        min-width: 200px;
+    }
+    .novedades-panel {
+        background: linear-gradient(135deg, #fff7ed, #fff);
+        border: 1px solid #fed7aa;
+        border-radius: 14px;
+        padding: 14px;
+        margin-bottom: 16px;
+    }
+    .novedad-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 0;
+        border-bottom: 1px solid #ffe4c7;
+    }
+    .novedad-item:last-child { border-bottom: none; }
+    .btn-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 12px;
+        border-radius: 10px;
+        border: 1px solid #f59e0b;
+        color: #b45309;
+        text-decoration: none;
+        font-weight: 600;
+        background: #fff7ed;
+    }
+    .empty {
+        color: #9ca3af;
+        font-style: italic;
+        font-size: 0.9rem;
+    }
+</style>
+
+<div class="page-toolbar">
+    <div>
+        <h1>Órdenes de trabajo (OT)</h1>
+        <p class="meta">Planifica, ejecuta y cierra las órdenes con trazabilidad.</p>
+    </div>
+    <div class="toolbar-actions">
+        <a class="back-button" href="{% url 'ot:orden_crear' %}">➕ Crear OT</a>
+    </div>
+</div>
+
+{% if messages %}
+    <div class="novedades-panel" style="border-color:#c7d2fe; background: #eef2ff; color:#312e81; margin-top: -6px;">
+        <ul style="margin:0; padding-left:18px;">
+            {% for message in messages %}
+                <li>{{ message }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+{% endif %}
+
+<div class="resumen-grid">
+    {% for estado in estados_tablero %}
+    <div class="resumen-card">
+        <div style="display:flex; align-items:center; justify-content: space-between;">
+            <div>
+                <strong>{{ estado.icono }} {{ estado.titulo }}</strong>
+                <p class="meta">{{ estado.descripcion }}</p>
+            </div>
+            <div class="pill pill-pill" style="--pill-color: {{ estado.color }}; --pill-text: {{ estado.color }};">{{ estado.conteo_global|default:0 }}</div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<form method="get" class="filtros">
+    <div style="flex:1;">
+        <label>Búsqueda</label><br>
+        <input type="text" name="q" value="{{ busqueda }}" placeholder="Equipo, título, consecutivo, descripción...">
+    </div>
+    <div>
+        <label>Estado</label><br>
+        <select name="estado">
+            <option value="">Todos</option>
+            {% for estado in estados_tablero %}
+                <option value="{{ estado.id }}" {% if estado_filtro == estado.id %}selected{% endif %}>{{ estado.titulo }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div>
+        <button type="submit" class="back-button">Filtrar</button>
+    </div>
+</form>
+
+{% if novedades_pendientes %}
+<div class="novedades-panel">
+    <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+        <strong>📌 Novedades pendientes que necesitan OT</strong>
+        <span class="meta">Toma las novedades y conviértelas en orden de trabajo</span>
+    </div>
+    {% for novedad in novedades_pendientes %}
+    <div class="novedad-item">
+        <div>
+            <div style="font-weight:600;">{{ novedad.titulo }}</div>
+            <div class="meta">{{ novedad.equipo }} · {{ novedad.fecha }}</div>
+        </div>
+        <a class="btn-link" href="{% url 'ot:orden_desde_novedad' novedad.id %}">Crear OT →</a>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<div class="board">
+    {% for estado in estados_tablero %}
+    <div class="column">
+        <div class="col-head">
+            <div>
+                <strong>{{ estado.icono }} {{ estado.titulo }}</strong>
+                <div class="meta">{{ estado.descripcion }}</div>
+            </div>
+            <span class="pill pill-pill" style="--pill-color: {{ estado.color }}; --pill-text: {{ estado.color }};">{{ estado.total }}</span>
+        </div>
+        {% with lista=estado.ordenes %}
+            {% if lista %}
+                {% for orden in lista %}
+                <div class="card">
+                    <div style="display:flex; justify-content: space-between; align-items: center;">
+                        <h4>{{ orden.codigo }} · {{ orden.titulo }}</h4>
+                        <span class="tag">{{ orden.get_prioridad_display }}</span>
+                    </div>
+                    <div class="meta">{{ orden.equipo }}{% if orden.responsable %} · Responsable: {{ orden.responsable }}{% endif %}</div>
+                    {% if orden.novedad_origen %}
+                        <div class="meta">Desde novedad: {{ orden.novedad_origen.titulo }}</div>
+                    {% endif %}
+                    <div class="acciones">
+                        <a href="{% url 'ot:orden_detalle' orden.pk %}">Ver detalle</a>
+                        <a href="{% url 'ot:orden_editar' orden.pk %}">Editar</a>
+                        <form method="post" action="{% url 'ot:orden_actualizar_estado' orden.pk %}">
+                            {% csrf_token %}
+                            <select name="estado">
+                                {% for opcion, nombre in orden.ESTADOS %}
+                                    <option value="{{ opcion }}" {% if opcion == orden.estado %}selected{% endif %}>{{ nombre }}</option>
+                                {% endfor %}
+                            </select>
+                            <input type="hidden" name="nota" value="">
+                            <button type="submit">Mover</button>
+                        </form>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <p class="empty">Sin órdenes en este estado.</p>
+            {% endif %}
+        {% endwith %}
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'reportes',
     'personal',
     'novedades',
+    'ot',
 ]
 
 MIDDLEWARE = [
