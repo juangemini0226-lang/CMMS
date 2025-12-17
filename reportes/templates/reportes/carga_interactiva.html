@@ -1,0 +1,304 @@
+{% extends "base.html" %}
+
+{% block extra_head %}
+<style>
+    .layout {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 24px;
+    }
+    .card {
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+        padding: 24px;
+        border: 1px solid rgba(0,0,0,0.05);
+    }
+    .card h2 {
+        margin-bottom: 12px;
+        color: #b31217;
+    }
+    .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: rgba(179, 18, 23, 0.08);
+        color: #b31217;
+        padding: 6px 12px;
+        border-radius: 999px;
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+    .upload-area {
+        border: 2px dashed rgba(179, 18, 23, 0.35);
+        border-radius: 16px;
+        padding: 26px;
+        text-align: center;
+        background: linear-gradient(180deg, rgba(179,18,23,0.05) 0%, rgba(179,18,23,0.02) 100%);
+        transition: all 0.2s ease;
+        cursor: pointer;
+    }
+    .upload-area.dragover {
+        border-color: #b31217;
+        background: rgba(179,18,23,0.08);
+        box-shadow: inset 0 0 0 2px rgba(179,18,23,0.1);
+    }
+    .upload-area p {
+        color: #4b5563;
+        margin: 6px 0;
+    }
+    .file-list {
+        margin-top: 16px;
+        display: grid;
+        gap: 10px;
+    }
+    .file-pill {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 14px;
+        background: #f9fafb;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        font-weight: 600;
+        color: #111827;
+    }
+    .file-pill small {
+        font-weight: 500;
+        color: #6b7280;
+    }
+    .stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 12px;
+    }
+    .stat-card {
+        background: #0ea5e9;
+        color: white;
+        padding: 16px;
+        border-radius: 14px;
+        display: grid;
+        gap: 4px;
+    }
+    .stat-card.secondary {
+        background: #10b981;
+    }
+    .stat-card.tertiary {
+        background: #6366f1;
+    }
+    .timeline {
+        display: grid;
+        gap: 12px;
+    }
+    .timeline-item {
+        padding: 12px 14px;
+        background: #f9fafb;
+        border-radius: 12px;
+        border: 1px solid #e5e7eb;
+    }
+    .timeline-item span {
+        display: inline-block;
+        background: rgba(179, 18, 23, 0.08);
+        color: #b31217;
+        padding: 4px 10px;
+        border-radius: 999px;
+        font-weight: 700;
+        font-size: 0.85rem;
+        margin-right: 8px;
+    }
+    .success-banner {
+        background: #ecfdf3;
+        border: 1px solid #bbf7d0;
+        padding: 14px 18px;
+        border-radius: 12px;
+        color: #166534;
+        margin-bottom: 16px;
+    }
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        padding: 10px 18px;
+        border-radius: 12px;
+        font-weight: 700;
+        text-decoration: none;
+        transition: transform 0.15s ease, box-shadow 0.2s ease;
+    }
+    .btn:hover { transform: translateY(-1px); }
+    .btn-danger {
+        background: linear-gradient(135deg, #e52d27, #b31217);
+        color: white;
+        border: none;
+        box-shadow: 0 8px 16px rgba(179,18,23,0.2);
+    }
+    .btn-outline-secondary {
+        background: white;
+        color: #374151;
+        border: 1px solid #d1d5db;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    }
+    .form-control {
+        width: 100%;
+        padding: 12px;
+        border-radius: 12px;
+        border: 1px solid #e5e7eb;
+        background: #f9fafb;
+        font-size: 1rem;
+    }
+    .form-control:focus {
+        outline: none;
+        border-color: #b31217;
+        box-shadow: 0 0 0 3px rgba(179,18,23,0.15);
+    }
+    .tipo-opcion input {
+        margin-right: 6px;
+    }
+    @media (max-width: 900px) {
+        .layout {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock extra_head %}
+
+{% block toolbar %}
+<div class="page-toolbar">
+    <button type="button" class="back-button" id="back-button">⬅️ Volver</button>
+    <div class="toolbar-actions">
+        <span class="badge">🚀 Nuevo cargador interactivo</span>
+    </div>
+</div>
+{% endblock toolbar %}
+
+{% block content %}
+<div class="layout">
+    <div class="card">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+            <div>
+                <h2>Carga interactiva de reportes y órdenes</h2>
+                <p style="color:#4b5563;">Arrastra tus archivos, clasifícalos y acompáñalos con contexto antes de enviarlos.</p>
+            </div>
+            <span class="badge">✨ Sin recargar la página</span>
+        </div>
+        {% if cargados %}
+        <div class="success-banner">
+            <strong>Archivos cargados:</strong>
+            {{ cargados|join:', ' }}
+        </div>
+        {% endif %}
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="stats">
+                <div class="stat-card">
+                    <div style="font-size:0.9rem;opacity:0.9;">Tipo seleccionado</div>
+                    <div style="font-size:1.2rem;">{{ form.tipo }}</div>
+                </div>
+                <div class="stat-card secondary">
+                    <div style="font-size:0.9rem;opacity:0.9;">Archivos soportados</div>
+                    <div style="font-size:1.2rem;">PDF, Office, CSV, Imágenes</div>
+                </div>
+                <div class="stat-card tertiary">
+                    <div style="font-size:0.9rem;opacity:0.9;">Tip</div>
+                    <div style="font-size:1.2rem;">Agrega contexto para priorizar</div>
+                </div>
+            </div>
+
+            <div class="upload-area" id="drop-area">
+                <h3 style="color:#111827;">Suelta aquí tus reportes o órdenes</h3>
+                <p>También puedes hacer clic para explorar tus carpetas.</p>
+                {{ form.archivos }}
+                <div class="file-list" id="file-list"></div>
+            </div>
+
+            <div style="margin-top:16px;">
+                {{ form.descripcion.label_tag }}
+                {{ form.descripcion }}
+                {% if form.descripcion.errors %}
+                    <div class="text-danger">{{ form.descripcion.errors }}</div>
+                {% endif %}
+            </div>
+
+            {% if form.errors %}
+                <div class="text-danger" style="margin-top:10px;">
+                    {{ form.errors }}
+                </div>
+            {% endif %}
+
+            <div style="display:flex;gap:12px;margin-top:18px;flex-wrap:wrap;">
+                <button type="submit" class="btn btn-danger">Cargar archivos</button>
+                <a href="{% url 'reportes:seleccionar_reporte' %}" class="btn btn-outline-secondary">Generar reportes PDF</a>
+            </div>
+        </form>
+    </div>
+
+    <div class="card">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+            <h2>Últimas cargas</h2>
+            <span class="badge">⏱️ Tiempo real</span>
+        </div>
+        <div class="timeline" style="margin-top:12px;">
+            {% for doc in recientes %}
+            <div class="timeline-item">
+                <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;">
+                    <div>
+                        <span>{{ doc.get_tipo_display }}</span>
+                        <strong>{{ doc.nombre_original }}</strong>
+                    </div>
+                    <small style="color:#6b7280;">{{ doc.fecha_subida|date:"d M, H:i" }}</small>
+                </div>
+                {% if doc.descripcion %}
+                    <p style="color:#4b5563;margin-top:6px;">{{ doc.descripcion }}</p>
+                {% endif %}
+            </div>
+            {% empty %}
+            <p style="color:#6b7280;">Aún no hay archivos cargados. ¡Empieza arriba!</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<script>
+    const dropArea = document.getElementById('drop-area');
+    const fileInput = document.querySelector('.file-input');
+    const fileList = document.getElementById('file-list');
+
+    const renderFiles = (files) => {
+        fileList.innerHTML = '';
+        Array.from(files).forEach((file) => {
+            const pill = document.createElement('div');
+            pill.className = 'file-pill';
+            pill.innerHTML = `<span>${file.name}</span><small>${(file.size / 1024).toFixed(1)} KB</small>`;
+            fileList.appendChild(pill);
+        });
+    };
+
+    dropArea.addEventListener('click', () => fileInput.click());
+
+    fileInput.addEventListener('change', (e) => {
+        renderFiles(e.target.files);
+    });
+
+    ['dragenter', 'dragover'].forEach(eventName => {
+        dropArea.addEventListener(eventName, (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            dropArea.classList.add('dragover');
+        });
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+        dropArea.addEventListener(eventName, (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            dropArea.classList.remove('dragover');
+        });
+    });
+
+    dropArea.addEventListener('drop', (e) => {
+        const files = e.dataTransfer.files;
+        fileInput.files = files;
+        renderFiles(files);
+    });
+</script>
+{% endblock content %}

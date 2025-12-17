@@ -1,0 +1,200 @@
+{% extends "base.html" %}
+{% block content %}
+<style>
+    .text-muted { color: #6b7280; }
+    .form-control, .form-select {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid #d1d5db;
+        border-radius: 10px;
+    }
+    .form-control:focus, .form-select:focus {
+        outline: none;
+        border-color: #b31217;
+        box-shadow: 0 0 0 3px rgba(179, 18, 23, 0.15);
+    }
+    .form-check-input { margin-right: 6px; }
+    .novedades-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        align-items: start;
+    }
+    .novedades-card {
+        background: white;
+        border-radius: 14px;
+        padding: 18px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+        border: 1px solid #e5e7eb;
+    }
+    .novedades-card h2 {
+        margin-bottom: 8px;
+        color: #b31217;
+    }
+    .novedades-card p {
+        margin-bottom: 12px;
+        color: #6b7280;
+    }
+    .campo-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 10px;
+    }
+    .campo-table th, .campo-table td {
+        border-bottom: 1px solid #e5e7eb;
+        padding: 10px 6px;
+        text-align: left;
+    }
+    .campo-table th {
+        color: #6b7280;
+        font-size: 0.9rem;
+    }
+    .tag {
+        display: inline-block;
+        background: #fef2f2;
+        color: #b31217;
+        padding: 4px 10px;
+        border-radius: 999px;
+        font-size: 0.8rem;
+        margin: 2px;
+    }
+    .form-actions {
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+        margin-top: 10px;
+    }
+    .btn-primary {
+        background: linear-gradient(135deg, #e52d27, #b31217);
+        color: white;
+        border: none;
+        padding: 10px 16px;
+        border-radius: 10px;
+        cursor: pointer;
+        font-weight: 600;
+        box-shadow: 0 10px 20px rgba(179, 18, 23, 0.2);
+    }
+    .btn-secondary {
+        background: #f3f4f6;
+        color: #374151;
+        border: 1px solid #e5e7eb;
+        padding: 10px 16px;
+        border-radius: 10px;
+        cursor: pointer;
+        font-weight: 600;
+    }
+    .section-title {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 12px;
+    }
+    .small-link {
+        color: #b31217;
+        font-weight: 600;
+        text-decoration: none;
+    }
+    .small-link:hover {
+        text-decoration: underline;
+    }
+</style>
+
+<div class="page-toolbar">
+    <div>
+        <h1>Campos para novedades</h1>
+        <p class="text-muted">Crea y edita campos padre, hijos y subopciones alineadas con ISO 14224.</p>
+    </div>
+    <div class="toolbar-actions">
+        <a class="back-button" href="{% url 'novedades:novedad_list' %}">← Volver al tablero diario</a>
+    </div>
+</div>
+
+<div class="novedades-grid">
+    <div class="novedades-card">
+        <h2>Definir estructura</h2>
+        <p>Primero agrega campos padre (p.e. Sistema de inyección, Refrigeración, Estructural), luego campos hijo y sus subopciones.</p>
+
+        <div class="section-title"><strong>Campos padre</strong></div>
+        <form method="post" class="mb-3">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="padre">
+            {{ campo_padre_form.non_field_errors }}
+            {{ campo_padre_form.as_p }}
+            <div class="form-actions">
+                <button type="submit" class="btn-primary">Guardar campo padre</button>
+            </div>
+        </form>
+
+        <div class="section-title"><strong>Campos hijo</strong></div>
+        <form method="post" class="mb-3">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="hijo">
+            {{ campo_hijo_form.non_field_errors }}
+            {{ campo_hijo_form.as_p }}
+            <div class="form-actions">
+                <button type="submit" class="btn-primary">Guardar campo hijo</button>
+            </div>
+        </form>
+
+        <div class="section-title"><strong>Subopciones</strong></div>
+        <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="subopcion">
+            {{ subopcion_form.non_field_errors }}
+            {{ subopcion_form.as_p }}
+            <div class="form-actions">
+                <button type="submit" class="btn-primary">Agregar subopción</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="novedades-card">
+        <h2>Campos disponibles</h2>
+        <p>Consulta y edita rápidamente la estructura que verán los usuarios al registrar una novedad.</p>
+        {% if campos %}
+        <table class="campo-table">
+            <thead>
+                <tr>
+                    <th>Campo padre</th>
+                    <th>Campos hijo</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for campo in campos %}
+                <tr>
+                    <td>
+                        <strong>{{ campo.nombre }}</strong>
+                        {% if not campo.activo %}<span class="tag">Inactivo</span>{% endif %}
+                        <div><a href="{% url 'novedades:editar_campo_padre' campo.pk %}" class="small-link">Editar</a></div>
+                    </td>
+                    <td>
+                        {% if campo.hijos.all %}
+                            {% for hijo in campo.hijos.all %}
+                                <div style="margin-bottom: 6px;">
+                                    <strong>{{ hijo.nombre }}</strong>
+                                    {% if not hijo.activo %}<span class="tag">Inactivo</span>{% endif %}
+                                    <a href="{% url 'novedades:editar_campo_hijo' hijo.pk %}" class="small-link">Editar</a>
+                                    {% if hijo.subopciones.all %}
+                                        <div>
+                                            {% for sub in hijo.subopciones.all %}
+                                                <span class="tag">{{ sub.nombre }}</span>
+                                                <a href="{% url 'novedades:editar_subopcion_campo' sub.pk %}" class="small-link">Editar</a>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <em class="text-muted">Agrega campos hijo desde el formulario lateral.</em>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p class="text-muted">Aún no hay campos configurados.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

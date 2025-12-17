@@ -1,0 +1,276 @@
+{% extends "base.html" %}
+{% block content %}
+<style>
+    .text-muted { color: #6b7280; }
+    .form-control, .form-select {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid #d1d5db;
+        border-radius: 10px;
+    }
+    .form-control:focus, .form-select:focus {
+        outline: none;
+        border-color: #b31217;
+        box-shadow: 0 0 0 3px rgba(179, 18, 23, 0.15);
+    }
+    .form-check-input { margin-right: 6px; }
+    .novedades-card {
+        background: white;
+        border-radius: 14px;
+        padding: 18px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+        border: 1px solid #e5e7eb;
+        margin-bottom: 18px;
+    }
+    .form-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 12px;
+    }
+    .detalle-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 10px;
+        align-items: end;
+        margin-bottom: 12px;
+    }
+    .form-actions {
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+        margin-top: 12px;
+    }
+    .btn-primary {
+        background: linear-gradient(135deg, #e52d27, #b31217);
+        color: white;
+        border: none;
+        padding: 10px 16px;
+        border-radius: 10px;
+        cursor: pointer;
+        font-weight: 600;
+        box-shadow: 0 10px 20px rgba(179, 18, 23, 0.2);
+    }
+    .btn-secondary {
+        background: #f3f4f6;
+        color: #374151;
+        border: 1px solid #e5e7eb;
+        padding: 10px 16px;
+        border-radius: 10px;
+        cursor: pointer;
+        font-weight: 600;
+        text-decoration: none;
+    }
+    .pill {
+        display: inline-block;
+        background: #fef2f2;
+        color: #b31217;
+        padding: 6px 10px;
+        border-radius: 999px;
+        font-size: 0.85rem;
+        margin-bottom: 8px;
+    }
+    .add-row {
+        background: #f3f4f6;
+        border: 1px dashed #d1d5db;
+        color: #374151;
+        padding: 10px;
+        border-radius: 10px;
+        cursor: pointer;
+        font-weight: 600;
+        text-align: center;
+    }
+    .estado-group .estado-radio {
+        display: flex;
+        gap: 12px;
+    }
+    .estado-group label {
+        font-weight: 600;
+        color: #374151;
+    }
+</style>
+
+<div class="page-toolbar">
+    <div>
+        <h1>Nueva novedad</h1>
+        <p class="text-muted">Registra la novedad diaria con los campos alineados a ISO 14224.</p>
+    </div>
+    <div class="toolbar-actions">
+        <a class="back-button" href="{% url 'novedades:configuracion_campos' %}">⚙️ Configurar campos</a>
+        <a class="back-button" href="{% url 'novedades:novedad_list' %}">← Volver al reporte diario</a>
+    </div>
+</div>
+
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <div class="novedades-card">
+        <div class="pill">Datos generales</div>
+        {{ form.non_field_errors }}
+        <div class="form-grid">
+            <div>{{ form.fecha.label_tag }}{{ form.fecha }}</div>
+            <div>{{ form.titulo.label_tag }}{{ form.titulo }}</div>
+            <div>{{ form.equipo.label_tag }}{{ form.equipo }}</div>
+        </div>
+        <div style="margin-top: 12px;">
+            <label><strong>Estado:</strong></label>
+            <div class="estado-group">
+                {{ form.estado }}
+            </div>
+        </div>
+        <div style="margin-top: 12px;">{{ form.descripcion.label_tag }}{{ form.descripcion }}</div>
+    </div>
+
+    <div class="novedades-card">
+        <div class="pill">Campos padre e hijo</div>
+        <p class="text-muted">Selecciona qué campo padre e hijo se usa en esta novedad y elige la subopción correspondiente. Deja en blanco los renglones que no necesites.</p>
+        <div id="detalles-formset">
+            {{ formset.management_form }}
+            {% for detalle_form in formset.forms %}
+            <div class="detalle-grid detalle-row">
+                {{ detalle_form.non_field_errors }}
+                <div>{{ detalle_form.campo_padre.label_tag }}{{ detalle_form.campo_padre }}</div>
+                <div>{{ detalle_form.campo_hijo.label_tag }}{{ detalle_form.campo_hijo }}</div>
+                <div>{{ detalle_form.subopcion.label_tag }}{{ detalle_form.subopcion }}</div>
+                <div>{{ detalle_form.comentario.label_tag }}{{ detalle_form.comentario }}</div>
+                <div>{{ detalle_form.evidencia.label_tag }}{{ detalle_form.evidencia }}</div>
+            </div>
+            {% endfor %}
+        </div>
+        <div class="add-row" id="add-detalle">➕ Agregar otro campo hijo</div>
+    </div>
+
+    <div class="form-actions">
+        <button type="submit" class="btn-primary">Guardar novedad</button>
+        <a href="{% url 'novedades:novedad_list' %}" class="btn-secondary">Cancelar</a>
+    </div>
+</form>
+
+<script>
+    const addButton = document.getElementById('add-detalle');
+    const formsetContainer = document.getElementById('detalles-formset');
+    const totalFormsInput = formsetContainer.querySelector('input[name$="-TOTAL_FORMS"]');
+    const hijosPorPadre = {};
+    const subopcionesPorHijo = {};
+
+    const hijosData = JSON.parse('{{ hijos_json|escapejs }}');
+    const subopcionesData = JSON.parse('{{ subopciones_json|escapejs }}');
+
+    hijosData.forEach((hijo) => {
+        if (!hijosPorPadre[hijo.padre_id]) {
+            hijosPorPadre[hijo.padre_id] = [];
+        }
+        hijosPorPadre[hijo.padre_id].push(hijo);
+    });
+
+    subopcionesData.forEach((sub) => {
+        if (!subopcionesPorHijo[sub.campo_hijo_id]) {
+            subopcionesPorHijo[sub.campo_hijo_id] = [];
+        }
+        subopcionesPorHijo[sub.campo_hijo_id].push(sub);
+    });
+
+    function resetOptions(select, placeholder) {
+        select.innerHTML = '';
+        const option = document.createElement('option');
+        option.value = '';
+        option.textContent = placeholder;
+        select.appendChild(option);
+    }
+
+    function actualizarHijos(padreSelect, hijoSelect, subopcionSelect) {
+        resetOptions(hijoSelect, 'Seleccione un campo hijo');
+        resetOptions(subopcionSelect, 'Seleccione una subopción');
+        const padreId = parseInt(padreSelect.value, 10);
+        if (!padreId || !hijosPorPadre[padreId]) return;
+        hijosPorPadre[padreId].forEach((hijo) => {
+            const option = document.createElement('option');
+            option.value = hijo.id;
+            option.textContent = hijo.nombre;
+            hijoSelect.appendChild(option);
+        });
+    }
+
+    function actualizarSubopciones(hijoSelect, subopcionSelect) {
+        resetOptions(subopcionSelect, 'Seleccione una subopción');
+        const hijoId = parseInt(hijoSelect.value, 10);
+        if (!hijoId || !subopcionesPorHijo[hijoId]) return;
+        subopcionesPorHijo[hijoId].forEach((sub) => {
+            const option = document.createElement('option');
+            option.value = sub.id;
+            option.textContent = sub.nombre;
+            subopcionSelect.appendChild(option);
+        });
+    }
+
+    function wireRowEvents(row) {
+        const padreSelect = row.querySelector('.detalle-padre');
+        const hijoSelect = row.querySelector('.detalle-hijo');
+        const subopcionSelect = row.querySelector('.detalle-subopcion');
+
+        if (!padreSelect || !hijoSelect || !subopcionSelect) return;
+
+        padreSelect.addEventListener('change', () => {
+            actualizarHijos(padreSelect, hijoSelect, subopcionSelect);
+        });
+        hijoSelect.addEventListener('change', () => {
+            actualizarSubopciones(hijoSelect, subopcionSelect);
+        });
+
+        // Inicializar opciones según valores precargados
+        const hijoSeleccionado = hijoSelect.value;
+        const subSeleccionada = subopcionSelect.value;
+        if (padreSelect.value) {
+            actualizarHijos(padreSelect, hijoSelect, subopcionSelect);
+            if (hijoSeleccionado) {
+                hijoSelect.value = hijoSeleccionado;
+                actualizarSubopciones(hijoSelect, subopcionSelect);
+                if (subSeleccionada) {
+                    subopcionSelect.value = subSeleccionada;
+                }
+            }
+        } else {
+            resetOptions(hijoSelect, 'Seleccione un campo hijo');
+            resetOptions(subopcionSelect, 'Seleccione una subopción');
+        }
+    }
+
+    document.querySelectorAll('.detalle-row').forEach((row) => {
+        wireRowEvents(row);
+    });
+
+    addButton.addEventListener('click', () => {
+        const totalForms = parseInt(totalFormsInput.value, 10);
+        const firstRow = formsetContainer.querySelector('.detalle-row');
+        if (!firstRow) return;
+        const newRow = firstRow.cloneNode(true);
+        newRow.querySelectorAll('input, select, textarea, label').forEach((el) => {
+            if (el.name) {
+                el.name = el.name.replace(/-\\d+-/, `-${totalForms}-`);
+            }
+            if (el.id) {
+                el.id = el.id.replace(/-\\d+-/, `-${totalForms}-`);
+            }
+            if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
+                el.value = '';
+            }
+            if (el.tagName === 'SELECT') {
+                el.selectedIndex = 0;
+            }
+            if (el.htmlFor) {
+                el.htmlFor = el.htmlFor.replace(/-\\d+-/, `-${totalForms}-`);
+            }
+            if (el.type === 'file') {
+                el.value = '';
+            }
+        });
+        const hijoSelect = newRow.querySelector('.detalle-hijo');
+        const subopcionSelect = newRow.querySelector('.detalle-subopcion');
+        if (hijoSelect && subopcionSelect) {
+            resetOptions(hijoSelect, 'Seleccione un campo hijo');
+            resetOptions(subopcionSelect, 'Seleccione una subopción');
+        }
+        formsetContainer.appendChild(newRow);
+        totalFormsInput.value = totalForms + 1;
+        wireRowEvents(newRow);
+    });
+</script>
+{% endblock %}

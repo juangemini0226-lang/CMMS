@@ -241,6 +241,7 @@ class DocumentoActivoAdmin(admin.ModelAdmin):
 # ========================================
 
 # Personalización del sitio admin
-admin.site.site_header = "CMMS ESTRA - Administración"
-admin.site.site_title = "CMMS ESTRA"
+admin.site.site_header = "Gestión de Activos ESTRA - Administración"
+admin.site.site_title = "Gestión de Activos ESTRA"
 admin.site.index_title = "Panel de Administración"
+

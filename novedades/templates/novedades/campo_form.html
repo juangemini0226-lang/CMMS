@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block content %}
+<style>
+    .text-muted { color: #6b7280; }
+    .form-control, .form-select {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid #d1d5db;
+        border-radius: 10px;
+    }
+    .form-control:focus, .form-select:focus {
+        outline: none;
+        border-color: #b31217;
+        box-shadow: 0 0 0 3px rgba(179, 18, 23, 0.15);
+    }
+    .form-check-input { margin-right: 6px; }
+    .novedades-card {
+        background: white;
+        border-radius: 14px;
+        padding: 18px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+        border: 1px solid #e5e7eb;
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    .form-actions {
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+        margin-top: 12px;
+    }
+    .btn-primary {
+        background: linear-gradient(135deg, #e52d27, #b31217);
+        color: white;
+        border: none;
+        padding: 10px 16px;
+        border-radius: 10px;
+        cursor: pointer;
+        font-weight: 600;
+        box-shadow: 0 10px 20px rgba(179, 18, 23, 0.2);
+    }
+    .btn-secondary {
+        background: #f3f4f6;
+        color: #374151;
+        border: 1px solid #e5e7eb;
+        padding: 10px 16px;
+        border-radius: 10px;
+        cursor: pointer;
+        font-weight: 600;
+        text-decoration: none;
+    }
+</style>
+
+<div class="page-toolbar">
+    <div>
+        <h1>{{ titulo }}</h1>
+        <p class="text-muted">Actualiza la estructura que se usa al registrar una novedad.</p>
+    </div>
+    <div class="toolbar-actions">
+        <a class="back-button" href="{% url 'novedades:configuracion_campos' %}">← Volver a configuración</a>
+    </div>
+</div>
+
+<div class="novedades-card">
+    <form method="post">
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+        {{ form.as_p }}
+        <div class="form-actions">
+            <button type="submit" class="btn-primary">Guardar cambios</button>
+            <a href="{% url 'novedades:configuracion_campos' %}" class="btn-secondary">Cancelar</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CMMS - Estra</title>
+    <title>Gestión de Activos - Estra</title>
     <style>
         * {
             margin: 0;
@@ -256,14 +256,16 @@
 <body>
     <nav>
         <div class="nav-left">
-            <a class="logo" href="{% url 'home' %}">CMMS · Estra</a>
+            <a class="logo" href="{% url 'home' %}">Gestión de Activos · Estra</a>
             {% if user.is_authenticated %}
             <button class="nav-toggle" id="menu-toggle" aria-label="Mostrar u ocultar menú">☰</button>
             <div class="nav-links" id="nav-links">
                 <a href="{% url 'home' %}" class="nav-link {% if request.path == '/' %}active{% endif %}">🏠 Inicio</a>
                 <a href="{% url 'activos:dashboard_activos' %}" class="nav-link {% if request.path|slice:':8' == '/activos' %}active{% endif %}">📦 Activos</a>
                 <a href="{% url 'personal:tecnico_list' %}" class="nav-link {% if request.path|slice:':9' == '/personal' %}active{% endif %}">👷 Personal</a>
-                <a href="{% url 'reportes:seleccionar_reporte' %}" class="nav-link {% if request.path|slice:':9' == '/reportes' %}active{% endif %}">📊 Reportes</a>
+                <a href="{% url 'reportes:seleccionar_reporte' %}" class="nav-link {% if '/reportes/seleccionar' in request.path %}active{% endif %}">📊 Reportes</a>
+                <a href="{% url 'reportes:carga_interactiva' %}" class="nav-link {% if '/reportes/cargas' in request.path %}active{% endif %}">📁 Cargas</a>
+                <a href="{% url 'novedades:novedad_list' %}" class="nav-link {% if request.path|slice:':10' == '/novedades' %}active{% endif %}">🗒️ Novedades</a>
                 {% if user.is_staff %}
                 <a href="{% url 'admin:index' %}" class="nav-link {% if request.path|slice:':7' == '/admin/' %}active{% endif %}">⚙️ Administración</a>
                 {% endif %}
@@ -285,11 +287,11 @@
         {% block toolbar %}
         <div class="page-toolbar">
             <button type="button" class="back-button" id="back-button">⬅️ Volver</button>
-            <div class="toolbar-actions">{% block toolbar_actions %}{% endblock %}</div>
+            <div class="toolbar-actions">{% block toolbar_actions %}{% endblock toolbar_actions %}</div>
         </div>
-        {% endblock %}
+        {% endblock toolbar %}
         {% block content %}
-        {% endblock %}
+        {% endblock content %}
     </div>
 
     <script>

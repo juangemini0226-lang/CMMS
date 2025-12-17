@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+{% block content %}
+<style>
+    .text-muted { color: #6b7280; }
+    .form-control, .form-select {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid #d1d5db;
+        border-radius: 10px;
+    }
+    .form-control:focus, .form-select:focus {
+        outline: none;
+        border-color: #b31217;
+        box-shadow: 0 0 0 3px rgba(179, 18, 23, 0.15);
+    }
+    .novedades-card {
+        background: white;
+        border-radius: 14px;
+        padding: 18px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+        border: 1px solid #e5e7eb;
+        margin-bottom: 18px;
+    }
+    .novedad-row {
+        border-bottom: 1px solid #e5e7eb;
+        padding: 10px 0;
+    }
+    .novedad-row:last-child {
+        border-bottom: none;
+    }
+    .tag {
+        display: inline-block;
+        background: #fef2f2;
+        color: #b31217;
+        padding: 4px 10px;
+        border-radius: 999px;
+        font-size: 0.8rem;
+        margin-right: 6px;
+    }
+    .pill {
+        display: inline-block;
+        background: #f3f4f6;
+        color: #374151;
+        padding: 6px 10px;
+        border-radius: 999px;
+        font-size: 0.85rem;
+    }
+    .detalle-lista {
+        margin-top: 8px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+    .filters {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-bottom: 12px;
+    }
+    .btn-primary {
+        background: linear-gradient(135deg, #e52d27, #b31217);
+        color: white;
+        border: none;
+        padding: 10px 16px;
+        border-radius: 10px;
+        cursor: pointer;
+        font-weight: 600;
+        box-shadow: 0 10px 20px rgba(179, 18, 23, 0.2);
+        text-decoration: none;
+        display: inline-block;
+    }
+    .small-link {
+        color: #b31217;
+        font-weight: 600;
+        text-decoration: none;
+    }
+    .small-link:hover {
+        text-decoration: underline;
+    }
+</style>
+
+<div class="page-toolbar">
+    <div>
+        <h1>Reporte diario de novedades</h1>
+        <p class="text-muted">Visualiza las novedades registradas por día y accede al detalle.</p>
+    </div>
+    <div class="toolbar-actions">
+        <a class="back-button" href="{% url 'novedades:novedad_crear' %}">➕ Registrar novedad</a>
+        <a class="back-button" href="{% url 'novedades:configuracion_campos' %}">⚙️ Gestionar campos</a>
+    </div>
+</div>
+
+<div class="novedades-card">
+    <form method="get" class="filters">
+        <label>
+            Seleccionar día:
+            <input type="date" name="dia" value="{{ dia|date:'Y-m-d' }}" class="form-control">
+        </label>
+        <button type="submit" class="btn-primary">Actualizar</button>
+        <span class="pill">Día en revisión: {{ dia|date:"l d \\d\\e F Y" }}</span>
+    </form>
+
+    {% if agrupadas %}
+        {% for grupo, items in agrupadas.items %}
+            <h3 style="margin-top:16px;">{{ grupo }}</h3>
+            {% if items %}
+                {% for novedad in items %}
+                <div class="novedad-row">
+                    <div style="display:flex; justify-content: space-between; align-items: center; gap: 10px;">
+                        <div>
+                            <strong>{{ novedad.titulo }}</strong><br>
+                            <small class="text-muted">{{ novedad.equipo }}</small>
+                        </div>
+                        <a href="{% url 'novedades:novedad_detalle' novedad.pk %}" class="small-link">Ver detalle →</a>
+                    </div>
+                    {% if novedad.descripcion %}<div class="text-muted" style="margin-top: 6px;">{{ novedad.descripcion }}</div>{% endif %}
+                    <div class="detalle-lista">
+                        {% for detalle in novedad.detalles.all %}
+                            <span class="tag">{{ detalle.campo_padre }} / {{ detalle.campo_hijo }}{% if detalle.subopcion %} - {{ detalle.subopcion.nombre }}{% endif %}</span>
+                        {% empty %}
+                            <span class="text-muted">Sin campos asociados.</span>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <p class="text-muted">No hay novedades en esta categoría.</p>
+            {% endif %}
+        {% endfor %}
+    {% else %}
+        <p class="text-muted">No hay novedades registradas para este día.</p>
+    {% endif %}
+</div>
+{% endblock %}

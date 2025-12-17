@@ -7,7 +7,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **kwargs):
         self.stdout.write(self.style.SUCCESS('╔═══════════════════════════════════════════════════════════╗'))
-        self.stdout.write(self.style.SUCCESS('║    CMMS ESTRA - INICIALIZACIÓN DEL SISTEMA                ║'))
+        self.stdout.write(self.style.SUCCESS('║    GESTIÓN DE ACTIVOS ESTRA - INICIALIZACIÓN DEL SISTEMA  ║'))
         self.stdout.write(self.style.SUCCESS('║    ISO 14224 Completo (9 Niveles)                         ║'))
         self.stdout.write(self.style.SUCCESS('╚═══════════════════════════════════════════════════════════╝'))
         self.stdout.write('')
