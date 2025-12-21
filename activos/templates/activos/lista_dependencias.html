@@ -24,14 +24,25 @@
         </div>
     </div>
 
-    <div style="padding: 20px;">
+   <div style="padding: 20px; display: grid; gap: 20px;">
         {% if requiere_familia %}
-            <div class="alert alert-warning" style="margin-bottom: 20px;">
+            <div class="alert alert-warning">
                 Este activo aún no tiene una familia asignada. Asignar una familia facilita el filtrado de dependencias en la jerarquía.
             </div>
         {% endif %}
 
-        <div class="alert alert-info" style="margin-bottom: 20px;">
+        <div class="alert alert-info" style="display: grid; gap: 12px;">
+            <div style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center;">
+                <strong>Ruta jerárquica:</strong>
+                {% for nodo in ruta_jerarquica %}
+                    <span style="background: white; border: 1px solid #e0e0e0; padding: 6px 10px; border-radius: 18px; font-size: 13px; display: inline-flex; gap: 6px; align-items: center;">
+                        <span class="badge badge-info">{{ nodo.nivel_jerarquia.nombre_nivel }}</span>
+                        <span style="font-weight: 700; color: #333;">{{ nodo.tag|default:nodo.codigo }}</span>
+                        <span style="color: #777;">{{ nodo.nombre }}</span>
+                    </span>
+                    {% if not forloop.last %}<span style="color: #e52d27; font-weight: 700;">›</span>{% endif %}
+                {% endfor %}
+            </div>
             <div style="display: flex; flex-wrap: wrap; gap: 15px;">
                 <div><strong>Código:</strong> {{ activo.codigo }}</div>
                 <div><strong>TAG:</strong> {{ activo.tag|default:'No asignado' }}</div>
@@ -40,49 +51,64 @@
             </div>
         </div>
 
-        <h3 style="margin-bottom: 15px;">Componentes registrados</h3>
-        {% if dependencias %}
-            <ul style="list-style: disc; padding-left: 25px;">
-                {% for dependencia in dependencias %}
-                    <li style="margin-bottom: 8px;">
-                        <strong>{{ dependencia.nombre }}</strong>
-                        {% if dependencia.descripcion %}
-                            <span style="color: #666;">- {{ dependencia.descripcion }}</span>
-                        {% endif %}
-                    </li>
-                {% endfor %}
-            </ul>
-        {% else %}
-            <p style="color: #999;">Todavía no se han registrado dependencias para este activo.</p>
-        {% endif %}
+        <div>
+            <h3 style="margin-bottom: 10px;">Componentes registrados</h3>
+            {% if dependencias %}
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Nombre</th>
+                                <th>Descripción</th>
+                                <th>Relación con el equipo</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for dependencia in dependencias %}
+                                <tr>
+                                    <td><strong>{{ dependencia.nombre }}</strong></td>
+                                    <td>{{ dependencia.descripcion|default:'—' }}</td>
+                                    <td><span class="badge badge-info">Hijo funcional</span></td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p style="color: #999;">Todavía no se han registrado dependencias para este activo.</p>
+            {% endif %}
+        </div>
 
-        <hr style="margin: 30px 0;">
-
-        <h3 style="margin-bottom: 15px;">Agregar nueva dependencia</h3>
-        {% if form.errors %}
-            <div class="alert alert-error" style="margin-bottom: 20px;">
-                {% for field in form %}
-                    {% for error in field.errors %}
+        <div style="border-top: 2px solid #f0f0f0; padding-top: 10px;">
+            <h3 style="margin-bottom: 15px;">Agregar nueva dependencia</h3>
+            {% if form.errors %}
+                <div class="alert alert-error" style="margin-bottom: 20px;">
+                    {% for field in form %}
+                        {% for error in field.errors %}
+                            <div>{{ error }}</div>
+                        {% endfor %}
+                    {% endfor %}
+                    {% for error in form.non_field_errors %}
                         <div>{{ error }}</div>
                     {% endfor %}
-                {% endfor %}
-                {% for error in form.non_field_errors %}
-                    <div>{{ error }}</div>
-                {% endfor %}
-            </div>
-        {% endif %}
-        <form method="post" style="max-width: 600px;">
-            {% csrf_token %}
-            <div class="form-group">
-                <label for="id_nombre">Nombre de la dependencia</label>
-                {{ form.nombre }}
-            </div>
-            <div class="form-group">
-                <label for="id_descripcion">Descripción</label>
-                {{ form.descripcion }}
-            </div>
-            <button type="submit" class="btn btn-primary">Agregar dependencia</button>
-        </form>
+                </div>
+            {% endif %}
+            <form method="post" style="max-width: 680px; display: grid; gap: 12px;">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="id_nombre">Nombre de la dependencia</label>
+                    {{ form.nombre }}
+                </div>
+                <div class="form-group">
+                    <label for="id_descripcion">Descripción</label>
+                    {{ form.descripcion }}
+                </div>
+                <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                    <button type="submit" class="btn btn-primary">Agregar dependencia</button>
+                    <span style="color: #666; font-size: 13px;">Úsalo para mapear componentes de acuerdo con ISO 14224.</span>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
 {% endblock %}

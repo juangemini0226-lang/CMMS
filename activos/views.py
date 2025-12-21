@@ -169,6 +169,12 @@ def lista_dependencias(request, activo_id):
     dependencias = activo.dependencias.order_by('nombre')
     padre_activo = getattr(activo, 'parent', None)
 
+    ruta_jerarquica = []
+    actual = activo
+    while actual:
+        ruta_jerarquica.insert(0, actual)
+        actual = actual.parent
+
     if request.method == 'POST':
         form = DependenciaActivoForm(request.POST)
         if form.is_valid():
@@ -190,6 +196,7 @@ def lista_dependencias(request, activo_id):
         'form': form,
         'requiere_familia': activo.familia is None,
         'padre_activo': padre_activo,
+        'ruta_jerarquica': ruta_jerarquica,
     })
 
 def dashboard_activos(request):
@@ -280,7 +287,9 @@ def vista_arbol_activos(request):
             Q(codigo__icontains=busqueda) |
             Q(tag__icontains=busqueda)
         )
-    
+
+    total_filtrados = activos.count()
+
     # Niveles para filtro
     niveles = NivelJerarquia.objects.filter(organizacion=organizacion)
     
@@ -291,10 +300,11 @@ def vista_arbol_activos(request):
         'nivel_seleccionado': nivel_id,
         'estado_seleccionado': estado,
         'busqueda': busqueda,
+        'total_filtrados': total_filtrados,
+        'filtros_activos': any([busqueda, nivel_id, estado]),
     }
     
     return render(request, 'activos/arbol_activos.html', context)
-
 
 
 @login_required
@@ -375,6 +385,12 @@ def detalle_activo(request, activo_id):
         organizacion=organizacion
     )
 
+    ruta_jerarquica = []
+    actual = activo
+    while actual:
+        ruta_jerarquica.insert(0, actual)
+        actual = actual.parent
+
     # Obtener hijos
     hijos = activo.children.select_related('nivel_jerarquia').all()
     hijos_count = hijos.count()
@@ -421,9 +437,13 @@ def detalle_activo(request, activo_id):
         'criticidad_badge': criticidad_badge,
         'estado_label': estado_label,
         'estado_badge': estado_badge,
+        'ruta_jerarquica': ruta_jerarquica,
+        'padre_activo': activo.parent,
+        'nivel_iso': activo.nivel_jerarquia.corresponde_iso_14224,
     }
 
     return render(request, 'activos/detalle_activo.html', context)
+
 @login_required
 def editar_activo(request, activo_id):
     """Editar activo existente"""

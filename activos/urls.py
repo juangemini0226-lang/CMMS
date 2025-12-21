@@ -1,6 +1,11 @@
 from django.urls import path
 from . import views
 
+# Validar presencia de vistas críticas para evitar errores de carga en runtime
+eliminar_activo_view = getattr(views, 'eliminar_activo', None)
+if eliminar_activo_view is None:
+    raise ImportError('La vista "eliminar_activo" no está definida en activos.views')
+
 app_name = 'activos'
 
 urlpatterns = [
@@ -16,7 +21,7 @@ urlpatterns = [
     path('crear/<int:padre_id>/', views.crear_activo, name='crear_activo_hijo'),
     path('<int:activo_id>/', views.detalle_activo, name='detalle_activo'),
     path('<int:activo_id>/editar/', views.editar_activo, name='editar_activo'),
-    path('<int:activo_id>/eliminar/', views.eliminar_activo, name='eliminar_activo'),
+    path('<int:activo_id>/eliminar/', eliminar_activo_view, name='eliminar_activo'),
 
     # Familias y dependencias
     path('familias/', views.gestionar_familias, name='gestionar_familias'),
