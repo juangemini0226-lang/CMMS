@@ -3,56 +3,308 @@
 {% block title %}Dashboard de Activos{% endblock %}
 
 {% block content %}
+<style>
+    .dashboard-kpis {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 18px;
+        margin-bottom: 22px;
+    }
+    .kpi-card {
+        color: white;
+        padding: 20px;
+        border-radius: 14px;
+        box-shadow: 0 12px 24px rgba(0,0,0,0.1);
+    }
+    .kpi-card h3 {
+        font-size: 34px;
+        margin-bottom: 6px;
+    }
+    .kpi-card small {
+        opacity: 0.85;
+    }
+    .gradient-indigo { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+    .gradient-rose { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+    .gradient-sunset { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); }
+    .gradient-blue { background: linear-gradient(135deg, #43cea2 0%, #185a9d 100%); }
+
+    .panel {
+        background: #fff;
+        border-radius: 12px;
+        padding: 18px;
+        box-shadow: 0 8px 18px rgba(0,0,0,0.06);
+        margin-bottom: 18px;
+    }
+    .panel-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 12px;
+    }
+    .panel-subtitle {
+        color: #6c757d;
+        font-size: 14px;
+        margin-top: 4px;
+    }
+    .pill {
+        background: #f1f3f5;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 13px;
+        color: #495057;
+    }
+    .split-grid {
+        display: grid;
+        gap: 18px;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    }
+    .progress-list {
+        list-style: none;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+    .progress-item {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+    .progress-track {
+        background: #f1f3f5;
+        border-radius: 10px;
+        overflow: hidden;
+        height: 10px;
+    }
+    .progress-bar {
+        height: 10px;
+        border-radius: 10px;
+        background: linear-gradient(135deg, #e52d27 0%, #b31217 100%);
+        width: 0;
+    }
+    .insight-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 14px;
+    }
+    .recent-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    .recent-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 10px;
+        border-bottom: 1px solid #f1f3f5;
+    }
+    .recent-item:last-child { border-bottom: none; }
+    .badge {
+        padding: 6px 10px;
+        border-radius: 10px;
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: capitalize;
+        background: #f1f3f5;
+        color: #495057;
+    }
+    .actions {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-top: 12px;
+    }
+    .table-responsive {
+        overflow-x: auto;
+        margin-top: 10px;
+    }
+    .empty-state {
+        text-align: center;
+        color: #adb5bd;
+        padding: 20px 0;
+    }
+</style>
 <div class="card">
     <div class="card-header">
         Dashboard de Activos - {{ organizacion.nombre }}
     </div>
-    
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 30px;">
-        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 25px; border-radius: 10px;">
-            <h3 style="font-size: 36px; margin-bottom: 10px;">{{ total_activos }}</h3>
-            <p style="opacity: 0.9;">Total de Activos</p>
+
+    <div class="dashboard-kpis">
+        <div class="kpi-card gradient-indigo">
+            <h3>{{ total_activos }}</h3>
+            <p>Total de Activos</p>
+            <small>Incluye todos los niveles y familias</small>
         </div>
-        
-        <div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; padding: 25px; border-radius: 10px;">
-            <h3 style="font-size: 36px; margin-bottom: 10px;">{{ activos_activos }}</h3>
-            <p style="opacity: 0.9;">Activos Activos</p>
+        <div class="kpi-card gradient-rose">
+            <h3>{{ activos_activos }}</h3>
+            <p>Activos Activos</p>
+            <small>Equipos listos para operar</small>
         </div>
-        
-        <div style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); color: white; padding: 25px; border-radius: 10px;">
-            <h3 style="font-size: 36px; margin-bottom: 10px;">{{ activos_criticos }}</h3>
-            <p style="opacity: 0.9;">Activos Críticos</p>
+        <div class="kpi-card gradient-sunset">
+            <h3>{{ activos_criticos }}</h3>
+            <p>Activos Críticos</p>
+            <small>Monitoreo prioritario</small>
+        </div>
+        <div class="kpi-card gradient-blue">
+            <h3>{{ activos_mantenimiento }}</h3>
+            <p>En mantenimiento</p>
+            <small>{{ activos_fuera_servicio }} fuera de servicio</small>
         </div>
     </div>
-    
-    <h3 style="margin-bottom: 15px;">Activos por Nivel de Jerarquía</h3>
-    <table>
-        <thead>
-            <tr>
-                <th>Nivel</th>
-                <th>Cantidad</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for item in activos_por_nivel %}
-            <tr>
-                <td>{{ item.nivel_jerarquia__nombre_nivel }}</td>
-                <td><strong>{{ item.total }}</strong></td>
-            </tr>
-            {% empty %}
-            <tr>
-                <td colspan="2" style="text-align: center; color: #999;">No hay activos registrados</td>
-            </tr>
+
+    <div class="split-grid">
+        <div class="panel">
+            <div class="panel-header">
+                <div>
+                    <h3 style="margin-bottom: 2px;">Activos por Nivel de Jerarquía</h3>
+                    <div class="panel-subtitle">Visibilidad de inventario por escalón</div>
+                </div>
+                <span class="pill">{{ activos_por_nivel|length }} niveles</span>
+            </div>
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Nivel</th>
+                            <th style="width: 130px;">Cantidad</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in activos_por_nivel %}
+                        <tr>
+                            <td>{{ item.nivel_jerarquia__nombre_nivel }}</td>
+                            <td><strong>{{ item.total }}</strong></td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="2" class="empty-state">No hay activos registrados</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-header">
+                <div>
+                    <h3 style="margin-bottom: 2px;">Familias con más activos</h3>
+                    <div class="panel-subtitle">Última instantánea</div>
+                </div>
+                <span class="pill">Top 5</span>
+            </div>
+            {% if top_familias %}
+            <ul class="progress-list">
+                {% for item in top_familias %}
+                <li class="progress-item">
+                    <div class="insight-row">
+                        <strong>{{ item.nombre }}</strong>
+                        <span>{{ item.total }} ({{ item.porcentaje }}%)</span>
+                    </div>
+                    <div class="progress-track">
+                        <div class="progress-bar" data-progress="{{ item.porcentaje }}"></div>
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <div class="empty-state">No hay familias con activos registrados.</div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="split-grid">
+        <div class="panel">
+            <div class="panel-header">
+                <h3 style="margin-bottom: 2px;">Distribución por Criticidad</h3>
+                <span class="pill">Condición</span>
+            </div>
+            {% if activos_por_criticidad %}
+                <ul class="progress-list">
+                    {% for item in activos_por_criticidad %}
+                        <li class="progress-item">
+                            <div class="insight-row">
+                                <span>{{ item.label }}</span>
+                                <span>{{ item.total }} ({{ item.porcentaje }}%)</span>
+                            </div>
+                            <div class="progress-track">
+                                <div class="progress-bar" data-progress="{{ item.porcentaje }}"></div>
+                            </div>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <div class="empty-state">Aún no se ha definido la criticidad de los activos.</div>
+            {% endif %}
+        </div>
+
+        <div class="panel">
+            <div class="panel-header">
+                <h3 style="margin-bottom: 2px;">Estado de los activos</h3>
+                <span class="pill">Disponibilidad</span>
+            </div>
+            {% if activos_por_estado %}
+                <ul class="progress-list">
+                    {% for item in activos_por_estado %}
+                        <li class="progress-item">
+                            <div class="insight-row">
+                                <span>{{ item.label }}</span>
+                                <span>{{ item.total }} ({{ item.porcentaje }}%)</span>
+                            </div>
+                            <div class="progress-track">
+                                <div class="progress-bar" data-progress="{{ item.porcentaje }}"></div>
+                            </div>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <div class="empty-state">Registre activos para ver su estado operativo.</div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="panel">
+        <div class="panel-header">
+            <div>
+                <h3 style="margin-bottom: 2px;">Últimos activos creados</h3>
+                <div class="panel-subtitle">Seguimiento rápido de novedades</div>
+            </div>
+            <span class="pill">Últimos 5</span>
+        </div>
+        {% if activos_recientes %}
+        <ul class="recent-list">
+            {% for activo in activos_recientes %}
+            <li class="recent-item">
+                <div>
+                    <strong>{{ activo.nombre }}</strong>
+                    <div class="panel-subtitle">
+                        {{ activo.nivel }} · {{ activo.familia }}
+                    </div>
+                </div>
+                <span class="badge">{{ activo.estado_label }}</span>
+            </li>
             {% endfor %}
-        </tbody>
-    </table>
-    
-    <div style="margin-top: 30px; display: flex; gap: 15px;">
+        </ul>
+        {% else %}
+        <div class="empty-state">Todavía no hay activos registrados recientemente.</div>
+        {% endif %}
+    </div>
+
+    <div class="actions">
         <a href="{% url 'activos:crear_activo' %}" class="btn btn-primary">+ Crear Activo</a>
         <a href="{% url 'activos:vista_arbol_activos' %}" class="btn btn-secondary">Ver Árbol de Activos</a>
         <a href="{% url 'activos:importar_excel' %}" class="btn btn-success">Importar Excel</a>
         <a href="{% url 'reportes:seleccionar_reporte' %}" class="btn btn-warning">Reportes PDF</a>
-
     </div>
 </div>
+<script>
+    document.querySelectorAll('.progress-bar[data-progress]').forEach(function(bar) {
+        var raw = bar.getAttribute('data-progress');
+        var value = parseFloat(raw);
+        var safeValue = !isNaN(value) ? Math.max(0, Math.min(value, 100)) : 0;
+        bar.style.width = safeValue + '%';
+    });
+</script>
 {% endblock %}

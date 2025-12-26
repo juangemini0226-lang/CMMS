@@ -218,6 +218,14 @@ def dashboard_activos(request):
         organizacion=organizacion,
         criticidad='alta'
     ).count()
+    activos_mantenimiento = NodoActivo.objects.filter(
+        organizacion=organizacion,
+        estado='mantenimiento',
+    ).count()
+    activos_fuera_servicio = NodoActivo.objects.filter(
+        organizacion=organizacion,
+        estado='fuera_servicio',
+    ).count()
     
     # Activos por nivel
     activos_por_nivel = NodoActivo.objects.filter(
@@ -227,6 +235,39 @@ def dashboard_activos(request):
     ).annotate(
         total=Count('id')
     )
+    # Distribuciones para análisis rápido
+    activos_por_estado = NodoActivo.objects.filter(
+        organizacion=organizacion,
+    ).values('estado').annotate(total=Count('id')).order_by('-total')
+    activos_por_criticidad = NodoActivo.objects.filter(
+        organizacion=organizacion,
+    ).values('criticidad').annotate(total=Count('id')).order_by('-total')
+    top_familias_raw = NodoActivo.objects.filter(
+        organizacion=organizacion,
+        familia__isnull=False,
+    ).values('familia__nombre').annotate(total=Count('id')).order_by('-total')[:5]
+    estado_labels = dict(NodoActivo.ESTADOS)
+    criticidad_labels = dict(NodoActivo.CRITICIDADES)
+    activos_recientes = NodoActivo.objects.filter(
+        organizacion=organizacion,
+    ).select_related('familia', 'nivel_jerarquia').order_by('-creado_el')[:5]
+    activos_recientes_info = [
+        {
+            'nombre': activo.nombre,
+            'nivel': activo.nivel_jerarquia.nombre_nivel,
+            'familia': activo.familia.nombre if activo.familia else 'Sin familia',
+            'estado_label': estado_labels.get(activo.estado, activo.estado),
+        }
+        for activo in activos_recientes
+    ]
+    top_familias = [
+        {
+            'nombre': item['familia__nombre'] or 'Sin familia',
+            'total': item['total'],
+            'porcentaje': round((item['total'] / total_activos) * 100, 1) if total_activos else 0,
+        }
+        for item in top_familias_raw
+    ]
     
     context = {
         'organizacion': organizacion,
@@ -234,11 +275,31 @@ def dashboard_activos(request):
         'activos_activos': activos_activos,
         'activos_criticos': activos_criticos,
         'activos_por_nivel': activos_por_nivel,
+        'activos_por_estado': [
+            {
+                'estado': item['estado'],
+                'label': estado_labels.get(item['estado'], 'Sin estado'),
+                'total': item['total'],
+                'porcentaje': round((item['total'] / total_activos) * 100, 1) if total_activos else 0,
+            }
+            for item in activos_por_estado
+        ],
+        'activos_por_criticidad': [
+            {
+                'criticidad': item['criticidad'],
+                'label': criticidad_labels.get(item['criticidad'], 'Sin criticidad'),
+                'total': item['total'],
+                'porcentaje': round((item['total'] / total_activos) * 100, 1) if total_activos else 0,
+            }
+            for item in activos_por_criticidad
+        ],
+        'top_familias': top_familias,
+        'activos_recientes': activos_recientes_info,
+        'activos_mantenimiento': activos_mantenimiento,
+        'activos_fuera_servicio': activos_fuera_servicio,
     }
     
     return render(request, 'activos/dashboard.html', context)
-
-
 @login_required
 def configurar_jerarquia(request):
     """Vista para configurar la jerarquía de la organización"""
