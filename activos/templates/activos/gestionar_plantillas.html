@@ -1,0 +1,96 @@
+{% extends 'activos/base_activos.html' %}
+
+{% block title %}Plantillas de activos{% endblock %}
+
+{% block content %}
+<div class="breadcrumb">
+    <a href="{% url 'activos:dashboard_activos' %}">Dashboard</a> /
+    Plantillas para niveles
+</div>
+
+<div class="card">
+    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+        <span>Plantillas reutilizables{% if organizacion %} · {{ organizacion.nombre }}{% endif %}</span>
+        <small style="color: #666;">Útil para crear Subunidades (Nivel 7) e Ítems mantenibles (Nivel 8)</small>
+    </div>
+    <div style="display: grid; grid-template-columns: 3fr 2fr; gap: 30px;">
+        <div>
+            <h3 style="margin-bottom: 15px; color: #333;">Plantillas registradas</h3>
+            {% if plantillas %}
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Nivel</th>
+                            <th>Clase ISO</th>
+                            <th>Activa</th>
+                            <th>Creada</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for plantilla in plantillas %}
+                            <tr>
+                                <td style="width: 30%;">
+                                    <strong>{{ plantilla.nombre }}</strong><br>
+                                    <span style="color: #666; font-size: 12px;">{{ plantilla.datos_predeterminados|default:'Sin datos' }}</span>
+                                </td>
+                                <td>{{ plantilla.nivel_jerarquia.nombre_nivel }}</td>
+                                <td>{% if plantilla.clase_equipo_iso %}{{ plantilla.clase_equipo_iso.codigo }}{% else %}-{% endif %}</td>
+                                <td>
+                                    {% if plantilla.es_activa %}
+                                        <span class="badge badge-success">Activa</span>
+                                    {% else %}
+                                        <span class="badge badge-warning">Inactiva</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ plantilla.creado_el|date:'d/m/Y H:i' }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p style="color: #777;">Aún no hay plantillas. Cree las primeras para los niveles 7 y 8 (ej. Sistemas de Inyección, Cavidad).</p>
+            {% endif %}
+        </div>
+        <div class="card" style="box-shadow: none; border: 1px solid #f0f0f0;">
+            <h3 style="margin-bottom: 10px; color: #333;">Crear nueva plantilla</h3>
+            <p style="color: #555; margin-bottom: 15px;">Defina campos predeterminados para acelerar la carga de subunidades e ítems mantenibles desde la pantalla de creación de activos.</p>
+            <form method="post">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="nombre">Nombre de la plantilla *</label>
+                    <input type="text" name="nombre" id="nombre" placeholder="Ej: Sistema de Inyección" required>
+                </div>
+                <div class="form-group">
+                    <label for="nivel_jerarquia">Nivel de jerarquía *</label>
+                    <select name="nivel_jerarquia" id="nivel_jerarquia" required>
+                        <option value="">Seleccione un nivel</option>
+                        {% for nivel in niveles %}
+                            <option value="{{ nivel.id }}">Nivel {{ nivel.numero_nivel }} · {{ nivel.nombre_nivel }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="clase_equipo_iso">Clase de equipo ISO (opcional)</label>
+                    <select name="clase_equipo_iso" id="clase_equipo_iso">
+                        <option value="">Sin asignar</option>
+                        {% for clase in clases_iso %}
+                            <option value="{{ clase.id }}">{{ clase.codigo }} - {{ clase.nombre }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="datos_predeterminados">Datos predeterminados (JSON)</label>
+                    <textarea name="datos_predeterminados" id="datos_predeterminados" rows="8" style="font-family: monospace;">{{ ejemplo_datos }}</textarea>
+                    <small style="color: #666;">Incluya claves como <code>nombre</code>, <code>codigo</code>, <code>descripcion</code>, <code>estado</code>, <code>criticidad</code>. Se aplicarán automáticamente al crear un activo usando esta plantilla.</small>
+                </div>
+                <div class="form-group" style="display: flex; align-items: center; gap: 10px;">
+                    <input type="checkbox" name="es_activa" id="es_activa" checked>
+                    <label for="es_activa" style="margin: 0;">Plantilla activa y visible en la pantalla de creación</label>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Guardar plantilla</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

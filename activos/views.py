@@ -356,18 +356,109 @@ def crear_activo(request, padre_id=None):
         return redirect('activos:detalle_activo', activo_id=activo.id)
 
     niveles = NivelJerarquia.objects.filter(organizacion=organizacion)
+    if padre:
+        niveles = niveles.filter(numero_nivel__gt=padre.nivel_jerarquia.numero_nivel)
+
+    plantillas = PlantillaActivo.objects.filter(
+        organizacion=organizacion,
+        es_activa=True,
+    ).select_related('nivel_jerarquia')
+
+    if padre:
+        plantillas = plantillas.filter(
+            nivel_jerarquia__numero_nivel__gt=padre.nivel_jerarquia.numero_nivel
+        )
+
     familias = FamiliaActivo.objects.filter(
         Q(organizacion=organizacion) | Q(organizacion__isnull=True)
     ).order_by('nombre')
+
+    plantillas_data = [
+        {
+            'id': p.id,
+            'nombre': p.nombre,
+            'nivel_id': p.nivel_jerarquia_id,
+            'datos': p.datos_predeterminados,
+        }
+        for p in plantillas
+    ]
 
     context = {
         'padre': padre,
         'niveles': niveles,
         'organizacion': organizacion,
         'familias': familias,
+        'plantillas': plantillas_data,
+        'plantillas_json': json.dumps(plantillas_data, ensure_ascii=False),
     }
 
     return render(request, 'activos/crear_activo.html', context)
+
+
+@login_required
+def gestionar_plantillas(request):
+    """Crear y consultar plantillas reutilizables para agilizar carga de activos."""
+    organizacion = Organizacion.objects.first()
+
+    if not organizacion:
+        messages.error(request, 'Debe configurar una organización antes de gestionar plantillas.')
+        return redirect('activos:dashboard_activos')
+
+    niveles = NivelJerarquia.objects.filter(organizacion=organizacion).order_by('numero_nivel')
+    clases_iso = ClaseEquipoISO14224.objects.all()
+    plantillas = PlantillaActivo.objects.filter(
+        organizacion=organizacion
+    ).select_related('nivel_jerarquia', 'clase_equipo_iso').order_by('-creado_el')
+
+    if request.method == 'POST':
+        nombre = request.POST.get('nombre', '').strip()
+        nivel_id = request.POST.get('nivel_jerarquia')
+        clase_id = request.POST.get('clase_equipo_iso')
+        datos_raw = request.POST.get('datos_predeterminados', '')
+        es_activa = request.POST.get('es_activa') == 'on'
+
+        if not nombre or not nivel_id:
+            messages.error(request, 'Debe indicar un nombre y el nivel al que aplica la plantilla.')
+            return redirect('activos:gestionar_plantillas')
+
+        try:
+            datos = json.loads(datos_raw) if datos_raw.strip() else {}
+        except json.JSONDecodeError:
+            messages.error(request, 'Los datos predeterminados deben tener un formato JSON válido.')
+            return redirect('activos:gestionar_plantillas')
+
+        nivel = get_object_or_404(NivelJerarquia, id=nivel_id, organizacion=organizacion)
+        clase_iso = None
+        if clase_id:
+            clase_iso = get_object_or_404(ClaseEquipoISO14224, id=clase_id)
+
+        PlantillaActivo.objects.create(
+            nombre=nombre,
+            organizacion=organizacion,
+            nivel_jerarquia=nivel,
+            clase_equipo_iso=clase_iso,
+            datos_predeterminados=datos,
+            es_activa=es_activa,
+        )
+
+        messages.success(request, 'Plantilla creada y disponible para su uso en la creación de activos.')
+        return redirect('activos:gestionar_plantillas')
+
+    contexto = {
+        'organizacion': organizacion,
+        'niveles': niveles,
+        'clases_iso': clases_iso,
+        'plantillas': plantillas,
+        'ejemplo_datos': json.dumps({
+            'nombre': 'Sistema de Inyección',
+            'codigo': 'INJ-01',
+            'descripcion': 'Subsistema predeterminado del molde',
+            'estado': 'activo',
+            'criticidad': 'media',
+        }, indent=4),
+    }
+
+    return render(request, 'activos/gestionar_plantillas.html', contexto)
 
 
 @login_required
@@ -595,27 +686,146 @@ def descargar_plantilla_excel(request):
     import pandas as pd
     import tempfile
     import os
-    
-    # Crear plantilla
+
+    # Crear datos de ejemplo con jerarquía básica y campos clave
     datos_ejemplo = {
-        'nivel': [1, 2, 2, 3, 3],
-        'nombre': ['Planta Principal', 'Área 1', 'Área 2', 'Bomba 001', 'Bomba 002'],
-        'codigo': ['P001', 'A001', 'A002', 'B001', 'B002'],
-        'padre': ['', 'P001', 'P001', 'A001', 'A001'],
-        'descripcion': ['', '', '', 'Bomba centrífuga', 'Bomba centrífuga'],
-        'fabricante': ['', '', '', 'Manufacturer A', 'Manufacturer A'],
-        'modelo': ['', '', '', 'Model X', 'Model X'],
-        'serie': ['', '', '', '12345', '12346'],
+        'nivel': [1, 2, 3, 6, 7, 8, 9],
+        'nombre': [
+            'Industria Principal',
+            'Línea de negocio',
+            'Planta Norte',
+            'Bomba Progresiva 01',
+            'Tren Hidráulico',
+            'Motor Principal',
+            'Rodamiento LC',
+        ],
+        'codigo': ['IND-01', 'LN-01', 'PL-01', 'BP-01', 'SU-01', 'IM-01', 'PZ-01'],
+        'padre': ['', 'IND-01', 'LN-01', 'PL-01', 'BP-01', 'SU-01', 'IM-01'],
+        'familia': [
+            'Infraestructura',
+            'Infraestructura',
+            'Infraestructura',
+            'Equipos rotativos',
+            'Subcomponentes',
+            'Subcomponentes',
+            'Subcomponentes',
+        ],
+        'descripcion': [
+            'Industria de gestión de residuos',
+            'Negocio de recolección y transporte',
+            'Planta de tratamiento Norte',
+            'Bomba progresiva de lodos',
+            'Conjunto hidráulico',
+            'Motor eléctrico 25 HP',
+            'Rodamiento 6314 C3',
+        ],
+        'fabricante': ['', '', '', 'Seepex', '', 'WEG', 'SKF'],
+        'modelo': ['', '', '', 'MD 012-24', '', 'W22', '6314 C3'],
+        'serie': ['', '', '', 'BP1-2023', '', 'MOT-25HP', ''],
+        'criticidad': ['', '', '', 'alta', 'media', 'media', 'media'],
+        'datos_personalizados (JSON)': [
+            '{"linea_base": "ISO 14224"}',
+            '{"enfoque": "Industria"}',
+            '{"turnos": "24/7"}',
+            '{"flujo_m3h": 12, "rpm_operacion": 480}',
+            '{"presion_diseno_bar": 8}',
+            '{"eficiencia": "94%"}',
+            '{"inventario_min": 2}',
+        ],
     }
-    
-    df = pd.DataFrame(datos_ejemplo)
-    
-    # Guardar en temporal
+
+    # Hoja 1: plantilla de activos
+    df_plantilla = pd.DataFrame(datos_ejemplo)
+
+    # Hoja 2: guía rápida de campos
+    df_campos = pd.DataFrame(
+        [
+            {
+                'Campo': 'nivel',
+                'Requerido': 'Sí',
+                'Descripción': 'Número de nivel ISO 14224 (1-9) según la jerarquía configurada.',
+                'Ejemplo': '6',
+            },
+            {
+                'Campo': 'nombre',
+                'Requerido': 'Sí',
+                'Descripción': 'Nombre descriptivo del activo.',
+                'Ejemplo': 'Bomba Progresiva 01',
+            },
+            {
+                'Campo': 'codigo',
+                'Requerido': 'Sí',
+                'Descripción': 'Código único en el nivel. Se usará para crear el tag si aplica.',
+                'Ejemplo': 'BP-01',
+            },
+            {
+                'Campo': 'padre',
+                'Requerido': 'Solo si nivel > 1',
+                'Descripción': 'Código del activo padre ya listado en la hoja.',
+                'Ejemplo': 'PL-01',
+            },
+            {
+                'Campo': 'familia',
+                'Requerido': 'Opcional',
+                'Descripción': 'Nombre de la familia de activo para clasificar (debe existir).',
+                'Ejemplo': 'Equipos rotativos',
+            },
+            {
+                'Campo': 'descripcion',
+                'Requerido': 'Opcional',
+                'Descripción': 'Detalle del activo o su función.',
+                'Ejemplo': 'Bomba progresiva de lodos',
+            },
+            {
+                'Campo': 'fabricante/modelo/serie',
+                'Requerido': 'Opcional',
+                'Descripción': 'Datos de placa del activo si aplica.',
+                'Ejemplo': 'Seepex / MD 012-24 / BP1-2023',
+            },
+            {
+                'Campo': 'criticidad',
+                'Requerido': 'Opcional',
+                'Descripción': 'Valor libre (ej: alta, media, baja).',
+                'Ejemplo': 'alta',
+            },
+            {
+                'Campo': 'datos_personalizados (JSON)',
+                'Requerido': 'Opcional',
+                'Descripción': 'Campos adicionales en formato JSON válido.',
+                'Ejemplo': '{"flujo_m3h": 12}',
+            },
+        ]
+    )
+
+    # Hoja 3: catálogos de referencia
+    df_catalogos = pd.DataFrame(
+        [
+            {'Tipo': 'Nivel', 'Valor': '1', 'Detalle': 'Industria'},
+            {'Tipo': 'Nivel', 'Valor': '2', 'Detalle': 'Negocio'},
+            {'Tipo': 'Nivel', 'Valor': '3', 'Detalle': 'Instalación'},
+            {'Tipo': 'Nivel', 'Valor': '4', 'Detalle': 'Planta/Unidad'},
+            {'Tipo': 'Nivel', 'Valor': '5', 'Detalle': 'Sección/Sistema'},
+            {'Tipo': 'Nivel', 'Valor': '6', 'Detalle': 'Equipo'},
+            {'Tipo': 'Nivel', 'Valor': '7', 'Detalle': 'Subunidad'},
+            {'Tipo': 'Nivel', 'Valor': '8', 'Detalle': 'Item mantenible'},
+            {'Tipo': 'Nivel', 'Valor': '9', 'Detalle': 'Parte/Pieza'},
+            {'Tipo': 'Familia', 'Valor': 'Infraestructura', 'Detalle': 'Estructuras, edificios y ubicaciones'},
+            {'Tipo': 'Familia', 'Valor': 'Equipos rotativos', 'Detalle': 'Bombas, compresores y motores'},
+            {'Tipo': 'Familia', 'Valor': 'Subcomponentes', 'Detalle': 'Conjuntos menores y partes'},
+            {'Tipo': 'Familia', 'Valor': 'Sistema de aire', 'Detalle': 'Redes y equipos de aire comprimido'},
+            {'Tipo': 'Familia', 'Valor': 'Sistema de bombeo', 'Detalle': 'Sistemas hidráulicos y de transferencia'},
+        ]
+    )
+
+    # Guardar en archivo temporal con varias hojas
     with tempfile.NamedTemporaryFile(delete=False, suffix='.xlsx') as tmp:
         ruta_temporal = tmp.name
-    
-    df.to_excel(ruta_temporal, index=False, engine='openpyxl')
-    
+
+    with pd.ExcelWriter(ruta_temporal, engine='openpyxl') as writer:
+        df_plantilla.to_excel(writer, sheet_name='Activos', index=False)
+        df_campos.to_excel(writer, sheet_name='Instrucciones', index=False)
+        df_catalogos.to_excel(writer, sheet_name='Catalogos', index=False)
+
     # Enviar archivo
     with open(ruta_temporal, 'rb') as f:
         response = HttpResponse(
@@ -623,11 +833,12 @@ def descargar_plantilla_excel(request):
             content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
         )
         response['Content-Disposition'] = 'attachment; filename="plantilla_activos.xlsx"'
-    
+
     # Limpiar
     os.unlink(ruta_temporal)
-    
+
     return response
+
 
 
 # ========================================

@@ -4,8 +4,8 @@
 
 {% block content %}
 <div class="breadcrumb">
-    <a href="{% url 'activos:dashboard_activos' %}">Dashboard</a> / 
-    <a href="{% url 'activos:vista_arbol_activos' %}">Activos</a> / 
+    <a href="{% url 'activos:dashboard_activos' %}">Dashboard</a> /
+    <a href="{% url 'activos:vista_arbol_activos' %}">Activos</a> /
     Crear Activo
 </div>
 
@@ -18,17 +18,17 @@
         </span>
         {% endif %}
     </div>
-    
+
     <form method="post" id="form-crear-activo">
         {% csrf_token %}
-        
+
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
             <div class="form-group">
                 <label>Nivel de Jerarquía *</label>
                 <select name="nivel_jerarquia" id="nivel_jerarquia" required>
                     <option value="">Seleccione un nivel</option>
                     {% for nivel in niveles %}
-                    <option value="{{ nivel.id }}" 
+                    <option value="{{ nivel.id }}"
                             data-requiere-tag="{{ nivel.requiere_tag }}"
                             data-formato-tag="{{ nivel.formato_tag }}"
                             data-prefijo-tag="{{ nivel.prefijo_tag }}">
@@ -37,17 +37,27 @@
                     {% endfor %}
                 </select>
             </div>
-            
+
             <div class="form-group">
                 <label>Código *</label>
-                <input type="text" name="codigo" id="codigo" required 
+                <input type="text" name="codigo" id="codigo" required
                        placeholder="Ej: EQ001">
             </div>
-            
+
             <div class="form-group">
                 <label>Nombre *</label>
                 <input type="text" name="nombre" required
                        placeholder="Nombre descriptivo del activo">
+            </div>
+
+            <div class="form-group">
+                <label>Plantilla sugerida</label>
+                <select id="plantilla_activo">
+                    <option value="">Sin plantilla</option>
+                </select>
+                <small style="color: #666;">
+                    Filtra automáticamente por el nivel seleccionado. Útil para Subunidades (Nivel 7) e Ítems mantenibles (Nivel 8).
+                </small>
             </div>
 
             <div class="form-group">
@@ -58,10 +68,15 @@
                         <option value="{{ familia.id }}">{{ familia.nombre }}</option>
                     {% endfor %}
                 </select>
+
                 {% if familias %}
-                    <small style="color: #666; font-size: 12px;">La familia ayuda a filtrar los activos de nivel 6</small>
+                    <small style="color: #666; font-size: 12px;">
+                        La familia ayuda a filtrar los activos de nivel 6
+                    </small>
                 {% else %}
-                    <small style="color: #b31217; font-size: 12px; font-weight: 600;">Aún no hay familias registradas. Cree una desde el menú "Familias" para asociar este activo.</small>
+                    <small style="color: #b31217; font-size: 12px; font-weight: 600;">
+                        Aún no hay familias registradas. Cree una desde el menú "Familias" para asociar este activo.
+                    </small>
                 {% endif %}
             </div>
 
@@ -72,32 +87,33 @@
                        placeholder="Se generará automáticamente">
             </div>
         </div>
-        
+
         <div class="form-group">
             <label>Descripción</label>
-            <textarea name="descripcion" rows="3" 
+            <textarea name="descripcion" rows="3"
                       placeholder="Descripción detallada del activo"></textarea>
         </div>
-        
+
         <h3 style="margin: 30px 0 15px; color: #333; border-bottom: 2px solid #f0f0f0; padding-bottom: 10px;">
             Datos Técnicos
         </h3>
-        
+
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
             <div class="form-group">
                 <label>Fabricante</label>
                 <input type="text" name="fabricante" placeholder="Nombre del fabricante">
             </div>
-        <div class="form-group">
+
+            <div class="form-group">
                 <label>Modelo</label>
                 <input type="text" name="modelo" placeholder="Modelo del equipo">
             </div>
-            
+
             <div class="form-group">
                 <label>Número de Serie</label>
                 <input type="text" name="numero_serie" placeholder="Número de serie único">
             </div>
-            
+
             <div class="form-group">
                 <label>Estado</label>
                 <select name="estado">
@@ -108,7 +124,7 @@
                     <option value="retirado">Retirado</option>
                 </select>
             </div>
-            
+
             <div class="form-group">
                 <label>Criticidad</label>
                 <select name="criticidad">
@@ -124,7 +140,7 @@
                 <input type="text" name="ubicacion_fisica" placeholder="Ej: Planta 1, Línea A">
             </div>
         </div>
-        
+
         <div style="margin-top: 30px; display: flex; gap: 15px;">
             <button type="submit" class="btn btn-primary">Crear Activo</button>
             <a href="{% url 'activos:vista_arbol_activos' %}" class="btn btn-secondary">Cancelar</a>
@@ -135,37 +151,106 @@
 
 {% block extra_js %}
 <script>
+    // Datos desde Django (string JSON -> objeto JS)
+    const plantillasDisponibles = JSON.parse('{{ plantillas_json|default:"[]"|escapejs }}' || '[]');
 
-    // Vista previa del TAG
+    const plantillaSelect = document.getElementById('plantilla_activo');
+    const nivelSelect = document.getElementById('nivel_jerarquia');
+
+
+    const padreCodigo = "{{ padre.codigo|default:''|escapejs }}";
+
     document.getElementById('codigo').addEventListener('input', generarTagPreview);
-    document.getElementById('nivel_jerarquia').addEventListener('change', generarTagPreview);
-    
+
+    nivelSelect.addEventListener('change', () => {
+        generarTagPreview();
+        poblarPlantillas(nivelSelect.value);
+    });
+
+    plantillaSelect.addEventListener('change', aplicarPlantilla);
+
     function generarTagPreview() {
-        const nivelSelect = document.getElementById('nivel_jerarquia');
         const codigo = document.getElementById('codigo').value;
         const tagPreview = document.getElementById('tag_preview');
-        
+
         if (!nivelSelect.value || !codigo) {
             tagPreview.value = '';
             return;
         }
-        
+
         const option = nivelSelect.options[nivelSelect.selectedIndex];
-        const requiereTag = option.dataset.requiereTag === 'True';
+        const requiereTag = option.dataset.requiereTag === 'True' || option.dataset.requiereTag === 'true';
         const formatoTag = option.dataset.formatoTag;
         const prefijoTag = option.dataset.prefijoTag;
-        
+
         if (requiereTag && formatoTag) {
-            // Simulación simple del formato
             let tag = formatoTag.replace('{PREFIJO}', prefijoTag || '');
             tag = tag.replace('{CODIGO}', codigo);
             tag = tag.replace('{SECUENCIA}', '001'); // Placeholder
-            tag = tag.replace('{PADRE}', '{% if padre %}{{ padre.codigo }}{% endif %}');
-            
+            tag = tag.replace('{PADRE}', padreCodigo || '');
+
             tagPreview.value = tag;
         } else {
             tagPreview.value = 'No se genera TAG para este nivel';
         }
+    }
+
+    function poblarPlantillas(nivelId) {
+        plantillaSelect.innerHTML = '<option value="">Sin plantilla</option>';
+
+        if (!nivelId) return;
+
+        plantillasDisponibles
+            .filter(p => String(p.nivel_id) === String(nivelId))
+            .forEach(p => {
+                const option = document.createElement('option');
+                option.value = p.id;
+                option.textContent = p.nombre;
+                plantillaSelect.appendChild(option);
+            });
+    }
+
+    function aplicarDato(selector, valor) {
+        const elemento = document.querySelector(selector);
+        if (elemento && valor) {
+            elemento.value = valor;
+        }
+    }
+
+    function aplicarPlantilla() {
+        const plantilla = plantillasDisponibles.find(p => String(p.id) === plantillaSelect.value);
+        if (!plantilla) return;
+
+        const datos = plantilla.datos || {};
+
+        aplicarDato('input[name="nombre"]', datos.nombre);
+        aplicarDato('input[name="codigo"]', datos.codigo);
+        aplicarDato('textarea[name="descripcion"]', datos.descripcion);
+        aplicarDato('input[name="fabricante"]', datos.fabricante);
+        aplicarDato('input[name="modelo"]', datos.modelo);
+        aplicarDato('input[name="numero_serie"]', datos.numero_serie);
+        aplicarDato('input[name="ubicacion_fisica"]', datos.ubicacion_fisica);
+
+        if (datos.estado) {
+            const estadoSelect = document.querySelector('select[name="estado"]');
+            if (estadoSelect.querySelector(`option[value="${datos.estado}"]`)) {
+                estadoSelect.value = datos.estado;
+            }
+        }
+
+        if (datos.criticidad) {
+            const criticidadSelect = document.querySelector('select[name="criticidad"]');
+            if (criticidadSelect.querySelector(`option[value="${datos.criticidad}"]`)) {
+                criticidadSelect.value = datos.criticidad;
+            }
+        }
+
+        generarTagPreview();
+    }
+
+    // Inicializar plantillas si ya hay nivel preseleccionado
+    if (nivelSelect.value) {
+        poblarPlantillas(nivelSelect.value);
     }
 </script>
 {% endblock %}

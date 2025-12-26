@@ -13,7 +13,7 @@
     </div>
     
     <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin-bottom: 20px; border-radius: 5px;">
-        <strong>⚠️ Importante:</strong> El archivo Excel debe seguir el formato específico. 
+        <strong>⚠️ Importante:</strong> Usa la plantilla oficial que incluye ejemplos, guía de campos y catálogos.
         <a href="{% url 'activos:descargar_plantilla_excel' %}" style="color: #e52d27; text-decoration: underline;">
             Descarga la plantilla aquí
         </a>
@@ -30,16 +30,19 @@
         
         <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
             <h3 style="margin-bottom: 15px; color: #333;">Formato del Archivo</h3>
-            <p style="margin-bottom: 15px;">El archivo debe contener las siguientes columnas:</p>
+            <p style="margin-bottom: 15px;">El archivo debe contener las siguientes columnas (ya incluidas en la plantilla):</p>
             <ul style="line-height: 2; color: #555;">
                 <li><strong>nivel:</strong> Número del nivel de jerarquía (1, 2, 3, etc.)</li>
                 <li><strong>nombre:</strong> Nombre del activo</li>
                 <li><strong>codigo:</strong> Código único del activo</li>
                 <li><strong>padre:</strong> Código del activo padre (vacío si es raíz)</li>
+                <li><strong>familia:</strong> Familia del activo (debe existir en el catálogo)</li>
                 <li><strong>descripcion:</strong> Descripción (opcional)</li>
                 <li><strong>fabricante:</strong> Fabricante (opcional)</li>
                 <li><strong>modelo:</strong> Modelo (opcional)</li>
                 <li><strong>serie:</strong> Número de serie (opcional)</li>
+                <li><strong>criticidad:</strong> Valor libre (ej.: alta, media, baja)</li>
+                <li><strong>datos_personalizados (JSON):</strong> Campos adicionales en formato JSON</li>
             </ul>
         </div>
         
