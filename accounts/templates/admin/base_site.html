@@ -1,0 +1,21 @@
+
+{% extends "admin/base.html" %}
+{% load static i18n %}
+
+{% block title %}{% trans "Panel de Administración" %}{% endblock %}
+
+{% block extrastyle %}
+    {{ block.super }}
+    <link rel="stylesheet" href="{% static 'admin/admin-theme.css' %}">
+{% endblock %}
+
+{% block branding %}
+<div class="admin-branding">
+    <div class="brand-text">
+        <span class="brand-title">Gestión de Activos ESTRA</span>
+        <span class="brand-subtitle">{% trans "Administración" %}</span>
+    </div>
+</div>
+{% endblock %}
+
+{% block nav-global %}{% endblock %}
