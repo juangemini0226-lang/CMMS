@@ -93,6 +93,91 @@
             <textarea name="descripcion" rows="3"
                       placeholder="Descripción detallada del activo"></textarea>
         </div>
+ <h3 style="margin: 30px 0 15px; color: #333; border-bottom: 2px solid #f0f0f0; padding-bottom: 10px;">
+            Taxonomía ISO 14224 (Niveles 6 a 9)
+        </h3>
+        <p style="color: #555; margin-top: -5px; margin-bottom: 15px;">
+            Selecciona cada nivel de la cadena (Sistema → Subunidad → Ítem mantenible → Componente). Si no existe una opción, agrégala para guardarla y reutilizarla en el futuro.
+        </p>
+
+        <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px;">
+            <div class="card" style="box-shadow: none; border: 1px solid #f0f0f0;">
+                <div class="form-group" style="margin-bottom: 12px;">
+                    <label for="iso_nivel6_id">Nivel 6 · Sistema de alimentación</label>
+                    <select name="iso_nivel6_id" id="iso_nivel6_id" data-nivel="6">
+                        <option value="">Seleccione un sistema</option>
+                    </select>
+                    <small style="color: #666;">Ej: Sistema de alimentación, Enfriamiento, Portamoldes</small>
+                </div>
+                <div class="form-group" id="contenedor-nuevo-6">
+                    <button type="button" class="btn btn-secondary" data-toggle-nuevo="6" style="margin-bottom: 8px;">+ Agregar nuevo sistema (Nivel 6)</button>
+                    <div class="campos-nuevo-iso" data-nivel="6" style="display: none; gap: 8px; grid-template-columns: 1fr 1fr;">
+                        <input type="text" name="iso_nivel6_nuevo_codigo" placeholder="Código nivel 6">
+                        <input type="text" name="iso_nivel6_nuevo_nombre" placeholder="Nombre nivel 6">
+                    </div>
+                    <small class="texto-nuevo" style="color: #888;">Si agregas un nuevo sistema quedará disponible en la siguiente carga.</small>
+                </div>
+            </div>
+
+            <div class="card" style="box-shadow: none; border: 1px solid #f0f0f0;">
+                <div class="form-group" style="margin-bottom: 12px;">
+                    <label for="iso_nivel7_id">Nivel 7 · Subunidad</label>
+                    <select name="iso_nivel7_id" id="iso_nivel7_id" data-nivel="7">
+                        <option value="">Seleccione una subunidad</option>
+                    </select>
+                    <small style="color: #666;">Opciones disponibles según el sistema elegido.</small>
+                </div>
+                <div class="form-group" id="contenedor-nuevo-7">
+                    <button type="button" class="btn btn-secondary" data-toggle-nuevo="7" style="margin-bottom: 8px;">+ Agregar nueva subunidad (Nivel 7)</button>
+                    <div class="campos-nuevo-iso" data-nivel="7" style="display: none; gap: 8px; grid-template-columns: 1fr 1fr;">
+                        <input type="text" name="iso_nivel7_nuevo_codigo" placeholder="Código nivel 7">
+                        <input type="text" name="iso_nivel7_nuevo_nombre" placeholder="Nombre nivel 7">
+                    </div>
+                    <small class="texto-nuevo" style="color: #888;">Se asociará automáticamente al sistema seleccionado.</small>
+                </div>
+            </div>
+
+            <div class="card" style="box-shadow: none; border: 1px solid #f0f0f0;">
+                <div class="form-group" style="margin-bottom: 12px;">
+                    <label for="iso_nivel8_id">Nivel 8 · Ítem mantenible</label>
+                    <select name="iso_nivel8_id" id="iso_nivel8_id" data-nivel="8">
+                        <option value="">Seleccione un ítem</option>
+                    </select>
+                    <small style="color: #666;">Se filtra por la subunidad elegida.</small>
+                </div>
+                <div class="form-group" id="contenedor-nuevo-8">
+                    <button type="button" class="btn btn-secondary" data-toggle-nuevo="8" style="margin-bottom: 8px;">+ Agregar nuevo ítem mantenible (Nivel 8)</button>
+                    <div class="campos-nuevo-iso" data-nivel="8" style="display: none; gap: 8px; grid-template-columns: 1fr 1fr;">
+                        <input type="text" name="iso_nivel8_nuevo_codigo" placeholder="Código nivel 8">
+                        <input type="text" name="iso_nivel8_nuevo_nombre" placeholder="Nombre nivel 8">
+                    </div>
+                    <small class="texto-nuevo" style="color: #888;">Perfecto para piezas específicas reutilizables.</small>
+                </div>
+            </div>
+
+            <div class="card" style="box-shadow: none; border: 1px solid #f0f0f0;">
+                <div class="form-group" style="margin-bottom: 12px;">
+                    <label for="iso_nivel9_id">Nivel 9 · Componente</label>
+                    <select name="iso_nivel9_id" id="iso_nivel9_id" data-nivel="9">
+                        <option value="">Seleccione un componente</option>
+                    </select>
+                    <small style="color: #666;">Ej: O-ring metálico, Sensor de presión.</small>
+                </div>
+                <div class="form-group" id="contenedor-nuevo-9">
+                    <button type="button" class="btn btn-secondary" data-toggle-nuevo="9" style="margin-bottom: 8px;">+ Agregar nuevo componente (Nivel 9)</button>
+                    <div class="campos-nuevo-iso" data-nivel="9" style="display: none; gap: 8px; grid-template-columns: 1fr 1fr;">
+                        <input type="text" name="iso_nivel9_nuevo_codigo" placeholder="Código nivel 9">
+                        <input type="text" name="iso_nivel9_nuevo_nombre" placeholder="Nombre nivel 9">
+                    </div>
+                    <small class="texto-nuevo" style="color: #888;">Quedará disponible como opción sugerida para este árbol.</small>
+                </div>
+            </div>
+        </div>
+        <div class="card" style="box-shadow: none; border: 1px dashed #d9e2ec; background: #f9fcff; margin-top: 10px;">
+            <strong>Ruta seleccionada:</strong>
+            <div id="iso-ruta-seleccionada" style="color: #1d4ed8; margin-top: 6px;">Sin selección</div>
+            <small style="color: #555;">Las nuevas opciones se guardarán en el catálogo ISO 14224 y podrás reutilizarlas en futuras cargas.</small>
+        </div>
 
         <h3 style="margin: 30px 0 15px; color: #333; border-bottom: 2px solid #f0f0f0; padding-bottom: 10px;">
             Datos Técnicos
@@ -153,6 +238,7 @@
 <script>
     // Datos desde Django (string JSON -> objeto JS)
     const plantillasDisponibles = JSON.parse('{{ plantillas_json|default:"[]"|escapejs }}' || '[]');
+    const clasesISO = JSON.parse('{{ clases_iso_json|default:"[]"|escapejs }}' || '[]');
 
     const plantillaSelect = document.getElementById('plantilla_activo');
     const nivelSelect = document.getElementById('nivel_jerarquia');
@@ -168,6 +254,7 @@
     });
 
     plantillaSelect.addEventListener('change', aplicarPlantilla);
+    inicializarISO();
 
     function generarTagPreview() {
         const codigo = document.getElementById('codigo').value;
@@ -248,9 +335,136 @@
         generarTagPreview();
     }
 
-    // Inicializar plantillas si ya hay nivel preseleccionado
+   // Inicializar plantillas si ya hay nivel preseleccionado
     if (nivelSelect.value) {
         poblarPlantillas(nivelSelect.value);
+    }
+
+    // -------------------------
+    // Taxonomía ISO 14224
+    // -------------------------
+    function inicializarISO() {
+        const niveles = [6, 7, 8, 9];
+        const selects = {};
+        niveles.forEach((nivel) => {
+            selects[nivel] = document.getElementById(`iso_nivel${nivel}_id`);
+            selects[nivel].addEventListener('change', () => {
+                limpiarNivelesInferiores(nivel, selects);
+                poblarNivel(nivel + 1, selects);
+                actualizarRuta(selects);
+            });
+
+            const botonToggle = document.querySelector(`[data-toggle-nuevo="${nivel}"]`);
+            const contenedorCampos = document.querySelector(`.campos-nuevo-iso[data-nivel="${nivel}"]`);
+
+            if (botonToggle && contenedorCampos) {
+                botonToggle.addEventListener('click', () => {
+                    if (nivel > 6) {
+                        const padreSeleccionado = selects[nivel - 1]?.value;
+                        if (!padreSeleccionado) {
+                            alert('Primero selecciona o crea el nivel anterior para mantener la ruta ISO 14224.');
+                            return;
+                        }
+                    }
+                    const visible = contenedorCampos.style.display === 'grid';
+                    contenedorCampos.style.display = visible ? 'none' : 'grid';
+                });
+
+                contenedorCampos.querySelectorAll('input').forEach((input) => {
+                    input.addEventListener('input', () => {
+                        // Prioriza la creación manual limpiando la selección previa
+                        if (input.value.trim()) {
+                            selects[nivel].value = '';
+                        }
+                        actualizarRuta(selects);
+                    });
+                });
+            }
+        });
+
+        poblarNivel(6, selects);
+        limpiarNivelesInferiores(6, selects);
+        actualizarRuta(selects);
+    }
+
+    function opcionesPorNivel(nivel, padreId = null) {
+        if (nivel > 6 && (!padreId || padreId === '')) {
+            return [];
+        }
+        return clasesISO.filter((clase) => {
+            const coincideNivel = Number(clase.nivel_taxonomico) === Number(nivel);
+            if (!coincideNivel) return false;
+            if (padreId === null || padreId === '') return !clase.padre_id;
+            return Number(clase.padre_id) === Number(padreId);
+        });
+    }
+
+    function crearPlaceholder(select, texto) {
+        const option = document.createElement('option');
+        option.value = '';
+        option.textContent = texto;
+        select.appendChild(option);
+    }
+
+    function poblarNivel(nivel, selects) {
+        const selectActual = selects[nivel];
+        if (!selectActual) return;
+
+        selectActual.innerHTML = '';
+        const padreSeleccionado = selects[nivel - 1]?.value || null;
+        const opciones = opcionesPorNivel(nivel, padreSeleccionado);
+        const placeholder = nivel === 6 ? 'Seleccione un sistema' : 'Seleccione una opción';
+        if (nivel > 6 && !padreSeleccionado) {
+            crearPlaceholder(selectActual, 'Seleccione primero el nivel anterior');
+            return;
+        }
+        crearPlaceholder(selectActual, placeholder);
+
+        opciones.forEach((opcion) => {
+            const option = document.createElement('option');
+            option.value = opcion.id;
+            option.textContent = `${opcion.codigo} · ${opcion.nombre}`;
+            selectActual.appendChild(option);
+        });
+    }
+
+    function limpiarNivelesInferiores(nivel, selects) {
+        const niveles = [7, 8, 9].filter((n) => n > nivel);
+        niveles.forEach((n) => {
+            if (selects[n]) {
+                selects[n].innerHTML = '';
+                crearPlaceholder(selects[n], 'Seleccione una opción');
+            }
+            const campos = document.querySelector(`.campos-nuevo-iso[data-nivel="${n}"]`);
+            if (campos) {
+                campos.querySelectorAll('input').forEach((input) => input.value = '');
+            }
+        });
+    }
+
+    function leerValorVisible(nivel) {
+        const select = document.getElementById(`iso_nivel${nivel}_id`);
+        const camposNuevos = document.querySelector(`.campos-nuevo-iso[data-nivel="${nivel}"]`);
+
+        const nuevoNombre = camposNuevos ? (camposNuevos.querySelector(`input[name="iso_nivel${nivel}_nuevo_nombre"]`)?.value || '') : '';
+        const nuevoCodigo = camposNuevos ? (camposNuevos.querySelector(`input[name="iso_nivel${nivel}_nuevo_codigo"]`)?.value || '') : '';
+
+        if (nuevoNombre.trim()) {
+            return `${nuevoCodigo ? nuevoCodigo + ' · ' : ''}${nuevoNombre}`;
+        }
+
+        const opcion = select?.selectedOptions?.[0];
+        return opcion && select.value ? opcion.textContent : '';
+    }
+
+    function actualizarRuta(selects) {
+        const ruta = [6, 7, 8, 9]
+            .map((nivel) => leerValorVisible(nivel))
+            .filter((valor) => valor && valor.trim())
+            .join(' / ');
+
+        const destino = document.getElementById('iso-ruta-seleccionada');
+        destino.textContent = ruta || 'Sin selección';
     }
 </script>
 {% endblock %}

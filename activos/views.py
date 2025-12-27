@@ -4,6 +4,7 @@ from django.http import JsonResponse, HttpResponse
 from django.contrib import messages
 from django.db import IntegrityError
 from django.db.models import Count, Q
+from django.utils.text import slugify
 
 from .models import (
     Organizacion,
@@ -385,7 +386,7 @@ def crear_activo(request, padre_id=None):
         # Procesar formulario
         nivel_id = request.POST.get('nivel_jerarquia')
         nivel = get_object_or_404(NivelJerarquia, id=nivel_id, organizacion=organizacion)
-        
+
         familia = None
         familia_id = request.POST.get('familia')
         if familia_id:
@@ -395,6 +396,63 @@ def crear_activo(request, padre_id=None):
                 ),
                 id=familia_id,
             )
+
+        def obtener_o_crear_clase_iso(nivel_iso, padre_clase):
+            existente_id = request.POST.get(f'iso_nivel{nivel_iso}_id')
+            nuevo_nombre = (request.POST.get(f'iso_nivel{nivel_iso}_nuevo_nombre') or '').strip()
+            nuevo_codigo = (request.POST.get(f'iso_nivel{nivel_iso}_nuevo_codigo') or '').strip()
+
+            if existente_id:
+                return get_object_or_404(ClaseEquipoISO14224, id=existente_id)
+
+            if nuevo_nombre:
+                if nivel_iso > 6 and not padre_clase:
+                    messages.warning(
+                        request,
+                        f'Debes seleccionar o crear primero el nivel {nivel_iso - 1} antes de registrar el nivel {nivel_iso}.',
+                    )
+                    return None
+
+                codigo_generado = slugify(nuevo_nombre).upper().replace('-', '')
+                if not codigo_generado:
+                    codigo_generado = f"ISO{nivel_iso}"
+                codigo_generado = codigo_generado[:20]
+                clase, creado = ClaseEquipoISO14224.objects.get_or_create(
+                    codigo=nuevo_codigo or codigo_generado,
+                    defaults={
+                        'nombre': nuevo_nombre,
+                        'descripcion': nuevo_nombre,
+                        'nivel_taxonomico': nivel_iso,
+                        'padre': padre_clase,
+                    },
+                )
+
+                if not creado:
+                    # Ajusta datos clave si ya existía pero con atributos diferentes
+                    clase.nombre = clase.nombre or nuevo_nombre
+                    clase.descripcion = clase.descripcion or nuevo_nombre
+                    clase.nivel_taxonomico = nivel_iso
+                    if padre_clase and clase.padre_id != padre_clase.id:
+                        clase.padre = padre_clase
+                    clase.save()
+
+                return clase
+
+            return None
+
+        clase_iso_seleccionada = None
+        padre_clase_iso = None
+
+        for numero_nivel in range(6, 10):
+            clase_iso = obtener_o_crear_clase_iso(numero_nivel, padre_clase_iso)
+            if clase_iso:
+                padre_clase_iso = clase_iso
+                clase_iso_seleccionada = clase_iso
+
+        clase_iso_texto = ''
+        if clase_iso_seleccionada:
+            clase_iso_texto = f"{clase_iso_seleccionada.codigo} - {clase_iso_seleccionada.nombre}"
+            clase_iso_texto = clase_iso_texto[:100]
 
         activo = NodoActivo.objects.create(
             organizacion=organizacion,
@@ -410,12 +468,12 @@ def crear_activo(request, padre_id=None):
             criticidad=request.POST.get('criticidad', ''),
             ubicacion_fisica=request.POST.get('ubicacion_fisica', ''),
             familia=familia,
+            clase_equipo_iso=clase_iso_texto,
             creado_por=request.user
         )
 
         messages.success(request, f'Activo "{activo.nombre}" creado exitosamente')
         return redirect('activos:detalle_activo', activo_id=activo.id)
-
     niveles = NivelJerarquia.objects.filter(organizacion=organizacion)
     if padre:
         niveles = niveles.filter(numero_nivel__gt=padre.nivel_jerarquia.numero_nivel)
@@ -444,6 +502,10 @@ def crear_activo(request, padre_id=None):
         for p in plantillas
     ]
 
+    clases_iso = ClaseEquipoISO14224.objects.all().values(
+        'id', 'codigo', 'nombre', 'nivel_taxonomico', 'padre_id'
+    ).order_by('nivel_taxonomico', 'nombre')
+
     context = {
         'padre': padre,
         'niveles': niveles,
@@ -451,11 +513,10 @@ def crear_activo(request, padre_id=None):
         'familias': familias,
         'plantillas': plantillas_data,
         'plantillas_json': json.dumps(plantillas_data, ensure_ascii=False),
+        'clases_iso_json': json.dumps(list(clases_iso), ensure_ascii=False),
     }
 
     return render(request, 'activos/crear_activo.html', context)
-
-
 @login_required
 def gestionar_plantillas(request):
     """Crear y consultar plantillas reutilizables para agilizar carga de activos."""

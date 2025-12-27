@@ -1,9 +1,15 @@
 from django.contrib import admin
 from tree_queries.admin import TreeAdmin
 from .models import (
-    Organizacion, NivelJerarquia, CampoPersonalizado,
-    NodoActivo, ClaseEquipoISO14224, PlantillaActivo,
-    DocumentoActivo
+    CatalogoParte,
+    CampoPersonalizado,
+    ClaseEquipoISO14224,
+    DocumentoActivo,
+    NivelJerarquia,
+    NodoActivo,
+    Organizacion,
+    PlantillaActivo,
+    PlantillaNodoISO,
 )
 
 # ========================================
@@ -56,6 +62,14 @@ class CampoPersonalizadoAdmin(admin.ModelAdmin):
     list_filter = ['nivel_jerarquia__organizacion', 'tipo_campo', 'es_requerido']
     search_fields = ['nombre_campo']
     ordering = ['nivel_jerarquia', 'orden']
+
+
+@admin.register(CatalogoParte)
+class CatalogoParteAdmin(admin.ModelAdmin):
+    list_display = ['codigo_sku', 'nombre', 'organizacion', 'es_activo']
+    list_filter = ['organizacion', 'es_activo']
+    search_fields = ['codigo_sku', 'nombre', 'descripcion']
+    ordering = ['organizacion', 'codigo_sku']
 
 
 # ========================================
@@ -200,6 +214,27 @@ class PlantillaActivoAdmin(admin.ModelAdmin):
             'fields': ('datos_predeterminados',),
             'description': 'Valores por defecto en formato JSON que se aplicarán al crear activos con esta plantilla.'
         }),
+    )
+
+
+@admin.register(PlantillaNodoISO)
+class PlantillaNodoISOAdmin(TreeAdmin):
+    list_display = ['indented_title', 'nombre', 'nivel_iso', 'plantilla', 'organizacion']
+    list_filter = ['nivel_iso', 'organizacion', 'plantilla']
+    search_fields = ['codigo', 'nombre']
+    ordering = ['organizacion', 'nivel_iso', 'codigo']
+    autocomplete_fields = ['parent', 'plantilla', 'catalogo_parte']
+    fieldsets = (
+        ('Jerarquía', {
+            'fields': ('organizacion', 'plantilla', 'parent', 'nivel_iso')
+        }),
+        ('Identificación', {
+            'fields': ('codigo', 'nombre')
+        }),
+        ('Datos', {
+            'fields': ('datos_predeterminados', 'catalogo_parte'),
+            'classes': ('collapse',)
+        })
     )
 
 

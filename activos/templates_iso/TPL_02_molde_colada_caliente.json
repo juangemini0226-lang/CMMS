@@ -1,0 +1,172 @@
+{
+  "plantilla": {
+    "codigo": "TPL_02",
+    "nombre": "Molde Colada Caliente + Correderas",
+    "descripcion": "Plantilla profunda ISO 14224 para molde de inyección con colada caliente y subsistemas obligatorios.",
+    "nivel_equipo": 5
+  },
+  "nodos": [
+    {
+      "codigo": "IND_PLASTICOS",
+      "nombre": "Industria Plásticos",
+      "nivel_iso": 1,
+      "children": [
+        {
+          "codigo": "ESTRA_SA",
+          "nombre": "Estra S.A.",
+          "nivel_iso": 2,
+          "children": [
+            {
+              "codigo": "PLT_MEDELLIN",
+              "nombre": "Planta Medellín",
+              "nivel_iso": 3,
+              "children": [
+                {
+                  "codigo": "NAVE_INY",
+                  "nombre": "Nave Inyección",
+                  "nivel_iso": 4,
+                  "children": [
+                    {
+                      "codigo": "MOL1",
+                      "nombre": "Molde de Inyección MOL1",
+                      "nivel_iso": 5,
+                      "children": [
+                        {
+                          "codigo": "SYS_A_MOLDBASE",
+                          "nombre": "Sistema Estructural (Mold Base)",
+                          "nivel_iso": 6,
+                          "children": [
+                            {
+                              "codigo": "GUÍAS",
+                              "nombre": "Columnas y Bujes",
+                              "nivel_iso": 7,
+                              "children": [
+                                {
+                                  "codigo": "BUJE_GUIA",
+                                  "nombre": "Buje guía",
+                                  "nivel_iso": 8,
+                                  "children": [
+                                    {
+                                      "codigo": "BUJE_GUIA_ORING",
+                                      "nombre": "O-Ring Vitón para buje guía",
+                                      "nivel_iso": 9,
+                                      "catalogo_parte_ref": "SKU-OR-001"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "codigo": "SYS_B_FEED",
+                          "nombre": "Sistema de Alimentación (Hot Runner)",
+                          "nivel_iso": 6,
+                          "children": [
+                            {
+                              "codigo": "MANIFOLD",
+                              "nombre": "Manifold",
+                              "nivel_iso": 7,
+                              "children": [
+                                {
+                                  "codigo": "NOZZLE",
+                                  "nombre": "Boquilla",
+                                  "nivel_iso": 8,
+                                  "children": [
+                                    {
+                                      "codigo": "TIP_NOZZLE",
+                                      "nombre": "Punta de boquilla",
+                                      "nivel_iso": 9,
+                                      "catalogo_parte_ref": "SKU-TIP-002"
+                                    },
+                                    {
+                                      "codigo": "NOZZLE_ORING",
+                                      "nombre": "O-Ring Manifold",
+                                      "nivel_iso": 9,
+                                      "catalogo_parte_ref": "SKU-OR-002"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "codigo": "SYS_C_COOLING",
+                          "nombre": "Sistema de Refrigeración",
+                          "nivel_iso": 6,
+                          "children": [
+                            {
+                              "codigo": "CIRCUITO_AGUA",
+                              "nombre": "Circuito de agua",
+                              "nivel_iso": 7,
+                              "children": [
+                                {
+                                  "codigo": "CONECTOR_RAPIDO",
+                                  "nombre": "Conector rápido",
+                                  "nivel_iso": 8,
+                                  "children": [
+                                    {
+                                      "codigo": "JUNTA_CIRC",
+                                      "nombre": "Junta tórica de circuito",
+                                      "nivel_iso": 9,
+                                      "catalogo_parte_ref": "SKU-OR-003"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "codigo": "SYS_D_EJECTION",
+                          "nombre": "Sistema de Expulsión",
+                          "nivel_iso": 6,
+                          "children": [
+                            {
+                              "codigo": "PLACA_EYE",
+                              "nombre": "Placa de expulsión",
+                              "nivel_iso": 7,
+                              "children": [
+                                {
+                                  "codigo": "PIN_EXP",
+                                  "nombre": "Pin expulsor",
+                                  "nivel_iso": 8,
+                                  "children": [
+                                    {
+                                      "codigo": "PIN_EXP_ASIENTO",
+                                      "nombre": "Asiento de pin expulsor",
+                                      "nivel_iso": 9,
+                                      "catalogo_parte_ref": "SKU-PIN-004"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "codigo": "RETORNO",
+                                  "nombre": "Resorte de retorno",
+                                  "nivel_iso": 8,
+                                  "children": [
+                                    {
+                                      "codigo": "RETORNO_SKU",
+                                      "nombre": "Resorte retorno 200N",
+                                      "nivel_iso": 9,
+                                      "catalogo_parte_ref": "SKU-RES-005"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
