@@ -790,20 +790,25 @@ def eliminar_activo(request, activo_id):
 def importar_excel(request):
     """Importar activos desde Excel"""
     organizacion = Organizacion.objects.first()  # Ajustar según tu lógica
+
+    if not organizacion:
+        messages.error(request, 'Debe configurar una organización antes de importar activos.')
+        return redirect('activos:dashboard_activos')
     
     if request.method == 'POST' and request.FILES.get('archivo_excel'):
         archivo_excel = request.FILES['archivo_excel']
         
         # Guardar archivo temporalmente
         import tempfile
+        import os
         with tempfile.NamedTemporaryFile(delete=False, suffix='.xlsx') as tmp:
             for chunk in archivo_excel.chunks():
                 tmp.write(chunk)
             ruta_temporal = tmp.name
         
         # Importar
+        importador = ImportadorExcelActivos(organizacion, usuario=request.user)
         try:
-            importador = ImportadorExcelActivos(organizacion)
             resultado = importador.importar_desde_excel(ruta_temporal)
             
             if resultado['errores']:
@@ -818,6 +823,10 @@ def importar_excel(request):
         except Exception as e:
             messages.error(request, f'Error al importar: {str(e)}')
         
+        finally:
+            if 'ruta_temporal' in locals() and os.path.exists(ruta_temporal):
+                os.unlink(ruta_temporal)
+
         return redirect('activos:vista_arbol_activos')
     
     return render(request, 'activos/importar_excel.html')

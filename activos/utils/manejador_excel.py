@@ -1,15 +1,23 @@
 import pandas as pd
+import os
 from django.core.exceptions import ValidationError
 from activos.models import NodoActivo, NivelJerarquia, Organizacion
 
 class ImportadorExcelActivos:
     """Maneja importación de activos desde Excel"""
     
-    def __init__(self, organizacion):
+    def __init__(self, organizacion, usuario=None):
         self.organizacion = organizacion
+        self.usuario = usuario
     
     def importar_desde_excel(self, ruta_archivo):
         """Importa jerarquía de activos desde Excel"""
+        if not self.organizacion:
+            raise ValidationError("Se requiere una organización configurada para importar activos.")
+
+        if not os.path.exists(ruta_archivo):
+            raise ValidationError("El archivo de Excel no está disponible para importar.")
+
         df = pd.read_excel(ruta_archivo)
         
         # Validar columnas requeridas
@@ -65,7 +73,7 @@ class ImportadorExcelActivos:
             fabricante=fila.get('fabricante', ''),
             modelo=fila.get('modelo', ''),
             numero_serie=fila.get('serie', ''),
-            creado_por=self.organizacion.creado_por
+            creado_por=self.usuario or self.organizacion.creado_por
         )
         
         return activo
