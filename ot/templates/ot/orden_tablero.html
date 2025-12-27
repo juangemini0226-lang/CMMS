@@ -1,131 +1,239 @@
 {% extends "base.html" %}
 {% block content %}
 <style>
+    :root {
+        --pendiente: #f97316;
+        --por-iniciar: #0ea5e9;
+        --en-ejecucion: #22c55e;
+        --en-espera: #eab308;
+        --finalizada: #6366f1;
+        --cancelada: #9ca3af;
+    }
+
+    .estado-pendiente { --estado-color: var(--pendiente); }
+    .estado-por_iniciar { --estado-color: var(--por-iniciar); }
+    .estado-en_ejecucion { --estado-color: var(--en-ejecucion); }
+    .estado-en_espera { --estado-color: var(--en-espera); }
+    .estado-finalizada { --estado-color: var(--finalizada); }
+    .estado-cancelada { --estado-color: var(--cancelada); }
+
+    .page-hero {
+        background: linear-gradient(135deg, #fff2f2, #fff9f0);
+        border: 1px solid #ffe0dc;
+        border-radius: 18px;
+        padding: 20px 24px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 18px;
+        box-shadow: 0 10px 30px rgba(229, 45, 39, 0.08);
+    }
+
+    .page-hero h1 {
+        margin-bottom: 6px;
+    }
+
+    .page-hero .meta {
+        color: #6b7280;
+    }
+
+    .hero-actions {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+    }
+
+    .hero-badge {
+        background: #fff;
+        border: 1px dashed #f59e0b;
+        color: #b45309;
+        padding: 8px 12px;
+        border-radius: 14px;
+        font-weight: 600;
+    }
+
     .resumen-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 12px;
+        grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+        gap: 14px;
         margin-bottom: 18px;
     }
+
     .resumen-card {
-        background: white;
-        border-radius: 14px;
+        background: #fff;
+        border-radius: 16px;
         padding: 14px;
         border: 1px solid #e5e7eb;
-        box-shadow: 0 10px 25px rgba(0,0,0,0.05);
-    }
-    .board {
+        box-shadow: 0 8px 20px rgba(0,0,0,0.04);
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-        gap: 16px;
-    }
-    .column {
-        background: #ffffff;
-        border: 1px solid #e5e7eb;
-        border-radius: 14px;
-        padding: 14px;
-        box-shadow: 0 10px 25px rgba(0,0,0,0.05);
-    }
-    .col-head {
-        display: flex;
-        justify-content: space-between;
+        grid-template-columns: auto 1fr auto;
         align-items: center;
-        margin-bottom: 10px;
+        gap: 12px;
     }
-    .pill {
-        padding: 6px 10px;
+
+    .resumen-icon {
+        width: 44px;
+        height: 44px;
+        display: grid;
+        place-items: center;
+        border-radius: 14px;
+        background: #f8fafc;
+        font-size: 1.2rem;
+        color: var(--estado-color, #111827);
+    }
+
+    .resumen-title {
+        font-weight: 700;
+        margin-bottom: 4px;
+    }
+
+    .resumen-desc {
+        color: #6b7280;
+        font-size: 0.9rem;
+    }
+
+    .resumen-count {
+        padding: 8px 12px;
+        border-radius: 12px;
+        font-weight: 700;
+        color: #0f172a;
+        background: #fff;
+        border: 1px solid var(--estado-color, #e5e7eb);
+        min-width: 48px;
+        text-align: center;
+    }
+
+    .filter-card {
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: 16px;
+        padding: 14px;
+        box-shadow: 0 10px 20px rgba(0,0,0,0.04);
+        margin-bottom: 18px;
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 14px;
+    }
+
+    .filter-card .field {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .filter-card label {
+        font-weight: 700;
+        color: #374151;
+    }
+
+    .filter-card input,
+    .filter-card select {
+        padding: 11px 12px;
+        border-radius: 12px;
+        border: 1px solid #d1d5db;
+        background: #f9fafb;
+        font-size: 0.95rem;
+    }
+
+    .chip-row {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .chip-row .label {
+        font-weight: 700;
+        color: #6b7280;
+    }
+
+    .chip {
+        border: 1px solid #e5e7eb;
+        background: #f8fafc;
+        color: #111827;
+        padding: 6px 12px;
         border-radius: 999px;
-        font-weight: 600;
-        font-size: 0.85rem;
         display: inline-flex;
         align-items: center;
         gap: 6px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
     }
-    .pill-pill {
-        background-color: var(--pill-color, #e5e7eb);
-        color: var(--pill-text, #111827);
+
+    .chip[data-active="true"] {
+        background: #111827;
+        color: #fff;
+        border-color: #111827;
     }
-    .card {
-        background: #f9fafb;
-        border: 1px solid #e5e7eb;
-        border-radius: 12px;
-        padding: 12px;
-        margin-bottom: 10px;
-    }
-    .card h4 { margin-bottom: 4px; }
-    .meta { color: #6b7280; font-size: 0.9rem; }
-    .tag {
-        display: inline-block;
-        background: #eef2ff;
-        color: #4338ca;
-        padding: 4px 8px;
+
+    .chip .dot {
+        width: 12px;
+        height: 12px;
         border-radius: 999px;
-        font-size: 0.8rem;
-        margin-right: 4px;
+        display: inline-block;
+        background: var(--estado-color, currentColor);
     }
-    .acciones {
+
+    .filter-actions {
         display: flex;
-        justify-content: space-between;
         align-items: center;
+        justify-content: flex-end;
         gap: 10px;
-        margin-top: 10px;
         flex-wrap: wrap;
     }
-    .acciones a {
-        text-decoration: none;
-        font-weight: 600;
-        color: #b31217;
-    }
-    .acciones form {
-        display: flex;
-        gap: 6px;
-        align-items: center;
-    }
-    .acciones select, .acciones button {
-        padding: 6px 10px;
-        border-radius: 10px;
-        border: 1px solid #d1d5db;
-    }
-    .acciones button {
-        background: linear-gradient(135deg, #e52d27, #b31217);
-        color: white;
-        border: none;
+
+    .secondary-btn {
+        border: 1px solid #e5e7eb;
+        background: #fff;
+        padding: 9px 14px;
+        border-radius: 12px;
+        font-weight: 700;
+        color: #111827;
         cursor: pointer;
     }
-    .filtros {
-        background: white;
-        padding: 12px;
-        border-radius: 14px;
-        border: 1px solid #e5e7eb;
-        box-shadow: 0 8px 18px rgba(0,0,0,0.04);
-        margin-bottom: 16px;
-        display: flex;
-        gap: 12px;
-        align-items: center;
-        flex-wrap: wrap;
-    }
-    .filtros input, .filtros select {
-        padding: 10px 12px;
+
+    .primary-btn {
+        border: none;
+        background: linear-gradient(135deg, #e52d27 0%, #b31217 100%);
+        color: white;
+        padding: 10px 16px;
         border-radius: 12px;
-        border: 1px solid #d1d5db;
-        min-width: 200px;
+        font-weight: 700;
+        cursor: pointer;
+        box-shadow: 0 8px 18px rgba(179, 18, 23, 0.25);
     }
+
     .novedades-panel {
         background: linear-gradient(135deg, #fff7ed, #fff);
         border: 1px solid #fed7aa;
-        border-radius: 14px;
+        border-radius: 16px;
         padding: 14px;
         margin-bottom: 16px;
+        box-shadow: 0 8px 16px rgba(0,0,0,0.04);
     }
+
+    .novedades-panel h3 {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 6px;
+    }
+
     .novedad-item {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        gap: 8px;
-        padding: 8px 0;
+        gap: 10px;
+        padding: 10px 0;
         border-bottom: 1px solid #ffe4c7;
     }
-    .novedad-item:last-child { border-bottom: none; }
+
+    .novedad-item:last-child {
+        border-bottom: none;
+    }
+
     .btn-link {
         display: inline-flex;
         align-items: center;
@@ -135,22 +243,204 @@
         border: 1px solid #f59e0b;
         color: #b45309;
         text-decoration: none;
-        font-weight: 600;
+        font-weight: 700;
         background: #fff7ed;
     }
+
+    .board-wrapper {
+        background: #fff;
+        border-radius: 18px;
+        border: 1px solid #e5e7eb;
+        box-shadow: 0 12px 28px rgba(0,0,0,0.05);
+        padding: 14px;
+    }
+
+    .board-toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-bottom: 12px;
+    }
+
+    .view-switch {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .view-pill {
+        padding: 8px 12px;
+        background: #f8fafc;
+        border: 1px solid #e5e7eb;
+        color: #111827;
+        border-radius: 12px;
+        font-weight: 700;
+        cursor: pointer;
+    }
+
+    .view-pill.active {
+        background: #111827;
+        color: #fff;
+        border-color: #111827;
+    }
+
+    .toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-weight: 600;
+        color: #374151;
+    }
+
+    .board {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 14px;
+    }
+
+    .board.compact .card {
+        padding: 10px;
+    }
+
+    .estado-column {
+        background: #f9fafb;
+        border: 1px solid #e5e7eb;
+        border-radius: 16px;
+        padding: 12px;
+    }
+
+    .col-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 12px;
+        gap: 10px;
+    }
+
+    .col-title {
+        font-weight: 800;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .col-meta {
+        color: #6b7280;
+        font-size: 0.9rem;
+    }
+
+    .pill {
+        padding: 6px 10px;
+        border-radius: 999px;
+        font-weight: 700;
+        font-size: 0.85rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .pill-count {
+        background-color: var(--estado-color, #e5e7eb);
+        color: #111827;
+        border: 1px solid var(--estado-color, #e5e7eb);
+    }
+
+    .card {
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: 14px;
+        padding: 12px;
+        margin-bottom: 12px;
+        box-shadow: 0 6px 14px rgba(0,0,0,0.04);
+    }
+
+    .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 6px;
+    }
+
+    .card h4 {
+        margin-bottom: 0;
+        font-size: 1.05rem;
+    }
+
+    .meta {
+        color: #6b7280;
+        font-size: 0.92rem;
+    }
+
+    .tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: #eef2ff;
+        color: #4338ca;
+        padding: 6px 10px;
+        border-radius: 999px;
+        font-size: 0.85rem;
+        font-weight: 700;
+    }
+
+    .acciones {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+        margin-top: 12px;
+        flex-wrap: wrap;
+    }
+
+    .acciones a {
+        text-decoration: none;
+        font-weight: 700;
+        color: #b31217;
+    }
+
+    .acciones form {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+    }
+
+    .acciones select, .acciones button {
+        padding: 6px 10px;
+        border-radius: 10px;
+        border: 1px solid #d1d5db;
+    }
+
+    .acciones button {
+        background: linear-gradient(135deg, #e52d27, #b31217);
+        color: white;
+        border: none;
+        cursor: pointer;
+    }
+
     .empty {
         color: #9ca3af;
         font-style: italic;
-        font-size: 0.9rem;
+        font-size: 0.95rem;
+        padding: 8px 0;
+    }
+
+    @media (max-width: 900px) {
+        .filter-card {
+            grid-template-columns: 1fr;
+        }
     }
 </style>
 
-<div class="page-toolbar">
+<div class="page-hero">
     <div>
         <h1>Órdenes de trabajo (OT)</h1>
-        <p class="meta">Planifica, ejecuta y cierra las órdenes con trazabilidad.</p>
+        <p class="meta">Planifica, ejecuta y cierra las órdenes con trazabilidad y control.</p>
     </div>
-    <div class="toolbar-actions">
+    <div class="hero-actions">
+        <span class="hero-badge">Tablero renovado</span>
         <a class="back-button" href="{% url 'ot:orden_crear' %}">➕ Crear OT</a>
     </div>
 </div>
@@ -167,25 +457,24 @@
 
 <div class="resumen-grid">
     {% for estado in estados_tablero %}
-    <div class="resumen-card">
-        <div style="display:flex; align-items:center; justify-content: space-between;">
-            <div>
-                <strong>{{ estado.icono }} {{ estado.titulo }}</strong>
-                <p class="meta">{{ estado.descripcion }}</p>
-            </div>
-            <div class="pill pill-pill" style="--pill-color: {{ estado.color }}; --pill-text: {{ estado.color }};">{{ estado.conteo_global|default:0 }}</div>
+    <div class="resumen-card estado-{{ estado.id }}">
+        <div class="resumen-icon estado-{{ estado.id }}">{{ estado.icono }}</div>
+        <div>
+            <div class="resumen-title">{{ estado.titulo }}</div>
+            <p class="resumen-desc">{{ estado.descripcion }}</p>
         </div>
+        <div class="resumen-count estado-{{ estado.id }}">{{ estado.conteo_global|default:0 }}</div>
     </div>
     {% endfor %}
 </div>
 
-<form method="get" class="filtros">
-    <div style="flex:1;">
-        <label>Búsqueda</label><br>
+<form id="filterForm" method="get" class="filter-card">
+    <div class="field">
+        <label>Búsqueda</label>
         <input type="text" name="q" value="{{ busqueda }}" placeholder="Equipo, título, consecutivo, descripción...">
     </div>
-    <div>
-        <label>Estado</label><br>
+    <div class="field">
+        <label>Estado</label>
         <select name="estado">
             <option value="">Todos</option>
             {% for estado in estados_tablero %}
@@ -193,21 +482,29 @@
             {% endfor %}
         </select>
     </div>
-    <div>
-        <button type="submit" class="back-button">Filtrar</button>
+    <div class="chip-row">
+        <span class="label">Atajos rápidos:</span>
+        {% for estado in estados_tablero %}
+            <button type="button" class="chip estado-{{ estado.id }}" data-estado-chip="{{ estado.id }}">
+                <span class="dot"></span>
+                {{ estado.titulo }}
+            </button>
+        {% endfor %}
+    </div>
+    <div class="filter-actions">
+        <a class="secondary-btn" href="{% url 'ot:orden_list' %}">Limpiar</a>
+        <button type="submit" class="primary-btn">Aplicar filtros</button>
     </div>
 </form>
 
 {% if novedades_pendientes %}
 <div class="novedades-panel">
-    <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-        <strong>📌 Novedades pendientes que necesitan OT</strong>
-        <span class="meta">Toma las novedades y conviértelas en orden de trabajo</span>
-    </div>
+    <h3>📌 Novedades pendientes que necesitan OT</h3>
+    <p class="meta" style="margin-bottom:8px;">Toma las novedades y conviértelas en orden de trabajo.</p>
     {% for novedad in novedades_pendientes %}
     <div class="novedad-item">
         <div>
-            <div style="font-weight:600;">{{ novedad.titulo }}</div>
+            <div style="font-weight:700;">{{ novedad.titulo }}</div>
             <div class="meta">{{ novedad.equipo }} · {{ novedad.fecha }}</div>
         </div>
         <a class="btn-link" href="{% url 'ot:orden_desde_novedad' novedad.id %}">Crear OT →</a>
@@ -216,49 +513,116 @@
 </div>
 {% endif %}
 
-<div class="board">
-    {% for estado in estados_tablero %}
-    <div class="column">
-        <div class="col-head">
-            <div>
-                <strong>{{ estado.icono }} {{ estado.titulo }}</strong>
-                <div class="meta">{{ estado.descripcion }}</div>
-            </div>
-            <span class="pill pill-pill" style="--pill-color: {{ estado.color }}; --pill-text: {{ estado.color }};">{{ estado.total }}</span>
+<div class="board-wrapper">
+    <div class="board-toolbar">
+        <div class="view-switch" id="viewSwitch">
+            <button type="button" class="view-pill active" data-view-target="all">Todas</button>
+            {% for estado in estados_tablero %}
+                <button type="button" class="view-pill" data-view-target="{{ estado.id }}">{{ estado.titulo }}</button>
+            {% endfor %}
         </div>
-        {% with lista=estado.ordenes %}
-            {% if lista %}
-                {% for orden in lista %}
-                <div class="card">
-                    <div style="display:flex; justify-content: space-between; align-items: center;">
-                        <h4>{{ orden.codigo }} · {{ orden.titulo }}</h4>
-                        <span class="tag">{{ orden.get_prioridad_display }}</span>
-                    </div>
-                    <div class="meta">{{ orden.equipo }}{% if orden.responsable %} · Responsable: {{ orden.responsable }}{% endif %}</div>
-                    {% if orden.novedad_origen %}
-                        <div class="meta">Desde novedad: {{ orden.novedad_origen.titulo }}</div>
-                    {% endif %}
-                    <div class="acciones">
-                        <a href="{% url 'ot:orden_detalle' orden.pk %}">Ver detalle</a>
-                        <a href="{% url 'ot:orden_editar' orden.pk %}">Editar</a>
-                        <form method="post" action="{% url 'ot:orden_actualizar_estado' orden.pk %}">
-                            {% csrf_token %}
-                            <select name="estado">
-                                {% for opcion, nombre in orden.ESTADOS %}
-                                    <option value="{{ opcion }}" {% if opcion == orden.estado %}selected{% endif %}>{{ nombre }}</option>
-                                {% endfor %}
-                            </select>
-                            <input type="hidden" name="nota" value="">
-                            <button type="submit">Mover</button>
-                        </form>
-                    </div>
-                </div>
-                {% endfor %}
-            {% else %}
-                <p class="empty">Sin órdenes en este estado.</p>
-            {% endif %}
-        {% endwith %}
+        <div class="view-switch">
+            <label class="toggle"><input type="checkbox" id="toggleCompact"> Modo compacto</label>
+            <label class="toggle"><input type="checkbox" id="toggleEmpty"> Ocultar vacías</label>
+        </div>
     </div>
-    {% endfor %}
+    <div class="board" id="board">
+        {% for estado in estados_tablero %}
+        <div class="estado-column" data-estado="{{ estado.id }}" data-total="{{ estado.total }}">
+            <div class="col-head">
+                <div>
+                    <div class="col-title">{{ estado.icono }} {{ estado.titulo }}</div>
+                    <div class="col-meta">{{ estado.descripcion }}</div>
+                </div>
+                <span class="pill pill-count estado-{{ estado.id }}">{{ estado.total }}</span>
+            </div>
+            {% with lista=estado.ordenes %}
+                {% if lista %}
+                    {% for orden in lista %}
+                    <div class="card">
+                        <div class="card-header">
+                            <h4>{{ orden.codigo }} · {{ orden.titulo }}</h4>
+                            <span class="tag">{{ orden.get_prioridad_display }}</span>
+                        </div>
+                        <div class="meta">{{ orden.equipo }}{% if orden.responsable %} · Responsable: {{ orden.responsable }}{% endif %}</div>
+                        {% if orden.novedad_origen %}
+                            <div class="meta">Desde novedad: {{ orden.novedad_origen.titulo }}</div>
+                        {% endif %}
+                        <div class="acciones">
+                            <div style="display:flex; gap:10px; flex-wrap: wrap;">
+                                <a href="{% url 'ot:orden_detalle' orden.pk %}">Ver detalle</a>
+                                <a href="{% url 'ot:orden_editar' orden.pk %}">Editar</a>
+                            </div>
+                            <form method="post" action="{% url 'ot:orden_actualizar_estado' orden.pk %}">
+                                {% csrf_token %}
+                                <select name="estado">
+                                    {% for opcion, nombre in orden.ESTADOS %}
+                                        <option value="{{ opcion }}" {% if opcion == orden.estado %}selected{% endif %}>{{ nombre }}</option>
+                                    {% endfor %}
+                                </select>
+                                <input type="hidden" name="nota" value="">
+                                <button type="submit">Mover</button>
+                            </form>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="empty">Sin órdenes en este estado.</p>
+                {% endif %}
+            {% endwith %}
+        </div>
+        {% endfor %}
+    </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const board = document.getElementById('board');
+        const viewButtons = document.querySelectorAll('[data-view-target]');
+        const columns = document.querySelectorAll('.estado-column');
+        const toggleCompact = document.getElementById('toggleCompact');
+        const toggleEmpty = document.getElementById('toggleEmpty');
+        const quickChips = document.querySelectorAll('[data-estado-chip]');
+        const estadoSelect = document.querySelector('select[name="estado"]');
+        const filterForm = document.getElementById('filterForm');
+        let currentView = 'all';
+
+        const applyVisibility = () => {
+            columns.forEach(col => {
+                const matchesView = currentView === 'all' || col.dataset.estado === currentView;
+                const hideEmpty = toggleEmpty.checked && col.dataset.total === '0';
+                col.style.display = matchesView && !hideEmpty ? '' : 'none';
+            });
+        };
+
+        viewButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                currentView = btn.dataset.viewTarget;
+                viewButtons.forEach(el => el.classList.toggle('active', el === btn));
+                applyVisibility();
+            });
+        });
+
+        toggleCompact.addEventListener('change', () => {
+            board.classList.toggle('compact', toggleCompact.checked);
+        });
+
+        toggleEmpty.addEventListener('change', applyVisibility);
+
+        quickChips.forEach(chip => {
+            chip.addEventListener('click', () => {
+                if (estadoSelect) {
+                    estadoSelect.value = chip.dataset.estadoChip;
+                }
+                quickChips.forEach(c => c.dataset.active = 'false');
+                chip.dataset.active = 'true';
+                if (filterForm) {
+                    filterForm.submit();
+                }
+            });
+        });
+
+        applyVisibility();
+    });
+</script>
 {% endblock %}
