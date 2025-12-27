@@ -47,6 +47,41 @@
         box-shadow: 0 8px 18px rgba(0,0,0,0.06);
         margin-bottom: 18px;
     }
+    .panel.collapsible {
+        padding: 0;
+    }
+    .collapsible-header {
+        cursor: pointer;
+        padding: 18px;
+    }
+    .collapsible-body {
+        padding: 0 18px 18px;
+        border-top: 1px solid #f1f3f5;
+    }
+    .summary-meta {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    .toggle-hint {
+        color: #6c757d;
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.2px;
+        text-transform: uppercase;
+    }
+    details.panel {
+        border: 1px solid transparent;
+    }
+    details.panel[open] {
+        border-color: #f1f3f5;
+    }
+    details.panel summary {
+        list-style: none;
+    }
+    details.panel summary::-webkit-details-marker {
+        display: none;
+    }
     .panel-header {
         display: flex;
         justify-content: space-between;
@@ -259,53 +294,69 @@
     </div>
 
     <div class="split-grid">
-        <div class="panel">
-            <div class="panel-header">
-                <h3 class="panel-title">Distribución por Criticidad</h3>
-                <span class="pill">Condición</span>
+     <details class="panel collapsible">
+            <summary class="panel-header collapsible-header">
+                <div>
+                    <h3 class="panel-title">Distribución por Criticidad</h3>
+                    <div class="panel-subtitle">Opcional: despliega para ver cómo se reparte la condición de los activos.</div>
+                </div>
+                <div class="summary-meta">
+                    <span class="pill">Condición general</span>
+                    <span class="toggle-hint">Ver detalle</span>
+                </div>
+            </summary>
+            <div class="collapsible-body">
+                {% if activos_por_criticidad %}
+                    <ul class="progress-list">
+                        {% for item in activos_por_criticidad %}
+                            <li class="progress-item">
+                                <div class="insight-row">
+                                    <span>{{ item.label }}</span>
+                                    <span>{{ item.total }} ({{ item.porcentaje }}%)</span>
+                                </div>
+                                <div class="progress-track">
+                                    <div class="progress-bar" data-progress="{{ item.porcentaje }}"></div>
+                                </div>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <div class="empty-state">Aún no se ha definido la criticidad de los activos.</div>
+                {% endif %}
             </div>
-            {% if activos_por_criticidad %}
-                <ul class="progress-list">
-                    {% for item in activos_por_criticidad %}
-                        <li class="progress-item">
-                            <div class="insight-row">
-                                <span>{{ item.label }}</span>
-                                <span>{{ item.total }} ({{ item.porcentaje }}%)</span>
-                            </div>
-                            <div class="progress-track">
-                                <div class="progress-bar" data-progress="{{ item.porcentaje }}"></div>
-                            </div>
-                        </li>
-                    {% endfor %}
-                </ul>
-            {% else %}
-                <div class="empty-state">Aún no se ha definido la criticidad de los activos.</div>
-            {% endif %}
-        </div>
+        </details>
 
-        <div class="panel">
-            <div class="panel-header">
-                <h3 class="panel-title">Estado de los activos</h3>
-                <span class="pill">Disponibilidad</span>
+        <details class="panel collapsible">
+            <summary class="panel-header collapsible-header">
+                <div>
+                    <h3 class="panel-title">Estado de los activos</h3>
+                    <div class="panel-subtitle">Opcional: despliega para consultar disponibilidad y uso.</div>
+                </div>
+                <div class="summary-meta">
+                    <span class="pill">Disponibilidad</span>
+                    <span class="toggle-hint">Ver detalle</span>
+                </div>
+            </summary>
+            <div class="collapsible-body">
+                {% if activos_por_estado %}
+                    <ul class="progress-list">
+                        {% for item in activos_por_estado %}
+                            <li class="progress-item">
+                                <div class="insight-row">
+                                    <span>{{ item.label }}</span>
+                                    <span>{{ item.total }} ({{ item.porcentaje }}%)</span>
+                                </div>
+                                <div class="progress-track">
+                                    <div class="progress-bar" data-progress="{{ item.porcentaje }}"></div>
+                                </div>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <div class="empty-state">Registre activos para ver su estado operativo.</div>
+                {% endif %}
             </div>
-            {% if activos_por_estado %}
-                <ul class="progress-list">
-                    {% for item in activos_por_estado %}
-                        <li class="progress-item">
-                            <div class="insight-row">
-                                <span>{{ item.label }}</span>
-                                <span>{{ item.total }} ({{ item.porcentaje }}%)</span>
-                            </div>
-                            <div class="progress-track">
-                                <div class="progress-bar" data-progress="{{ item.porcentaje }}"></div>
-                            </div>
-                        </li>
-                    {% endfor %}
-                </ul>
-            {% else %}
-                <div class="empty-state">Registre activos para ver su estado operativo.</div>
-            {% endif %}
-        </div>
+        </details>
     </div>
 
     <div class="panel">
