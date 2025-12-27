@@ -101,6 +101,25 @@
                     <td style="padding: 8px 0; font-weight: 600;">ISO 14224:</td>
                     <td style="padding: 8px 0;">Nivel {{ nivel_iso|default:'No definido' }}</td>
                 </tr>
+ <tr>
+                    <td style="padding: 8px 0; font-weight: 600;">Taxonomía ISO:</td>
+                    <td style="padding: 8px 0;">
+                        {% if ruta_taxonomia_iso %}
+                            <div style="display: flex; gap: 6px; flex-wrap: wrap; align-items: center;">
+                                {% for nodo_iso in ruta_taxonomia_iso %}
+                                    <span style="display: inline-flex; align-items: center; gap: 6px; background: #f8f9fa; border: 1px solid #e0e0e0; padding: 6px 10px; border-radius: 16px; font-size: 12px; color: #333; font-weight: 600;">
+                                        {{ nodo_iso.codigo }} · {{ nodo_iso.nombre }}
+                                    </span>
+                                    {% if not forloop.last %}
+                                        <span style="color: #e52d27; font-weight: 700;">›</span>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <span style="color: #999;">Sin taxonomía asociada</span>
+                        {% endif %}
+                    </td>
+                </tr>
             </table>
         </div>
 

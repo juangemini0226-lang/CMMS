@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse, HttpResponse, QueryDict
 from django.contrib import messages
+from django.core.exceptions import ValidationError
 from django.db import IntegrityError
 from django.db.models import Count, Q
 from django.urls import reverse
@@ -192,14 +193,28 @@ def gestionar_taxonomia_iso(request):
                 return _redirigir_con_selecciones()
             mensajes_accion = 'registrada'
 
-        preselecciones[nivel_taxonomico] = str(clase_guardada.id)
+         # Mantén la ruta superior para facilitar cargas en serie.
+        # Al crear, reinicia el nivel actual si es 7, 8 o 9 para poder
+        # registrar varios hermanos seguidos sin tocar el padre.
+        if accion == 'actualizar':
+            preselecciones[nivel_taxonomico] = str(clase_guardada.id)
+        else:
+            if nivel_taxonomico == 6:
+                preselecciones[nivel_taxonomico] = str(clase_guardada.id)
+            else:
+                preselecciones[nivel_taxonomico] = ''
+
         for inferior in (nivel_taxonomico + 1, nivel_taxonomico + 2, nivel_taxonomico + 3):
             if inferior in preselecciones:
                 preselecciones[inferior] = ''
 
+        mensaje_extra = ''
+        if accion == 'crear' and nivel_taxonomico >= 8:
+            mensaje_extra = ' El nivel actual quedó limpio para que puedas registrar otra opción con el mismo padre.'
+
         messages.success(
             request,
-            f'Opción {mensajes_accion} en el nivel {nivel_taxonomico}. Puedes seguir agregando o editar niveles independientes sin completar hasta el nivel 9.',
+            f'Opción {mensajes_accion} en el nivel {nivel_taxonomico}. Puedes seguir agregando o editar niveles independientes sin completar hasta el nivel 9.{mensaje_extra}',
         )
         return _redirigir_con_selecciones()
 
@@ -220,7 +235,6 @@ def gestionar_taxonomia_iso(request):
         'preselecciones_json': json.dumps(preselecciones, ensure_ascii=False),
     }
     return render(request, 'activos/gestionar_taxonomia_iso.html', contexto)
-
 
 @login_required
 def seleccionar_familia(request):
@@ -387,20 +401,25 @@ def dashboard_activos(request):
     ).count()
     
     # Activos por nivel
-    activos_por_nivel = NodoActivo.objects.filter(
-        organizacion=organizacion
-    ).values(
-        'nivel_jerarquia__nombre_nivel'
-    ).annotate(
-        total=Count('id')
+    activos_por_nivel_raw = (
+        NodoActivo.objects.filter(organizacion=organizacion)
+        .values("nivel_jerarquia__nombre_nivel")
+        .annotate(total=Count("id"))
+        .order_by("-total")
     )
     # Distribuciones para análisis rápido
-    activos_por_estado = NodoActivo.objects.filter(
-        organizacion=organizacion,
-    ).values('estado').annotate(total=Count('id')).order_by('-total')
-    activos_por_criticidad = NodoActivo.objects.filter(
-        organizacion=organizacion,
-    ).values('criticidad').annotate(total=Count('id')).order_by('-total')
+    activos_por_estado_raw = (
+        NodoActivo.objects.filter(organizacion=organizacion)
+        .values("estado")
+        .annotate(total=Count("id"))
+        .order_by("-total")
+    )
+    activos_por_criticidad_raw = (
+        NodoActivo.objects.filter(organizacion=organizacion)
+        .values("criticidad")
+        .annotate(total=Count("id"))
+        .order_by("-total")
+    )
     top_familias_raw = NodoActivo.objects.filter(
         organizacion=organizacion,
         familia__isnull=False,
@@ -433,7 +452,14 @@ def dashboard_activos(request):
         'total_activos': total_activos,
         'activos_activos': activos_activos,
         'activos_criticos': activos_criticos,
-        'activos_por_nivel': activos_por_nivel,
+        'activos_por_nivel': [
+            {
+                'nivel': item['nivel_jerarquia__nombre_nivel'] or 'Sin nivel',
+                'total': item['total'],
+            }
+            for item in activos_por_nivel_raw
+            if item['total'] > 0
+        ],
         'activos_por_estado': [
             {
                 'estado': item['estado'],
@@ -441,7 +467,8 @@ def dashboard_activos(request):
                 'total': item['total'],
                 'porcentaje': round((item['total'] / total_activos) * 100, 1) if total_activos else 0,
             }
-            for item in activos_por_estado
+            for item in activos_por_estado_raw
+            if item['total'] > 0
         ],
         'activos_por_criticidad': [
             {
@@ -450,7 +477,8 @@ def dashboard_activos(request):
                 'total': item['total'],
                 'porcentaje': round((item['total'] / total_activos) * 100, 1) if total_activos else 0,
             }
-            for item in activos_por_criticidad
+            for item in activos_por_criticidad_raw
+            if item['total'] > 0
         ],
         'top_familias': top_familias,
         'activos_recientes': activos_recientes_info,
@@ -635,7 +663,7 @@ def crear_activo(request, padre_id=None):
 
         clase_iso_seleccionada = None
         clase_iso_texto = ''
-
+        ruta_taxonomia_iso = []
         if nivel.numero_nivel >= 6:
             def obtener_o_crear_clase_iso(nivel_iso, padre_clase):
                 existente_id = request.POST.get(f'iso_nivel{nivel_iso}_id')
@@ -687,6 +715,13 @@ def crear_activo(request, padre_id=None):
                 if clase_iso:
                     padre_clase_iso = clase_iso
                     clase_iso_seleccionada = clase_iso
+                    ruta_taxonomia_iso.append({
+                        'id': clase_iso.id,
+                        'codigo': clase_iso.codigo,
+                        'nombre': clase_iso.nombre,
+                        'nivel': clase_iso.nivel_taxonomico,
+                        'padre_id': clase_iso.padre_id,
+                    })
 
             if nivel.numero_nivel >= 6 and not clase_iso_seleccionada:
                 messages.error(
@@ -704,6 +739,13 @@ def crear_activo(request, padre_id=None):
                 clase_iso_texto = f"{clase_iso_seleccionada.codigo} - {clase_iso_seleccionada.nombre}"
                 clase_iso_texto = clase_iso_texto[:100]
 
+        datos_personalizados = {}
+        if ruta_taxonomia_iso:
+            datos_personalizados['taxonomia_iso'] = ruta_taxonomia_iso
+            datos_personalizados['taxonomia_iso_resumen'] = " / ".join(
+                f"{nodo['codigo']} - {nodo['nombre']}" for nodo in ruta_taxonomia_iso
+            )
+
         activo = NodoActivo.objects.create(
             organizacion=organizacion,
             nivel_jerarquia=nivel,
@@ -719,6 +761,7 @@ def crear_activo(request, padre_id=None):
             ubicacion_fisica=request.POST.get('ubicacion_fisica', ''),
             familia=familia,
             clase_equipo_iso=clase_iso_texto,
+            datos_personalizados=datos_personalizados,
             creado_por=request.user
         )
 
@@ -844,6 +887,13 @@ def detalle_activo(request, activo_id):
         (activo.get_estado_display(), 'danger'),
     )
 
+    datos_personalizados = activo.datos_personalizados if isinstance(activo.datos_personalizados, dict) else {}
+    ruta_taxonomia_iso = datos_personalizados.get('taxonomia_iso', [])
+    if not isinstance(ruta_taxonomia_iso, list):
+        ruta_taxonomia_iso = []
+    ruta_taxonomia_iso = sorted(ruta_taxonomia_iso, key=lambda nodo: nodo.get('nivel', 0))
+    taxonomia_iso_resumen = datos_personalizados.get('taxonomia_iso_resumen', '')
+
     context = {
         'activo': activo,
         'hijos': hijos,
@@ -862,6 +912,8 @@ def detalle_activo(request, activo_id):
         'ruta_jerarquica': ruta_jerarquica,
         'padre_activo': activo.parent,
         'nivel_iso': activo.nivel_jerarquia.corresponde_iso_14224,
+        'ruta_taxonomia_iso': ruta_taxonomia_iso,
+        'taxonomia_iso_resumen': taxonomia_iso_resumen,
     }
 
     return render(request, 'activos/detalle_activo.html', context)

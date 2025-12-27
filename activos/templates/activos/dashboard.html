@@ -7,26 +7,38 @@
     .dashboard-kpis {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-        gap: 18px;
-        margin-bottom: 22px;
+        gap: 16px;
+        margin-bottom: 18px;
     }
     .kpi-card {
         color: white;
-        padding: 20px;
+        padding: 18px;
         border-radius: 14px;
-        box-shadow: 0 12px 24px rgba(0,0,0,0.1);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.08);
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
     }
     .kpi-card h3 {
-        font-size: 34px;
-        margin-bottom: 6px;
+        font-size: 32px;
+        margin: 0;
+        display: flex;
+        align-items: baseline;
+        gap: 8px;
     }
-    .kpi-card small {
-        opacity: 0.85;
+    .kpi-card h3 small {
+        font-size: 14px;
+        opacity: 0.8;
     }
-    .gradient-indigo { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
-    .gradient-rose { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
-    .gradient-sunset { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); }
-    .gradient-blue { background: linear-gradient(135deg, #43cea2 0%, #185a9d 100%); }
+    .kpi-card p {
+        margin: 0;
+        font-weight: 600;
+    }
+    .kpi-card small { opacity: 0.85; }
+    .gradient-indigo { background: linear-gradient(135deg, #5a67d8 0%, #7f63ff 100%); }
+    .gradient-rose { background: linear-gradient(135deg, #ff6cab 0%, #7366ff 100%); }
+    .gradient-sunset { background: linear-gradient(135deg, #ff9a8b 0%, #ff6a88 55%, #ff99ac 100%); }
+    .gradient-blue { background: linear-gradient(135deg, #1d976c 0%, #2b32b2 100%); }
 
     .panel {
         background: #fff;
@@ -39,7 +51,12 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 12px;
+        margin-bottom: 10px;
+        gap: 10px;
+    }
+    .panel-title {
+        margin: 0;
+        font-weight: 700;
     }
     .panel-subtitle {
         color: #6c757d;
@@ -52,6 +69,7 @@
         border-radius: 20px;
         font-size: 13px;
         color: #495057;
+        white-space: nowrap;
     }
     .split-grid {
         display: grid;
@@ -63,7 +81,8 @@
         padding: 0;
         display: flex;
         flex-direction: column;
-        gap: 10px;
+        gap: 12px;
+        margin: 0;
     }
     .progress-item {
         display: flex;
@@ -112,7 +131,7 @@
     }
     .actions {
         display: flex;
-        gap: 12px;
+        gap: 10px;
         flex-wrap: wrap;
         margin-top: 12px;
     }
@@ -120,22 +139,46 @@
         overflow-x: auto;
         margin-top: 10px;
     }
+    .table th, .table td {
+        padding: 10px;
+    }
     .empty-state {
         text-align: center;
         color: #adb5bd;
         padding: 20px 0;
     }
+    .stack {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 14px;
+    }
+    .tag-muted {
+        background: #eef2f7;
+        color: #556677;
+        padding: 4px 10px;
+        border-radius: 10px;
+        font-size: 12px;
+    }
 </style>
 <div class="card">
-    <div class="card-header">
-        Dashboard de Activos - {{ organizacion.nombre }}
+    <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <div>
+            <div class="fw-bold">Dashboard de Activos - {{ organizacion.nombre }}</div>
+            <small class="text-muted">Resumen compacto para tomar decisiones rápidas</small>
+        </div>
+        <div class="actions mb-0">
+            <a href="{% url 'activos:crear_activo' %}" class="btn btn-primary">+ Crear Activo</a>
+            <a href="{% url 'activos:vista_arbol_activos' %}" class="btn btn-outline-secondary">Árbol de Activos</a>
+            <a href="{% url 'activos:importar_excel' %}" class="btn btn-outline-success">Importar</a>
+            <a href="{% url 'reportes:seleccionar_reporte' %}" class="btn btn-outline-warning">Reportes</a>
+        </div>
     </div>
 
     <div class="dashboard-kpis">
         <div class="kpi-card gradient-indigo">
             <h3>{{ total_activos }}</h3>
             <p>Total de Activos</p>
-            <small>Incluye todos los niveles y familias</small>
+            <small>Inventario registrado en todos los niveles</small>
         </div>
         <div class="kpi-card gradient-rose">
             <h3>{{ activos_activos }}</h3>
@@ -148,9 +191,9 @@
             <small>Monitoreo prioritario</small>
         </div>
         <div class="kpi-card gradient-blue">
-            <h3>{{ activos_mantenimiento }}</h3>
-            <p>En mantenimiento</p>
-            <small>{{ activos_fuera_servicio }} fuera de servicio</small>
+            <h3>{{ activos_mantenimiento }} <small>({{ activos_fuera_servicio }} fuera)</small></h3>
+            <p>Mantenimiento</p>
+            <small>Incluye equipos fuera de servicio</small>
         </div>
     </div>
 
@@ -158,24 +201,24 @@
         <div class="panel">
             <div class="panel-header">
                 <div>
-                    <h3 style="margin-bottom: 2px;">Activos por Nivel de Jerarquía</h3>
+                    <h3 class="panel-title">Activos por Nivel</h3>
                     <div class="panel-subtitle">Visibilidad de inventario por escalón</div>
                 </div>
                 <span class="pill">{{ activos_por_nivel|length }} niveles</span>
             </div>
             <div class="table-responsive">
-                <table>
+                <table class="table table-sm mb-0">
                     <thead>
                         <tr>
                             <th>Nivel</th>
-                            <th style="width: 130px;">Cantidad</th>
+                            <th style="width: 130px;" class="text-end">Cantidad</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for item in activos_por_nivel %}
                         <tr>
-                            <td>{{ item.nivel_jerarquia__nombre_nivel }}</td>
-                            <td><strong>{{ item.total }}</strong></td>
+                            <td>{{ item.nivel }}</td>
+                            <td class="text-end"><strong>{{ item.total }}</strong></td>
                         </tr>
                         {% empty %}
                         <tr>
@@ -190,8 +233,8 @@
         <div class="panel">
             <div class="panel-header">
                 <div>
-                    <h3 style="margin-bottom: 2px;">Familias con más activos</h3>
-                    <div class="panel-subtitle">Última instantánea</div>
+                    <h3 class="panel-title">Familias con más activos</h3>
+                    <div class="panel-subtitle">Instantánea del inventario</div>
                 </div>
                 <span class="pill">Top 5</span>
             </div>
@@ -218,7 +261,7 @@
     <div class="split-grid">
         <div class="panel">
             <div class="panel-header">
-                <h3 style="margin-bottom: 2px;">Distribución por Criticidad</h3>
+                <h3 class="panel-title">Distribución por Criticidad</h3>
                 <span class="pill">Condición</span>
             </div>
             {% if activos_por_criticidad %}
@@ -242,7 +285,7 @@
 
         <div class="panel">
             <div class="panel-header">
-                <h3 style="margin-bottom: 2px;">Estado de los activos</h3>
+                <h3 class="panel-title">Estado de los activos</h3>
                 <span class="pill">Disponibilidad</span>
             </div>
             {% if activos_por_estado %}
@@ -268,7 +311,7 @@
     <div class="panel">
         <div class="panel-header">
             <div>
-                <h3 style="margin-bottom: 2px;">Últimos activos creados</h3>
+                <h3 class="panel-title">Actividad reciente</h3>
                 <div class="panel-subtitle">Seguimiento rápido de novedades</div>
             </div>
             <span class="pill">Últimos 5</span>
@@ -292,12 +335,6 @@
         {% endif %}
     </div>
 
-    <div class="actions">
-        <a href="{% url 'activos:crear_activo' %}" class="btn btn-primary">+ Crear Activo</a>
-        <a href="{% url 'activos:vista_arbol_activos' %}" class="btn btn-secondary">Ver Árbol de Activos</a>
-        <a href="{% url 'activos:importar_excel' %}" class="btn btn-success">Importar Excel</a>
-        <a href="{% url 'reportes:seleccionar_reporte' %}" class="btn btn-warning">Reportes PDF</a>
-    </div>
 </div>
 <script>
     document.querySelectorAll('.progress-bar[data-progress]').forEach(function(bar) {
