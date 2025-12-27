@@ -106,76 +106,145 @@
             Selecciona cada nivel de la cadena (Sistema → Subunidad → Ítem mantenible → Componente). Si no existe una opción, agrégala para guardarla y reutilizarla en el futuro.
         </p>
 
+<div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+            <p style="color: #1f2937; margin: 0 0 6px; font-weight: 600;">Cómo completar la cadena ISO 14224</p>
+            <ul style="margin: 0; padding-left: 18px; color: #4b5563; display: grid; gap: 4px;">
+                <li>Primero intenta seleccionar una opción existente en cada menú desplegable.</li>
+                <li>Si falta una opción, crea una nueva para que aparezca en el menú y quede guardada para futuras cargas.</li>
+                <li>Revisa la “Ruta seleccionada” para confirmar que todos los niveles estén correctos.</li>
+            </ul>
+        </div>
+
         <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px;">
             <div class="card" style="box-shadow: none; border: 1px solid #f0f0f0;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                    <label for="iso_nivel6_id" style="font-weight: 600; color: #111827; margin: 0;">Nivel 6 · Sistema de alimentación</label>
+                    <span style="background: #e0f2fe; color: #0369a1; padding: 4px 8px; border-radius: 12px; font-size: 12px;">Base de la ruta</span>
+                </div>
                 <div class="form-group" style="margin-bottom: 12px;">
-                    <label for="iso_nivel6_id">Nivel 6 · Sistema de alimentación</label>
                     <select name="iso_nivel6_id" id="iso_nivel6_id" data-nivel="6">
                         <option value="">Seleccione un sistema</option>
                     </select>
                     <small style="color: #666;">Ej: Sistema de alimentación, Enfriamiento, Portamoldes</small>
                 </div>
                 <div class="form-group" id="contenedor-nuevo-6">
-                    <button type="button" class="btn btn-secondary" data-toggle-nuevo="6" style="margin-bottom: 8px;">+ Agregar nuevo sistema (Nivel 6)</button>
-                    <div class="campos-nuevo-iso" data-nivel="6" style="display: none; gap: 8px; grid-template-columns: 1fr 1fr;">
-                        <input type="text" name="iso_nivel6_nuevo_codigo" placeholder="Código nivel 6">
-                        <input type="text" name="iso_nivel6_nuevo_nombre" placeholder="Nombre nivel 6">
+                    <div style="display: flex; justify-content: space-between; gap: 12px; align-items: center; background: #f9fafb; border: 1px dashed #d1d5db; padding: 12px; border-radius: 8px;">
+                        <div style="color: #374151;">
+                            <strong style="display: block; margin-bottom: 4px;">¿Falta algún sistema?</strong>
+                            <span style="font-size: 13px; color: #4b5563;">Regístralo para que aparezca en el menú desplegable.</span>
+                        </div>
+                        <button type="button" class="btn btn-secondary" data-toggle-nuevo="6">+ Registrar opción</button>
                     </div>
-                    <small class="texto-nuevo" style="color: #888;">Si agregas un nuevo sistema quedará disponible en la siguiente carga.</small>
+                    <div class="campos-nuevo-iso" data-nivel="6" style="display: none; gap: 10px; grid-template-columns: repeat(2, minmax(0, 1fr)); background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px; margin-top: 10px;">
+                        <label style="display: flex; flex-direction: column; gap: 4px; color: #374151; font-size: 13px;">
+                            Código nivel 6
+                            <input type="text" name="iso_nivel6_nuevo_codigo" placeholder="Ej: SYS-01">
+                        </label>
+                        <label style="display: flex; flex-direction: column; gap: 4px; color: #374151; font-size: 13px;">
+                            Nombre nivel 6
+                            <input type="text" name="iso_nivel6_nuevo_nombre" placeholder="Ej: Sistema de alimentación">
+                        </label>
+                    </div>
+                    <small class="texto-nuevo" style="color: #6b7280;">Las opciones nuevas quedarán guardadas y disponibles en próximas cargas.</small>
                 </div>
             </div>
 
             <div class="card" style="box-shadow: none; border: 1px solid #f0f0f0;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                    <label for="iso_nivel7_id" style="font-weight: 600; color: #111827; margin: 0;">Nivel 7 · Subunidad</label>
+                    <span style="background: #eef2ff; color: #4338ca; padding: 4px 8px; border-radius: 12px; font-size: 12px;">Depende del nivel 6</span>
+                </div>
                 <div class="form-group" style="margin-bottom: 12px;">
-                    <label for="iso_nivel7_id">Nivel 7 · Subunidad</label>
                     <select name="iso_nivel7_id" id="iso_nivel7_id" data-nivel="7">
                         <option value="">Seleccione una subunidad</option>
                     </select>
                     <small style="color: #666;">Opciones disponibles según el sistema elegido.</small>
                 </div>
                 <div class="form-group" id="contenedor-nuevo-7">
-                    <button type="button" class="btn btn-secondary" data-toggle-nuevo="7" style="margin-bottom: 8px;">+ Agregar nueva subunidad (Nivel 7)</button>
-                    <div class="campos-nuevo-iso" data-nivel="7" style="display: none; gap: 8px; grid-template-columns: 1fr 1fr;">
-                        <input type="text" name="iso_nivel7_nuevo_codigo" placeholder="Código nivel 7">
-                        <input type="text" name="iso_nivel7_nuevo_nombre" placeholder="Nombre nivel 7">
+                    <div style="display: flex; justify-content: space-between; gap: 12px; align-items: center; background: #f9fafb; border: 1px dashed #d1d5db; padding: 12px; border-radius: 8px;">
+                        <div style="color: #374151;">
+                            <strong style="display: block; margin-bottom: 4px;">¿No hay subunidad adecuada?</strong>
+                            <span style="font-size: 13px; color: #4b5563;">Crea una nueva y quedará ligada al sistema seleccionado.</span>
+                        </div>
+                        <button type="button" class="btn btn-secondary" data-toggle-nuevo="7">+ Registrar opción</button>
                     </div>
-                    <small class="texto-nuevo" style="color: #888;">Se asociará automáticamente al sistema seleccionado.</small>
+                    <div class="campos-nuevo-iso" data-nivel="7" style="display: none; gap: 10px; grid-template-columns: repeat(2, minmax(0, 1fr)); background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px; margin-top: 10px;">
+                        <label style="display: flex; flex-direction: column; gap: 4px; color: #374151; font-size: 13px;">
+                            Código nivel 7
+                            <input type="text" name="iso_nivel7_nuevo_codigo" placeholder="Ej: SUB-01">
+                        </label>
+                        <label style="display: flex; flex-direction: column; gap: 4px; color: #374151; font-size: 13px;">
+                            Nombre nivel 7
+                            <input type="text" name="iso_nivel7_nuevo_nombre" placeholder="Ej: Subunidad mecánica">
+                        </label>
+                    </div>
+                    <small class="texto-nuevo" style="color: #6b7280;">Se asociará automáticamente al sistema seleccionado y aparecerá en el menú.</small>
                 </div>
             </div>
 
             <div class="card" style="box-shadow: none; border: 1px solid #f0f0f0;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                    <label for="iso_nivel8_id" style="font-weight: 600; color: #111827; margin: 0;">Nivel 8 · Ítem mantenible</label>
+                    <span style="background: #ecfeff; color: #0e7490; padding: 4px 8px; border-radius: 12px; font-size: 12px;">Depende de la subunidad</span>
+                </div>
                 <div class="form-group" style="margin-bottom: 12px;">
-                    <label for="iso_nivel8_id">Nivel 8 · Ítem mantenible</label>
                     <select name="iso_nivel8_id" id="iso_nivel8_id" data-nivel="8">
                         <option value="">Seleccione un ítem</option>
                     </select>
                     <small style="color: #666;">Se filtra por la subunidad elegida.</small>
                 </div>
                 <div class="form-group" id="contenedor-nuevo-8">
-                    <button type="button" class="btn btn-secondary" data-toggle-nuevo="8" style="margin-bottom: 8px;">+ Agregar nuevo ítem mantenible (Nivel 8)</button>
-                    <div class="campos-nuevo-iso" data-nivel="8" style="display: none; gap: 8px; grid-template-columns: 1fr 1fr;">
-                        <input type="text" name="iso_nivel8_nuevo_codigo" placeholder="Código nivel 8">
-                        <input type="text" name="iso_nivel8_nuevo_nombre" placeholder="Nombre nivel 8">
+                    <div style="display: flex; justify-content: space-between; gap: 12px; align-items: center; background: #f9fafb; border: 1px dashed #d1d5db; padding: 12px; border-radius: 8px;">
+                        <div style="color: #374151;">
+                            <strong style="display: block; margin-bottom: 4px;">¿Necesitas un ítem nuevo?</strong>
+                            <span style="font-size: 13px; color: #4b5563;">Añádelo y se mostrará como opción filtrada por la subunidad elegida.</span>
+                        </div>
+                        <button type="button" class="btn btn-secondary" data-toggle-nuevo="8">+ Registrar opción</button>
                     </div>
-                    <small class="texto-nuevo" style="color: #888;">Perfecto para piezas específicas reutilizables.</small>
+                    <div class="campos-nuevo-iso" data-nivel="8" style="display: none; gap: 10px; grid-template-columns: repeat(2, minmax(0, 1fr)); background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px; margin-top: 10px;">
+                        <label style="display: flex; flex-direction: column; gap: 4px; color: #374151; font-size: 13px;">
+                            Código nivel 8
+                            <input type="text" name="iso_nivel8_nuevo_codigo" placeholder="Ej: ITM-01">
+                        </label>
+                        <label style="display: flex; flex-direction: column; gap: 4px; color: #374151; font-size: 13px;">
+                            Nombre nivel 8
+                            <input type="text" name="iso_nivel8_nuevo_nombre" placeholder="Ej: Ítem mantenible">
+                        </label>
+                    </div>
+                    <small class="texto-nuevo" style="color: #6b7280;">Perfecto para piezas específicas reutilizables que quieras ver en el desplegable.</small>
                 </div>
             </div>
 
             <div class="card" style="box-shadow: none; border: 1px solid #f0f0f0;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                    <label for="iso_nivel9_id" style="font-weight: 600; color: #111827; margin: 0;">Nivel 9 · Componente</label>
+                    <span style="background: #fef3c7; color: #92400e; padding: 4px 8px; border-radius: 12px; font-size: 12px;">Último nivel</span>
+                </div>
                 <div class="form-group" style="margin-bottom: 12px;">
-                    <label for="iso_nivel9_id">Nivel 9 · Componente</label>
                     <select name="iso_nivel9_id" id="iso_nivel9_id" data-nivel="9">
                         <option value="">Seleccione un componente</option>
                     </select>
                     <small style="color: #666;">Ej: O-ring metálico, Sensor de presión.</small>
                 </div>
                 <div class="form-group" id="contenedor-nuevo-9">
-                    <button type="button" class="btn btn-secondary" data-toggle-nuevo="9" style="margin-bottom: 8px;">+ Agregar nuevo componente (Nivel 9)</button>
-                    <div class="campos-nuevo-iso" data-nivel="9" style="display: none; gap: 8px; grid-template-columns: 1fr 1fr;">
-                        <input type="text" name="iso_nivel9_nuevo_codigo" placeholder="Código nivel 9">
-                        <input type="text" name="iso_nivel9_nuevo_nombre" placeholder="Nombre nivel 9">
+                    <div style="display: flex; justify-content: space-between; gap: 12px; align-items: center; background: #f9fafb; border: 1px dashed #d1d5db; padding: 12px; border-radius: 8px;">
+                        <div style="color: #374151;">
+                            <strong style="display: block; margin-bottom: 4px;">¿Agregar un componente nuevo?</strong>
+                            <span style="font-size: 13px; color: #4b5563;">Créalo aquí y quedará visible en el menú desplegable para este árbol.</span>
+                        </div>
+                        <button type="button" class="btn btn-secondary" data-toggle-nuevo="9">+ Registrar opción</button>
                     </div>
-                    <small class="texto-nuevo" style="color: #888;">Quedará disponible como opción sugerida para este árbol.</small>
+                    <div class="campos-nuevo-iso" data-nivel="9" style="display: none; gap: 10px; grid-template-columns: repeat(2, minmax(0, 1fr)); background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px; margin-top: 10px;">
+                        <label style="display: flex; flex-direction: column; gap: 4px; color: #374151; font-size: 13px;">
+                            Código nivel 9
+                            <input type="text" name="iso_nivel9_nuevo_codigo" placeholder="Ej: CMP-01">
+                        </label>
+                        <label style="display: flex; flex-direction: column; gap: 4px; color: #374151; font-size: 13px;">
+                            Nombre nivel 9
+                            <input type="text" name="iso_nivel9_nuevo_nombre" placeholder="Ej: Sensor de presión">
+                        </label>
+                    </div>
+                    <small class="texto-nuevo" style="color: #6b7280;">Quedará disponible como opción sugerida para este árbol y futuros registros.</small>
                 </div>
             </div>
         </div>

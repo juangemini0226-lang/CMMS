@@ -4,7 +4,9 @@ from django.http import JsonResponse, HttpResponse, QueryDict
 from django.contrib import messages
 from django.db import IntegrityError
 from django.db.models import Count, Q
+from django.urls import reverse
 from django.utils.text import slugify
+from urllib.parse import urlencode
 
 from .models import (
     Organizacion,
@@ -62,6 +64,162 @@ def gestionar_familias(request):
         'organizacion': organizacion,
     }
     return render(request, 'activos/gestionar_familias.html', context)
+
+@login_required
+def gestionar_taxonomia_iso(request):
+    """Pantalla dedicada para crear y mantener la taxonomía ISO 14224 (niveles 6-9)."""
+    organizacion = Organizacion.objects.first()
+    if not organizacion:
+        messages.error(request, 'Debe configurar una organización antes de gestionar la taxonomía ISO 14224.')
+        return redirect('activos:dashboard_activos')
+
+    clases_qs = ClaseEquipoISO14224.objects.all().select_related('padre').order_by('nivel_taxonomico', 'nombre')
+    preselecciones = {
+        6: request.GET.get('sel6', ''),
+        7: request.GET.get('sel7', ''),
+        8: request.GET.get('sel8', ''),
+        9: request.GET.get('sel9', ''),
+    }
+
+    def _redirigir_con_selecciones():
+        query = urlencode({
+            'sel6': preselecciones.get(6, '') or '',
+            'sel7': preselecciones.get(7, '') or '',
+            'sel8': preselecciones.get(8, '') or '',
+            'sel9': preselecciones.get(9, '') or '',
+        })
+        return redirect(f'{reverse("activos:gestionar_taxonomia_iso")}?{query}')
+
+    if request.method == 'POST':
+        for nivel in (6, 7, 8, 9):
+            preselecciones[nivel] = request.POST.get(f'seleccion_nivel{nivel}', '') or preselecciones[nivel]
+
+        accion = (request.POST.get('accion') or 'crear').lower()
+        clase_id = request.POST.get('clase_id')
+        try:
+            nivel_taxonomico = int(request.POST.get('nivel_taxonomico', 0))
+        except ValueError:
+            nivel_taxonomico = 0
+
+        codigo = (request.POST.get('codigo') or '').strip().upper()
+        nombre = (request.POST.get('nombre') or '').strip()
+        descripcion = (request.POST.get('descripcion') or '').strip()
+        padre_id = request.POST.get('padre_id') or None
+
+        if accion == 'eliminar':
+            if not clase_id:
+                messages.error(request, 'No se especificó la opción a eliminar.')
+                return _redirigir_con_selecciones()
+
+            clase = get_object_or_404(ClaseEquipoISO14224, id=clase_id)
+            tiene_hijos = ClaseEquipoISO14224.objects.filter(padre=clase).exists()
+            if tiene_hijos:
+                messages.error(request, 'No puedes eliminar esta opción porque tiene subniveles asociados.')
+                return _redirigir_con_selecciones()
+
+            nivel_taxonomico = clase.nivel_taxonomico
+            clase.delete()
+            preselecciones[nivel_taxonomico] = ''
+            for inferior in (nivel_taxonomico + 1, nivel_taxonomico + 2, nivel_taxonomico + 3):
+                if inferior in preselecciones:
+                    preselecciones[inferior] = ''
+
+            messages.success(request, 'Opción eliminada correctamente.')
+            return _redirigir_con_selecciones()
+
+        if nivel_taxonomico not in (6, 7, 8, 9):
+            messages.error(request, 'Selecciona un nivel válido entre 6 y 9.')
+            return _redirigir_con_selecciones()
+
+        if not nombre:
+            messages.error(request, 'Debes ingresar el nombre de la opción que quieres registrar o actualizar.')
+            return _redirigir_con_selecciones()
+
+        if not codigo:
+            codigo_generado = slugify(nombre).upper().replace('-', '')
+            codigo = codigo_generado[:50] or f'ISO{nivel_taxonomico}'
+
+        padre = None
+        if nivel_taxonomico > 6:
+            if not padre_id:
+                messages.error(request, f'Debes seleccionar primero el nivel {nivel_taxonomico - 1} antes de registrar o actualizar el nivel {nivel_taxonomico}.')
+                return _redirigir_con_selecciones()
+
+            padre = get_object_or_404(ClaseEquipoISO14224, id=padre_id)
+            if padre.nivel_taxonomico != nivel_taxonomico - 1:
+                messages.error(request, f'El padre seleccionado debe ser de nivel {nivel_taxonomico - 1}.')
+                return _redirigir_con_selecciones()
+
+        descripcion = descripcion or nombre
+
+        # Validar unicidad de código
+        existente = ClaseEquipoISO14224.objects.filter(codigo=codigo)
+        if clase_id:
+            existente = existente.exclude(id=clase_id)
+        existente = existente.first()
+        if existente:
+            messages.warning(
+                request,
+                f'El código {codigo} ya existe como "{existente.nombre}". Usa otro código para registrar/actualizar.',
+            )
+            preselecciones[existente.nivel_taxonomico] = str(existente.id)
+            return _redirigir_con_selecciones()
+
+        if accion == 'actualizar':
+            clase = get_object_or_404(ClaseEquipoISO14224, id=clase_id)
+            if clase.nivel_taxonomico != nivel_taxonomico:
+                messages.error(request, 'No se puede cambiar el nivel taxonómico de una opción existente.')
+                return _redirigir_con_selecciones()
+
+            clase.codigo = codigo
+            clase.nombre = nombre
+            clase.descripcion = descripcion
+            clase.padre = padre
+            clase.save()
+            mensajes_accion = 'actualizada'
+            clase_guardada = clase
+        else:
+            try:
+                clase_guardada = ClaseEquipoISO14224.objects.create(
+                    codigo=codigo,
+                    nombre=nombre,
+                    descripcion=descripcion,
+                    nivel_taxonomico=nivel_taxonomico,
+                    padre=padre,
+                )
+            except IntegrityError:
+                messages.error(request, 'No se pudo guardar la opción. Verifica que el código sea único y vuelve a intentarlo.')
+                return _redirigir_con_selecciones()
+            mensajes_accion = 'registrada'
+
+        preselecciones[nivel_taxonomico] = str(clase_guardada.id)
+        for inferior in (nivel_taxonomico + 1, nivel_taxonomico + 2, nivel_taxonomico + 3):
+            if inferior in preselecciones:
+                preselecciones[inferior] = ''
+
+        messages.success(
+            request,
+            f'Opción {mensajes_accion} en el nivel {nivel_taxonomico}. Puedes seguir agregando o editar niveles independientes sin completar hasta el nivel 9.',
+        )
+        return _redirigir_con_selecciones()
+
+    totales_por_nivel = {
+        6: clases_qs.filter(nivel_taxonomico=6).count(),
+        7: clases_qs.filter(nivel_taxonomico=7).count(),
+        8: clases_qs.filter(nivel_taxonomico=8).count(),
+        9: clases_qs.filter(nivel_taxonomico=9).count(),
+    }
+
+    contexto = {
+        'organizacion': organizacion,
+        'clases_iso_json': json.dumps(list(clases_qs.values(
+            'id', 'codigo', 'nombre', 'descripcion', 'nivel_taxonomico', 'padre_id'
+        )), ensure_ascii=False),
+        'totales_por_nivel': totales_por_nivel,
+        'preselecciones': preselecciones,
+        'preselecciones_json': json.dumps(preselecciones, ensure_ascii=False),
+    }
+    return render(request, 'activos/gestionar_taxonomia_iso.html', contexto)
 
 
 @login_required

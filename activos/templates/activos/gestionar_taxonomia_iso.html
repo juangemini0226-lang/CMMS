@@ -1,0 +1,585 @@
+{% extends 'activos/base_activos.html' %}
+
+{% block title %}Taxonomía ISO 14224{% endblock %}
+
+{% block content %}
+<div class="breadcrumb">
+    <a href="{% url 'activos:dashboard_activos' %}">Dashboard</a> /
+    Taxonomía ISO 14224
+</div>
+
+<div class="card">
+    <div class="card-header">
+        Taxonomía ISO 14224 (Niveles 6 a 9)
+    </div>
+    <p style="color: #444; line-height: 1.6; margin-bottom: 15px;">
+        Usa esta pantalla exclusiva para cargar y mantener las opciones que se muestran en los desplegables de los niveles 6 a 9.
+        Cada nivel depende del anterior: primero registra el nivel 6 (Sistema), luego sus subniveles 7, 8 y 9.
+    </p>
+    <ul style="margin-left: 18px; color: #555; line-height: 1.5;">
+        <li>El nivel 6 es el padre de toda la ruta y habilita los niveles siguientes.</li>
+        <li>El nivel 7 hereda del nivel 6, el nivel 8 hereda del nivel 7 y el nivel 9 hereda del nivel 8.</li>
+        <li>Todo lo que registres aquí quedará disponible inmediatamente en los formularios de creación de activos.</li>
+    </ul>
+    <div style="display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap;">
+        <span class="badge badge-info">Nivel 6: {{ totales_por_nivel.6 }} opciones</span>
+        <span class="badge badge-info">Nivel 7: {{ totales_por_nivel.7 }} opciones</span>
+        <span class="badge badge-info">Nivel 8: {{ totales_por_nivel.8 }} opciones</span>
+        <span class="badge badge-info">Nivel 9: {{ totales_por_nivel.9 }} opciones</span>
+    </div>
+</div>
+
+<div class="card" style="border: 1px dashed #d9e2ec; background: #f9fcff;">
+    <h3 style="margin-bottom: 10px;">Ruta seleccionada</h3>
+    <p style="color: #4b5563; margin-bottom: 15px;">
+        Selecciona la ruta padre para visualizar sus subniveles y registrar nuevas opciones en cascada.
+    </p>
+    <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 15px;">
+        <div class="form-group">
+            <label>Nivel 6 · Sistema</label>
+            <select id="selector-nivel-6"></select>
+            <small style="color: #6b7280;">Padre de los niveles 7, 8 y 9.</small>
+        </div>
+        <div class="form-group">
+            <label>Nivel 7 · Subunidad</label>
+            <select id="selector-nivel-7"></select>
+            <small style="color: #6b7280;">Disponible después de elegir el nivel 6.</small>
+        </div>
+        <div class="form-group">
+            <label>Nivel 8 · Ítem mantenible</label>
+            <select id="selector-nivel-8"></select>
+            <small style="color: #6b7280;">Se filtra por la subunidad elegida.</small>
+        </div>
+        <div class="form-group">
+            <label>Nivel 9 · Componente</label>
+            <select id="selector-nivel-9"></select>
+            <small style="color: #6b7280;">Último nivel de la ruta.</small>
+        </div>
+    </div>
+    <div style="margin-top: 15px; color: #1d4ed8; font-weight: 600;">
+        Ruta actual:
+        <span id="iso-ruta-actual" style="color: #1f2937; font-weight: 700;">Sin selección</span>
+    </div>
+    <div style="margin-top: 10px;">
+        <button type="button" class="btn btn-secondary btn-sm" id="guardar-seleccion">
+            Guardar ruta seleccionada
+        </button>
+        <small style="color: #6b7280; margin-left: 8px;">Puedes guardar el avance parcial sin completar todos los niveles.</small>
+    </div>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px;">
+    <div class="card">
+        <div class="card-header">Nivel 6 · Sistema</div>
+        <p style="color: #555; margin-bottom: 12px;">Define los sistemas base. Cada uno será el padre del resto de niveles.</p>
+        <form method="post" class="form-nivel" data-nivel="6">
+            {% csrf_token %}
+            <input type="hidden" name="nivel_taxonomico" value="6">
+            <input type="hidden" name="padre_id" id="padre-id-6" value="">
+            <input type="hidden" name="accion" value="crear">
+            <input type="hidden" name="clase_id" value="">
+            <input type="hidden" name="seleccion_nivel6">
+            <input type="hidden" name="seleccion_nivel7">
+            <input type="hidden" name="seleccion_nivel8">
+            <input type="hidden" name="seleccion_nivel9">
+            <div class="form-group">
+                <label>Código</label>
+                <input type="text" name="codigo" placeholder="Ej: SYS_AIR" maxlength="50">
+            </div>
+            <div class="form-group">
+                <label>Nombre *</label>
+                <input type="text" name="nombre" placeholder="Ej: Sistema de aire" required>
+            </div>
+            <div class="form-group">
+                <label>Descripción</label>
+                <textarea name="descripcion" rows="2" placeholder="Detalle breve de la función del sistema"></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary" data-submit-nivel="6">Registrar nivel 6</button>
+            <button type="button" class="btn btn-secondary btn-sm btn-cancelar-edicion" data-cancelar="6" style="display:none;">Cancelar edición</button>
+            <small style="display: block; margin-top: 8px; color: #6b7280;">Se guardará como opción base reutilizable.</small>
+        </form>
+        <div class="panel-opciones">
+            <h4>Opciones registradas</h4>
+            <ul class="lista-iso" data-listado="6"></ul>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">Nivel 7 · Subunidad</div>
+        <p style="color: #555; margin-bottom: 12px;">Subunidades asociadas al sistema seleccionado en el nivel 6.</p>
+        <form method="post" class="form-nivel" data-nivel="7">
+            {% csrf_token %}
+            <input type="hidden" name="nivel_taxonomico" value="7">
+            <input type="hidden" name="padre_id" id="padre-id-7" value="">
+            <input type="hidden" name="accion" value="crear">
+            <input type="hidden" name="clase_id" value="">
+            <input type="hidden" name="seleccion_nivel6">
+            <input type="hidden" name="seleccion_nivel7">
+            <input type="hidden" name="seleccion_nivel8">
+            <input type="hidden" name="seleccion_nivel9">
+            <div class="form-group">
+                <label>Código</label>
+                <input type="text" name="codigo" placeholder="Ej: SUB_AIR01" maxlength="50">
+            </div>
+            <div class="form-group">
+                <label>Nombre *</label>
+                <input type="text" name="nombre" placeholder="Ej: Subunidad de filtración" required>
+            </div>
+            <div class="form-group">
+                <label>Descripción</label>
+                <textarea name="descripcion" rows="2" placeholder="Describe la subunidad ligada al sistema elegido"></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary" data-submit-nivel="7">Registrar nivel 7</button>
+            <button type="button" class="btn btn-secondary btn-sm btn-cancelar-edicion" data-cancelar="7" style="display:none;">Cancelar edición</button>
+            <small style="display: block; margin-top: 8px; color: #6b7280;">Se asociará al sistema seleccionado en la ruta.</small>
+        </form>
+        <div class="panel-opciones">
+            <h4>Opciones filtradas por la ruta</h4>
+            <ul class="lista-iso" data-listado="7"></ul>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">Nivel 8 · Ítem mantenible</div>
+        <p style="color: #555; margin-bottom: 12px;">Ítems mantenibles dependientes de la subunidad seleccionada (nivel 7).</p>
+        <form method="post" class="form-nivel" data-nivel="8">
+            {% csrf_token %}
+            <input type="hidden" name="nivel_taxonomico" value="8">
+            <input type="hidden" name="padre_id" id="padre-id-8" value="">
+            <input type="hidden" name="accion" value="crear">
+            <input type="hidden" name="clase_id" value="">
+            <input type="hidden" name="seleccion_nivel6">
+            <input type="hidden" name="seleccion_nivel7">
+            <input type="hidden" name="seleccion_nivel8">
+            <input type="hidden" name="seleccion_nivel9">
+            <div class="form-group">
+                <label>Código</label>
+                <input type="text" name="codigo" placeholder="Ej: ITEM_AIR01" maxlength="50">
+            </div>
+            <div class="form-group">
+                <label>Nombre *</label>
+                <input type="text" name="nombre" placeholder="Ej: Trampa de condensados" required>
+            </div>
+            <div class="form-group">
+                <label>Descripción</label>
+                <textarea name="descripcion" rows="2" placeholder="Detalle breve del ítem mantenible"></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary" data-submit-nivel="8">Registrar nivel 8</button>
+            <button type="button" class="btn btn-secondary btn-sm btn-cancelar-edicion" data-cancelar="8" style="display:none;">Cancelar edición</button>
+            <small style="display: block; margin-top: 8px; color: #6b7280;">Necesita una subunidad seleccionada en la ruta.</small>
+        </form>
+        <div class="panel-opciones">
+            <h4>Opciones filtradas por la ruta</h4>
+            <ul class="lista-iso" data-listado="8"></ul>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">Nivel 9 · Componente</div>
+        <p style="color: #555; margin-bottom: 12px;">Componentes hijos del ítem mantenible seleccionado en nivel 8.</p>
+        <form method="post" class="form-nivel" data-nivel="9">
+            {% csrf_token %}
+            <input type="hidden" name="nivel_taxonomico" value="9">
+            <input type="hidden" name="padre_id" id="padre-id-9" value="">
+            <input type="hidden" name="accion" value="crear">
+            <input type="hidden" name="clase_id" value="">
+            <input type="hidden" name="seleccion_nivel6">
+            <input type="hidden" name="seleccion_nivel7">
+            <input type="hidden" name="seleccion_nivel8">
+            <input type="hidden" name="seleccion_nivel9">
+            <div class="form-group">
+                <label>Código</label>
+                <input type="text" name="codigo" placeholder="Ej: CMP_AIR01" maxlength="50">
+            </div>
+            <div class="form-group">
+                <label>Nombre *</label>
+                <input type="text" name="nombre" placeholder="Ej: Filtro separador" required>
+            </div>
+            <div class="form-group">
+                <label>Descripción</label>
+                <textarea name="descripcion" rows="2" placeholder="Detalle del componente específico"></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary" data-submit-nivel="9">Registrar nivel 9</button>
+            <button type="button" class="btn btn-secondary btn-sm btn-cancelar-edicion" data-cancelar="9" style="display:none;">Cancelar edición</button>
+            <small style="display: block; margin-top: 8px; color: #6b7280;">Requiere un ítem mantenible seleccionado.</small>
+        </form>
+        <div class="panel-opciones">
+            <h4>Opciones filtradas por la ruta</h4>
+            <ul class="lista-iso" data-listado="9"></ul>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .panel-opciones {
+        margin-top: 15px;
+        padding: 12px;
+        border: 1px dashed #e5e7eb;
+        background: #f9fafb;
+        border-radius: 8px;
+    }
+
+    .panel-opciones h4 {
+        margin-bottom: 10px;
+        font-size: 15px;
+        color: #1f2937;
+    }
+
+    .lista-iso {
+        list-style: none;
+        padding-left: 0;
+    }
+
+    .lista-iso li {
+        padding: 8px 10px;
+        border-radius: 6px;
+        background: white;
+        border: 1px solid #e5e7eb;
+        margin-bottom: 6px;
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 10px;
+        align-items: center;
+    }
+
+    .lista-iso li .pill {
+        display: inline-block;
+        background: #eef2ff;
+        color: #4338ca;
+        border-radius: 12px;
+        padding: 2px 8px;
+        font-size: 12px;
+        font-weight: 700;
+    }
+
+    .lista-iso li .nombre {
+        color: #111827;
+        font-weight: 600;
+    }
+
+    .lista-iso li .descripcion {
+        color: #6b7280;
+        font-size: 13px;
+    }
+
+    .acciones-item {
+        display: flex;
+        gap: 6px;
+    }
+
+    .estado-vacio {
+        color: #9ca3af;
+        font-style: italic;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const clasesISO = JSON.parse('{{ clases_iso_json|default:"[]"|escapejs }}' || '[]');
+    const preselecciones = JSON.parse('{{ preselecciones_json|default:"{}"|escapejs }}' || '{}');
+
+    const selects = {
+        6: document.getElementById('selector-nivel-6'),
+        7: document.getElementById('selector-nivel-7'),
+        8: document.getElementById('selector-nivel-8'),
+        9: document.getElementById('selector-nivel-9'),
+    };
+
+    const listados = {
+        6: document.querySelector('[data-listado="6"]'),
+        7: document.querySelector('[data-listado="7"]'),
+        8: document.querySelector('[data-listado="8"]'),
+        9: document.querySelector('[data-listado="9"]'),
+    };
+
+    const rutaActual = document.getElementById('iso-ruta-actual');
+    const guardarSeleccion = document.getElementById('guardar-seleccion');
+
+    function opcionesNivel(nivel, padreId = null) {
+        return clasesISO.filter((clase) => {
+            const coincideNivel = Number(clase.nivel_taxonomico) === Number(nivel);
+            if (!coincideNivel) return false;
+            if (nivel === 6) return !clase.padre_id;
+            return Number(clase.padre_id) === Number(padreId);
+        });
+    }
+
+    function crearOpcionSelect(valor, texto) {
+        const option = document.createElement('option');
+        option.value = valor;
+        option.textContent = texto;
+        return option;
+    }
+
+    function poblarSelect(nivel, aplicarPreseleccion = false) {
+        const select = selects[nivel];
+        if (!select) return;
+
+        const padreValor = nivel === 6 ? null : (selects[nivel - 1].value || null);
+        const opciones = opcionesNivel(nivel, padreValor);
+        select.innerHTML = '';
+
+        if (nivel > 6 && !padreValor) {
+            select.appendChild(crearOpcionSelect('', 'Selecciona primero el nivel anterior'));
+            select.disabled = true;
+            return;
+        }
+
+        select.disabled = false;
+        select.appendChild(crearOpcionSelect('', nivel === 6 ? 'Seleccione un sistema (nivel 6)' : 'Seleccione una opción'));
+        opciones.forEach((opcion) => {
+            select.appendChild(crearOpcionSelect(opcion.id, `${opcion.codigo} · ${opcion.nombre}`));
+        });
+
+        if (aplicarPreseleccion && preselecciones[nivel]) {
+            select.value = preselecciones[nivel];
+        }
+    }
+
+    function renderListado(nivel) {
+        const contenedor = listados[nivel];
+        if (!contenedor) return;
+        contenedor.innerHTML = '';
+
+        const padreValor = nivel === 6 ? null : (selects[nivel - 1].value || null);
+        const opciones = opcionesNivel(nivel, padreValor);
+
+        if (!opciones.length) {
+            const li = document.createElement('li');
+            li.className = 'estado-vacio';
+            li.textContent = nivel === 6 ? 'Aún no hay sistemas registrados.' : 'No hay opciones para la ruta seleccionada.';
+            contenedor.appendChild(li);
+            return;
+        }
+
+        opciones.forEach((opcion) => {
+            const li = document.createElement('li');
+            const pill = document.createElement('span');
+            pill.className = 'pill';
+            pill.textContent = opcion.codigo;
+
+            const nombre = document.createElement('span');
+            nombre.className = 'nombre';
+            nombre.textContent = opcion.nombre;
+
+            const texto = document.createElement('div');
+            texto.style.display = 'flex';
+            texto.style.flexDirection = 'column';
+            texto.style.gap = '2px';
+            const titulo = document.createElement('div');
+            titulo.appendChild(pill);
+            titulo.appendChild(document.createTextNode(' '));
+            titulo.appendChild(nombre);
+            texto.appendChild(titulo);
+
+            if (opcion.descripcion) {
+                const descripcion = document.createElement('span');
+                descripcion.className = 'descripcion';
+                descripcion.textContent = `· ${opcion.descripcion}`;
+                texto.appendChild(descripcion);
+            }
+
+            li.appendChild(texto);
+
+            const acciones = document.createElement('div');
+            acciones.className = 'acciones-item';
+
+            const btnEditar = document.createElement('button');
+            btnEditar.type = 'button';
+            btnEditar.className = 'btn btn-secondary btn-sm';
+            btnEditar.textContent = 'Editar';
+            btnEditar.dataset.editar = '1';
+            btnEditar.dataset.id = opcion.id;
+            btnEditar.dataset.nivel = opcion.nivel_taxonomico;
+            btnEditar.dataset.codigo = opcion.codigo;
+            btnEditar.dataset.nombre = opcion.nombre;
+            btnEditar.dataset.descripcion = opcion.descripcion || '';
+            btnEditar.dataset.padreId = opcion.padre_id || '';
+            acciones.appendChild(btnEditar);
+
+            const formEliminar = document.createElement('form');
+            formEliminar.method = 'post';
+            formEliminar.className = 'form-eliminar';
+            formEliminar.innerHTML = `
+                {% csrf_token %}
+                <input type="hidden" name="accion" value="eliminar">
+                <input type="hidden" name="clase_id" value="${opcion.id}">
+                <input type="hidden" name="nivel_taxonomico" value="${opcion.nivel_taxonomico}">
+                <input type="hidden" name="seleccion_nivel6">
+                <input type="hidden" name="seleccion_nivel7">
+                <input type="hidden" name="seleccion_nivel8">
+                <input type="hidden" name="seleccion_nivel9">
+                <button type="submit" class="btn btn-danger btn-sm">Eliminar</button>
+            `;
+            acciones.appendChild(formEliminar);
+
+            li.appendChild(acciones);
+            contenedor.appendChild(li);
+        });
+    }
+
+    function textoSeleccion(nivel) {
+        const select = selects[nivel];
+        if (!select || select.disabled || !select.value) return '';
+        const opcion = select.selectedOptions[0];
+        return opcion ? opcion.textContent : '';
+    }
+
+    function actualizarRuta() {
+        const ruta = [6, 7, 8, 9]
+            .map((nivel) => textoSeleccion(nivel))
+            .filter((valor) => valor && valor.trim());
+
+        rutaActual.textContent = ruta.length ? ruta.join(' / ') : 'Sin selección';
+    }
+
+    function actualizarEstadoBotones() {
+        [7, 8, 9].forEach((nivel) => {
+            const boton = document.querySelector(`[data-submit-nivel="${nivel}"]`);
+            if (!boton) return;
+            const padreSeleccionado = selects[nivel - 1] && selects[nivel - 1].value;
+            boton.disabled = !padreSeleccionado;
+            boton.textContent = boton.disabled ? 'Selecciona el nivel anterior' : `Registrar nivel ${nivel}`;
+        });
+    }
+
+    function sincronizarHidden(form, nivel) {
+        form.querySelector('input[name="padre_id"]').value = nivel === 6 ? '' : (selects[nivel - 1].value || '');
+        [6, 7, 8, 9].forEach((n) => {
+            const hidden = form.querySelector(`input[name="seleccion_nivel${n}"]`);
+            if (hidden) hidden.value = selects[n].value || '';
+        });
+    }
+
+    document.querySelectorAll('.form-nivel').forEach((form) => {
+        const nivel = Number(form.dataset.nivel);
+        form.addEventListener('submit', (event) => {
+            if (nivel > 6 && !(selects[nivel - 1] && selects[nivel - 1].value)) {
+                event.preventDefault();
+                alert(`Selecciona primero el nivel ${nivel - 1} para mantener la jerarquía.`);
+                return;
+            }
+            sincronizarHidden(form, nivel);
+        });
+    });
+
+    function limpiarEdicion(nivel) {
+        const form = document.querySelector(`.form-nivel[data-nivel="${nivel}"]`);
+        if (!form) return;
+        form.reset();
+        form.querySelector('input[name="accion"]').value = 'crear';
+        form.querySelector('input[name="clase_id"]').value = '';
+        form.querySelector(`[data-submit-nivel="${nivel}"]`).textContent = `Registrar nivel ${nivel}`;
+        const btnCancelar = form.querySelector(`[data-cancelar="${nivel}"]`);
+        if (btnCancelar) btnCancelar.style.display = 'none';
+        sincronizarHidden(form, nivel);
+    }
+
+    function poblarEdicion(nivel, datos) {
+        const form = document.querySelector(`.form-nivel[data-nivel="${nivel}"]`);
+        if (!form) return;
+        form.querySelector('input[name="accion"]').value = 'actualizar';
+        form.querySelector('input[name="clase_id"]').value = datos.id;
+        form.querySelector('input[name="codigo"]').value = datos.codigo || '';
+        form.querySelector('input[name="nombre"]').value = datos.nombre || '';
+        form.querySelector('textarea[name="descripcion"]').value = datos.descripcion || '';
+        form.querySelector(`[data-submit-nivel="${nivel}"]`).textContent = `Actualizar nivel ${nivel}`;
+        const btnCancelar = form.querySelector(`[data-cancelar="${nivel}"]`);
+        if (btnCancelar) btnCancelar.style.display = 'inline-block';
+        sincronizarHidden(form, nivel);
+    }
+
+    document.addEventListener('click', (event) => {
+        const btnEditar = event.target.closest('[data-editar]');
+        if (btnEditar) {
+            const nivel = Number(btnEditar.dataset.nivel);
+            const datos = {
+                id: btnEditar.dataset.id,
+                codigo: btnEditar.dataset.codigo,
+                nombre: btnEditar.dataset.nombre,
+                descripcion: btnEditar.dataset.descripcion,
+                padreId: btnEditar.dataset.padreId,
+            };
+            if (nivel > 6 && btnEditar.dataset.padreId) {
+                const selectPadre = selects[nivel - 1];
+                if (selectPadre) {
+                    selectPadre.value = btnEditar.dataset.padreId;
+                    selectPadre.dispatchEvent(new Event('change'));
+                }
+            }
+            poblarEdicion(nivel, datos);
+        }
+    });
+
+    document.querySelectorAll('.btn-cancelar-edicion').forEach((btn) => {
+        btn.addEventListener('click', () => {
+            const nivel = Number(btn.dataset.cancelar);
+            limpiarEdicion(nivel);
+        });
+    });
+
+    document.addEventListener('submit', (event) => {
+        const formEliminar = event.target.closest('.form-eliminar');
+        if (formEliminar) {
+            if (!confirm('¿Deseas eliminar esta opción? Los subniveles deben eliminarse primero.')) {
+                event.preventDefault();
+                return;
+            }
+            [6, 7, 8, 9].forEach((n) => {
+                const hidden = formEliminar.querySelector(`input[name="seleccion_nivel${n}"]`);
+                if (hidden) hidden.value = selects[n]?.value || '';
+            });
+        }
+    });
+
+    if (guardarSeleccion) {
+        guardarSeleccion.addEventListener('click', () => {
+            const params = new URLSearchParams();
+            [6, 7, 8, 9].forEach((nivel) => {
+                const val = selects[nivel]?.value || '';
+                if (val) params.set(`sel${nivel}`, val);
+            });
+            const url = `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ''}`;
+            window.location.href = url;
+        });
+    }
+
+    [6, 7, 8, 9].forEach((nivel) => {
+        const select = selects[nivel];
+        if (!select) return;
+        select.addEventListener('change', () => {
+            if (nivel < 9) {
+                const siguientes = [7, 8, 9].filter((n) => n > nivel);
+                siguientes.forEach((n) => {
+                    if (selects[n]) {
+                        selects[n].value = '';
+                        preselecciones[n] = '';
+                        poblarSelect(n);
+                    }
+                });
+            }
+            renderListado(nivel);
+            if (nivel < 9) {
+                renderListado(nivel + 1);
+            }
+            actualizarRuta();
+            actualizarEstadoBotones();
+        });
+    });
+
+    // Inicialización
+    poblarSelect(6, true);
+    poblarSelect(7, true);
+    poblarSelect(8, true);
+    poblarSelect(9, true);
+    renderListado(6);
+    renderListado(7);
+    renderListado(8);
+    renderListado(9);
+    actualizarRuta();
+    actualizarEstadoBotones();
+</script>
+{% endblock %}
