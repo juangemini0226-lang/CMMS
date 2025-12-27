@@ -31,7 +31,8 @@
                     <option value="{{ nivel.id }}"
                             data-requiere-tag="{{ nivel.requiere_tag }}"
                             data-formato-tag="{{ nivel.formato_tag }}"
-                            data-prefijo-tag="{{ nivel.prefijo_tag }}">
+                            data-prefijo-tag="{{ nivel.prefijo_tag }}"
+                            {% if nivel_preseleccionado|stringformat:'s' == nivel.id|stringformat:'s' %}selected{% endif %}>
                         {{ nivel.nombre_nivel }}
                     </option>
                     {% endfor %}
@@ -41,13 +42,15 @@
             <div class="form-group">
                 <label>Código *</label>
                 <input type="text" name="codigo" id="codigo" required
-                       placeholder="Ej: EQ001">
+                       placeholder="Ej: EQ001"
+                       value="{{ valores_formulario.codigo|default:'' }}">
             </div>
 
             <div class="form-group">
                 <label>Nombre *</label>
                 <input type="text" name="nombre" required
-                       placeholder="Nombre descriptivo del activo">
+                       placeholder="Nombre descriptivo del activo"
+                       value="{{ valores_formulario.nombre|default:'' }}">
             </div>
 
             <div class="form-group">
@@ -65,7 +68,10 @@
                 <select name="familia" class="form-select">
                     <option value="">Seleccione una familia</option>
                     {% for familia in familias %}
-                        <option value="{{ familia.id }}">{{ familia.nombre }}</option>
+                        <option value="{{ familia.id }}"
+                            {% if familia_seleccionada|stringformat:'s' == familia.id|stringformat:'s' %}selected{% endif %}>
+                            {{ familia.nombre }}
+                        </option>
                     {% endfor %}
                 </select>
 
@@ -91,7 +97,7 @@
         <div class="form-group">
             <label>Descripción</label>
             <textarea name="descripcion" rows="3"
-                      placeholder="Descripción detallada del activo"></textarea>
+                      placeholder="Descripción detallada del activo">{{ valores_formulario.descripcion|default:'' }}</textarea>
         </div>
  <h3 style="margin: 30px 0 15px; color: #333; border-bottom: 2px solid #f0f0f0; padding-bottom: 10px;">
             Taxonomía ISO 14224 (Niveles 6 a 9)
@@ -186,43 +192,47 @@
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
             <div class="form-group">
                 <label>Fabricante</label>
-                <input type="text" name="fabricante" placeholder="Nombre del fabricante">
+                <input type="text" name="fabricante" placeholder="Nombre del fabricante"
+                       value="{{ valores_formulario.fabricante|default:'' }}">
             </div>
 
             <div class="form-group">
                 <label>Modelo</label>
-                <input type="text" name="modelo" placeholder="Modelo del equipo">
+                <input type="text" name="modelo" placeholder="Modelo del equipo"
+                       value="{{ valores_formulario.modelo|default:'' }}">
             </div>
 
             <div class="form-group">
                 <label>Número de Serie</label>
-                <input type="text" name="numero_serie" placeholder="Número de serie único">
+                <input type="text" name="numero_serie" placeholder="Número de serie único"
+                       value="{{ valores_formulario.numero_serie|default:'' }}">
             </div>
 
             <div class="form-group">
                 <label>Estado</label>
                 <select name="estado">
-                    <option value="activo">Activo</option>
-                    <option value="inactivo">Inactivo</option>
-                    <option value="mantenimiento">En mantenimiento</option>
-                    <option value="fuera_servicio">Fuera de servicio</option>
-                    <option value="retirado">Retirado</option>
+                    <option value="activo" {% if valores_formulario.estado == 'activo' or not valores_formulario.estado %}selected{% endif %}>Activo</option>
+                    <option value="inactivo" {% if valores_formulario.estado == 'inactivo' %}selected{% endif %}>Inactivo</option>
+                    <option value="mantenimiento" {% if valores_formulario.estado == 'mantenimiento' %}selected{% endif %}>En mantenimiento</option>
+                    <option value="fuera_servicio" {% if valores_formulario.estado == 'fuera_servicio' %}selected{% endif %}>Fuera de servicio</option>
+                    <option value="retirado" {% if valores_formulario.estado == 'retirado' %}selected{% endif %}>Retirado</option>
                 </select>
             </div>
 
             <div class="form-group">
                 <label>Criticidad</label>
                 <select name="criticidad">
-                    <option value="">Sin especificar</option>
-                    <option value="alta">Alta</option>
-                    <option value="media">Media</option>
-                    <option value="baja">Baja</option>
+                    <option value="" {% if not valores_formulario.criticidad %}selected{% endif %}>Sin especificar</option>
+                    <option value="alta" {% if valores_formulario.criticidad == 'alta' %}selected{% endif %}>Alta</option>
+                    <option value="media" {% if valores_formulario.criticidad == 'media' %}selected{% endif %}>Media</option>
+                    <option value="baja" {% if valores_formulario.criticidad == 'baja' %}selected{% endif %}>Baja</option>
                 </select>
             </div>
 
             <div class="form-group">
                 <label>Ubicación Física</label>
-                <input type="text" name="ubicacion_fisica" placeholder="Ej: Planta 1, Línea A">
+                <input type="text" name="ubicacion_fisica" placeholder="Ej: Planta 1, Línea A"
+                       value="{{ valores_formulario.ubicacion_fisica|default:'' }}">
             </div>
         </div>
 
@@ -239,6 +249,7 @@
     // Datos desde Django (string JSON -> objeto JS)
     const plantillasDisponibles = JSON.parse('{{ plantillas_json|default:"[]"|escapejs }}' || '[]');
     const clasesISO = JSON.parse('{{ clases_iso_json|default:"[]"|escapejs }}' || '[]');
+    const valoresPrevios = JSON.parse('{{ valores_formulario|default:"{}"|escapejs }}' || '{}');
 
     const plantillaSelect = document.getElementById('plantilla_activo');
     const nivelSelect = document.getElementById('nivel_jerarquia');
@@ -335,9 +346,10 @@
         generarTagPreview();
     }
 
-   // Inicializar plantillas si ya hay nivel preseleccionado
+  // Inicializar plantillas si ya hay nivel preseleccionado
     if (nivelSelect.value) {
         poblarPlantillas(nivelSelect.value);
+        generarTagPreview();
     }
 
     // -------------------------
@@ -384,7 +396,50 @@
 
         poblarNivel(6, selects);
         limpiarNivelesInferiores(6, selects);
+        aplicarPreseleccionIso(selects);
         actualizarRuta(selects);
+    }
+
+    function aplicarPreseleccionIso(selects) {
+        const preselecciones = {
+            6: valoresPrevios.iso_nivel6_id || '',
+            7: valoresPrevios.iso_nivel7_id || '',
+            8: valoresPrevios.iso_nivel8_id || '',
+            9: valoresPrevios.iso_nivel9_id || '',
+        };
+
+        const nuevosValores = {
+            6: { codigo: valoresPrevios.iso_nivel6_nuevo_codigo, nombre: valoresPrevios.iso_nivel6_nuevo_nombre },
+            7: { codigo: valoresPrevios.iso_nivel7_nuevo_codigo, nombre: valoresPrevios.iso_nivel7_nuevo_nombre },
+            8: { codigo: valoresPrevios.iso_nivel8_nuevo_codigo, nombre: valoresPrevios.iso_nivel8_nuevo_nombre },
+            9: { codigo: valoresPrevios.iso_nivel9_nuevo_codigo, nombre: valoresPrevios.iso_nivel9_nuevo_nombre },
+        };
+
+        [6, 7, 8, 9].forEach((nivel) => {
+            if (!selects[nivel]) return;
+
+            const nuevos = nuevosValores[nivel];
+            if (nuevos && (nuevos.codigo || nuevos.nombre)) {
+                const contenedorCampos = document.querySelector(`.campos-nuevo-iso[data-nivel="${nivel}"]`);
+                if (contenedorCampos) {
+                    contenedorCampos.style.display = 'grid';
+                    const inputCodigo = contenedorCampos.querySelector(`input[name="iso_nivel${nivel}_nuevo_codigo"]`);
+                    const inputNombre = contenedorCampos.querySelector(`input[name="iso_nivel${nivel}_nuevo_nombre"]`);
+                    if (inputCodigo && nuevos.codigo) inputCodigo.value = nuevos.codigo;
+                    if (inputNombre && nuevos.nombre) inputNombre.value = nuevos.nombre;
+                }
+                selects[nivel].value = '';
+            } else if (preselecciones[nivel]) {
+                selects[nivel].value = preselecciones[nivel];
+            }
+
+            if (nivel < 9) {
+                poblarNivel(nivel + 1, selects);
+                if (preselecciones[nivel]) {
+                    selects[nivel].dispatchEvent(new Event('change'));
+                }
+            }
+        });
     }
 
     function opcionesPorNivel(nivel, padreId = null) {

@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse, HttpResponse
+from django.http import JsonResponse, HttpResponse, QueryDict
 from django.contrib import messages
 from django.db import IntegrityError
 from django.db.models import Count, Q
@@ -381,11 +381,89 @@ def crear_activo(request, padre_id=None):
     padre = None
     if padre_id:
         padre = get_object_or_404(NodoActivo, id=padre_id, organizacion=organizacion)
-    
+
+    def construir_contexto(nivel_preseleccionado=None, familia_seleccionada=None, valores_formulario=None):
+        valores_serializables = valores_formulario
+        if isinstance(valores_formulario, QueryDict):
+            valores_serializables = valores_formulario.dict()
+
+        niveles_qs = NivelJerarquia.objects.filter(organizacion=organizacion).order_by('numero_nivel')
+
+        plantillas_qs = PlantillaActivo.objects.filter(
+            organizacion=organizacion,
+            es_activa=True,
+        ).select_related('nivel_jerarquia')
+
+        if padre:
+            siguiente_nivel = padre.nivel_jerarquia.numero_nivel + 1
+            niveles_qs = niveles_qs.filter(numero_nivel=siguiente_nivel)
+            plantillas_qs = plantillas_qs.filter(
+                nivel_jerarquia__numero_nivel=siguiente_nivel
+            )
+
+        niveles = list(niveles_qs)
+        preseleccion = nivel_preseleccionado
+        if preseleccion is None and padre and len(niveles) == 1:
+            preseleccion = niveles[0].id
+
+        familias = FamiliaActivo.objects.filter(
+            Q(organizacion=organizacion) | Q(organizacion__isnull=True)
+        ).order_by('nombre')
+
+        plantillas_data = [
+            {
+                'id': p.id,
+                'nombre': p.nombre,
+                'nivel_id': p.nivel_jerarquia_id,
+                'datos': p.datos_predeterminados,
+            }
+            for p in plantillas_qs
+        ]
+
+        clases_iso = ClaseEquipoISO14224.objects.all().values(
+            'id', 'codigo', 'nombre', 'nivel_taxonomico', 'padre_id'
+        ).order_by('nivel_taxonomico', 'nombre')
+
+        return {
+            'padre': padre,
+            'niveles': niveles,
+            'organizacion': organizacion,
+            'familias': familias,
+            'plantillas': plantillas_data,
+            'plantillas_json': json.dumps(plantillas_data, ensure_ascii=False),
+            'clases_iso_json': json.dumps(list(clases_iso), ensure_ascii=False),
+            'nivel_preseleccionado': preseleccion,
+            'familia_seleccionada': familia_seleccionada,
+            'valores_formulario': valores_serializables or {},
+        }
+
     if request.method == 'POST':
         # Procesar formulario
         nivel_id = request.POST.get('nivel_jerarquia')
+        if not nivel_id:
+            messages.error(request, 'Debes seleccionar un nivel de jerarquía para el activo.')
+            context = construir_contexto(
+                nivel_preseleccionado=None,
+                familia_seleccionada=request.POST.get('familia'),
+                valores_formulario=request.POST,
+            )
+            return render(request, 'activos/crear_activo.html', context)
+
         nivel = get_object_or_404(NivelJerarquia, id=nivel_id, organizacion=organizacion)
+
+        if padre:
+            siguiente_nivel = padre.nivel_jerarquia.numero_nivel + 1
+            if nivel.numero_nivel != siguiente_nivel:
+                messages.error(
+                    request,
+                    f'Debe seleccionar el nivel inmediato hijo ({siguiente_nivel}) respecto al activo padre.',
+                )
+                context = construir_contexto(
+                    nivel_preseleccionado=nivel_id,
+                    familia_seleccionada=request.POST.get('familia'),
+                    valores_formulario=request.POST,
+                )
+                return render(request, 'activos/crear_activo.html', context)
 
         familia = None
         familia_id = request.POST.get('familia')
@@ -397,62 +475,76 @@ def crear_activo(request, padre_id=None):
                 id=familia_id,
             )
 
-        def obtener_o_crear_clase_iso(nivel_iso, padre_clase):
-            existente_id = request.POST.get(f'iso_nivel{nivel_iso}_id')
-            nuevo_nombre = (request.POST.get(f'iso_nivel{nivel_iso}_nuevo_nombre') or '').strip()
-            nuevo_codigo = (request.POST.get(f'iso_nivel{nivel_iso}_nuevo_codigo') or '').strip()
-
-            if existente_id:
-                return get_object_or_404(ClaseEquipoISO14224, id=existente_id)
-
-            if nuevo_nombre:
-                if nivel_iso > 6 and not padre_clase:
-                    messages.warning(
-                        request,
-                        f'Debes seleccionar o crear primero el nivel {nivel_iso - 1} antes de registrar el nivel {nivel_iso}.',
-                    )
-                    return None
-
-                codigo_generado = slugify(nuevo_nombre).upper().replace('-', '')
-                if not codigo_generado:
-                    codigo_generado = f"ISO{nivel_iso}"
-                codigo_generado = codigo_generado[:20]
-                clase, creado = ClaseEquipoISO14224.objects.get_or_create(
-                    codigo=nuevo_codigo or codigo_generado,
-                    defaults={
-                        'nombre': nuevo_nombre,
-                        'descripcion': nuevo_nombre,
-                        'nivel_taxonomico': nivel_iso,
-                        'padre': padre_clase,
-                    },
-                )
-
-                if not creado:
-                    # Ajusta datos clave si ya existía pero con atributos diferentes
-                    clase.nombre = clase.nombre or nuevo_nombre
-                    clase.descripcion = clase.descripcion or nuevo_nombre
-                    clase.nivel_taxonomico = nivel_iso
-                    if padre_clase and clase.padre_id != padre_clase.id:
-                        clase.padre = padre_clase
-                    clase.save()
-
-                return clase
-
-            return None
-
         clase_iso_seleccionada = None
-        padre_clase_iso = None
-
-        for numero_nivel in range(6, 10):
-            clase_iso = obtener_o_crear_clase_iso(numero_nivel, padre_clase_iso)
-            if clase_iso:
-                padre_clase_iso = clase_iso
-                clase_iso_seleccionada = clase_iso
-
         clase_iso_texto = ''
-        if clase_iso_seleccionada:
-            clase_iso_texto = f"{clase_iso_seleccionada.codigo} - {clase_iso_seleccionada.nombre}"
-            clase_iso_texto = clase_iso_texto[:100]
+
+        if nivel.numero_nivel >= 6:
+            def obtener_o_crear_clase_iso(nivel_iso, padre_clase):
+                existente_id = request.POST.get(f'iso_nivel{nivel_iso}_id')
+                nuevo_nombre = (request.POST.get(f'iso_nivel{nivel_iso}_nuevo_nombre') or '').strip()
+                nuevo_codigo = (request.POST.get(f'iso_nivel{nivel_iso}_nuevo_codigo') or '').strip()
+
+                if existente_id:
+                    return get_object_or_404(ClaseEquipoISO14224, id=existente_id)
+
+                if nuevo_nombre:
+                    if nivel_iso > 6 and not padre_clase:
+                        messages.warning(
+                            request,
+                            f'Debes seleccionar o crear primero el nivel {nivel_iso - 1} antes de registrar el nivel {nivel_iso}.',
+                        )
+                        return None
+
+                    codigo_generado = slugify(nuevo_nombre).upper().replace('-', '')
+                    if not codigo_generado:
+                        codigo_generado = f"ISO{nivel_iso}"
+                    codigo_generado = codigo_generado[:20]
+                    clase, creado = ClaseEquipoISO14224.objects.get_or_create(
+                        codigo=nuevo_codigo or codigo_generado,
+                        defaults={
+                            'nombre': nuevo_nombre,
+                            'descripcion': nuevo_nombre,
+                            'nivel_taxonomico': nivel_iso,
+                            'padre': padre_clase,
+                        },
+                    )
+
+                    if not creado:
+                        # Ajusta datos clave si ya existía pero con atributos diferentes
+                        clase.nombre = clase.nombre or nuevo_nombre
+                        clase.descripcion = clase.descripcion or nuevo_nombre
+                        clase.nivel_taxonomico = nivel_iso
+                        if padre_clase and clase.padre_id != padre_clase.id:
+                            clase.padre = padre_clase
+                        clase.save()
+
+                    return clase
+
+                return None
+
+            padre_clase_iso = None
+
+            for numero_nivel in range(6, 10):
+                clase_iso = obtener_o_crear_clase_iso(numero_nivel, padre_clase_iso)
+                if clase_iso:
+                    padre_clase_iso = clase_iso
+                    clase_iso_seleccionada = clase_iso
+
+            if nivel.numero_nivel >= 6 and not clase_iso_seleccionada:
+                messages.error(
+                    request,
+                    'Para los niveles 6 en adelante debes seleccionar o crear una ruta de taxonomía ISO 14224.',
+                )
+                context = construir_contexto(
+                    nivel_preseleccionado=nivel_id,
+                    familia_seleccionada=familia_id,
+                    valores_formulario=request.POST,
+                )
+                return render(request, 'activos/crear_activo.html', context)
+
+            if clase_iso_seleccionada:
+                clase_iso_texto = f"{clase_iso_seleccionada.codigo} - {clase_iso_seleccionada.nombre}"
+                clase_iso_texto = clase_iso_texto[:100]
 
         activo = NodoActivo.objects.create(
             organizacion=organizacion,
@@ -474,48 +566,7 @@ def crear_activo(request, padre_id=None):
 
         messages.success(request, f'Activo "{activo.nombre}" creado exitosamente')
         return redirect('activos:detalle_activo', activo_id=activo.id)
-    niveles = NivelJerarquia.objects.filter(organizacion=organizacion)
-    if padre:
-        niveles = niveles.filter(numero_nivel__gt=padre.nivel_jerarquia.numero_nivel)
-
-    plantillas = PlantillaActivo.objects.filter(
-        organizacion=organizacion,
-        es_activa=True,
-    ).select_related('nivel_jerarquia')
-
-    if padre:
-        plantillas = plantillas.filter(
-            nivel_jerarquia__numero_nivel__gt=padre.nivel_jerarquia.numero_nivel
-        )
-
-    familias = FamiliaActivo.objects.filter(
-        Q(organizacion=organizacion) | Q(organizacion__isnull=True)
-    ).order_by('nombre')
-
-    plantillas_data = [
-        {
-            'id': p.id,
-            'nombre': p.nombre,
-            'nivel_id': p.nivel_jerarquia_id,
-            'datos': p.datos_predeterminados,
-        }
-        for p in plantillas
-    ]
-
-    clases_iso = ClaseEquipoISO14224.objects.all().values(
-        'id', 'codigo', 'nombre', 'nivel_taxonomico', 'padre_id'
-    ).order_by('nivel_taxonomico', 'nombre')
-
-    context = {
-        'padre': padre,
-        'niveles': niveles,
-        'organizacion': organizacion,
-        'familias': familias,
-        'plantillas': plantillas_data,
-        'plantillas_json': json.dumps(plantillas_data, ensure_ascii=False),
-        'clases_iso_json': json.dumps(list(clases_iso), ensure_ascii=False),
-    }
-
+    context = construir_contexto()
     return render(request, 'activos/crear_activo.html', context)
 @login_required
 def gestionar_plantillas(request):
