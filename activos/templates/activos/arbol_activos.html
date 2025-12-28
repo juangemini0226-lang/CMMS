@@ -3,6 +3,27 @@
 
 {% block title %}Árbol de Activos{% endblock %}
 
+{% block extra_css %}
+<style>
+    .node-dot {
+        width: 6px;
+        height: 6px;
+        background: #e52d27;
+        border-radius: 50%;
+    }
+    .depth-0 { margin-left: 0; }
+    .depth-1 { margin-left: 20px; }
+    .depth-2 { margin-left: 40px; }
+    .depth-3 { margin-left: 60px; }
+    .depth-4 { margin-left: 80px; }
+    .depth-5 { margin-left: 100px; }
+    .depth-6,
+    .depth-7,
+    .depth-8,
+    .depth-9 { margin-left: 120px; }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="breadcrumb">
     <a href="{% url 'activos:dashboard_activos' %}">Dashboard</a> / Árbol de Activos
@@ -17,56 +38,32 @@
         </div>
     </div>
     
-    <!-- Filtros -->
+    <!-- Buscador -->
     <form method="get" style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+        <div style="display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: end;">
             <div>
                 <label style="display: block; margin-bottom: 5px; font-size: 14px; font-weight: 600;">Buscar</label>
                 <input type="text" name="q" value="{{ busqueda }}" placeholder="Nombre, código o TAG" 
-                       style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 5px;">
+                       style="width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 8px;">
             </div>
-            
             <div>
-                <label style="display: block; margin-bottom: 5px; font-size: 14px; font-weight: 600;">Nivel</label>
-                <select name="nivel" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 5px;">
-                    <option value="">Todos los niveles</option>
-                    {% for nivel in niveles %}
-                    <option value="{{ nivel.id }}" {% if nivel_seleccionado == nivel.id|stringformat:"s" %}selected{% endif %}>
-                        {{ nivel.nombre_nivel }}
-                    </option>
-                    {% endfor %}
-                </select>
-            </div>
-            
-            <div>
-                <label style="display: block; margin-bottom: 5px; font-size: 14px; font-weight: 600;">Estado</label>
-                <select name="estado" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 5px;">
-                    <option value="">Todos los estados</option>
-                    <option value="activo" {% if estado_seleccionado == "activo" %}selected{% endif %}>Activo</option>
-                    <option value="inactivo" {% if estado_seleccionado == "inactivo" %}selected{% endif %}>Inactivo</option>
-                    <option value="mantenimiento" {% if estado_seleccionado == "mantenimiento" %}selected{% endif %}>En mantenimiento</option>
-                    <option value="fuera_servicio" {% if estado_seleccionado == "fuera_servicio" %}selected{% endif %}>Fuera de servicio</option>
-                </select>
-            </div>
-            
-            <div style="display: flex; align-items: flex-end;">
-                <button type="submit" class="btn btn-primary" style="width: 100%;">Filtrar</button>
+                <button type="submit" class="btn btn-primary" style="width: 100%; height: 42px;">Filtrar</button>
             </div>
         </div>
     </form>
 
-    <div class="alert alert-info" style="display: grid; gap: 6px; margin-bottom: 20px;">
+    <div class="alert alert-info" style="display: grid; gap: 10px; margin-bottom: 20px;">
         <div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: center;">
-            <strong>Resultados de trazabilidad</strong>
+            <strong>Resultados</strong>
             <span class="badge badge-info">{{ total_filtrados }} activos encontrados</span>
             {% if filtros_activos %}
-                <span class="badge badge-info">Filtros aplicados</span>
+                <span class="badge badge-info">Búsqueda aplicada</span>
             {% else %}
                 <span style="color: #666; font-size: 13px;">Mostrando toda la jerarquía</span>
             {% endif %}
         </div>
         {% if busqueda %}
-            <span style="color: #666; font-size: 13px;">Coincidencias para "{{ busqueda }}". Usa la ruta para seguir la trazabilidad en padres e hijos.</span>
+            <span style="color: #666; font-size: 13px;">Coincidencias para "{{ busqueda }}". Se muestran padres e hijos relacionados.</span>
         {% endif %}
         <div style="display: grid; gap: 8px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));">
             {% for activo in activos|slice:":4" %}
@@ -79,97 +76,95 @@
             {% endfor %}
         </div>
     </div>
-    <!-- Árbol de activos -->
+
+    <!-- Árbol de activos en tabla -->
     <div style="overflow-x: auto;">
-        <table>
+        <table style="min-width: 960px;">
             <thead>
                 <tr>
-                    <th>TAG / Código</th>
-                    <th>Nombre</th>
-                    <th>Nivel</th>
-                    <th>Estado</th>
-                    <th>Criticidad</th>
+                    <th style="width: 200px;">TAG / Código</th>
+                    <th>Activo (padre / hijo)</th>
+                    <th style="width: 160px;">Nivel</th>
+                    <th style="width: 140px;">Estado</th>
+                    <th style="width: 140px;">Criticidad</th>
                     <th>Ruta</th>
-                    <th>Acciones</th>
+                    <th style="width: 200px;">Acciones</th>
                 </tr>
             </thead>
-           <tbody>
-    {% for activo in activos %}
-    {% with padding=activo.tree_depth|multiply:20 %}
-    <tr>
-        <td>
-            <strong>{{ activo.tag|default:activo.codigo }}</strong>
-        </td>
-        <td>
-            {% if activo.tree_depth == 0 %}
-                {{ activo.nombre }}
-            {% elif activo.tree_depth == 1 %}
-                <span style="padding-left: 20px;">└─ {{ activo.nombre }}</span>
-            {% elif activo.tree_depth == 2 %}
-                <span style="padding-left: 40px;">└─ {{ activo.nombre }}</span>
-            {% elif activo.tree_depth == 3 %}
-                <span style="padding-left: 60px;">└─ {{ activo.nombre }}</span>
-            {% elif activo.tree_depth == 4 %}
-                <span style="padding-left: 80px;">└─ {{ activo.nombre }}</span>
-            {% elif activo.tree_depth == 5 %}
-                <span style="padding-left: 100px;">└─ {{ activo.nombre }}</span>
-            {% else %}
-                <span style="padding-left: 120px;">└─ {{ activo.nombre }}</span>
-            {% endif %}
-        </td>
-        <td>
-            <span class="badge badge-info">{{ activo.nivel_jerarquia.nombre_nivel }}</span>
-        </td>
-        <td>
-            {% if activo.estado == 'activo' %}
-                <span class="badge badge-success">Activo</span>
-            {% elif activo.estado == 'mantenimiento' %}
-                <span class="badge badge-warning">Mantenimiento</span>
-            {% else %}
-                <span class="badge badge-danger">{{ activo.get_estado_display }}</span>
-            {% endif %}
-        </td>
-        <td>
-            {% if activo.criticidad == 'alta' %}
-                <span class="badge badge-danger">Alta</span>
-            {% elif activo.criticidad == 'media' %}
-                <span class="badge badge-warning">Media</span>
-            {% elif activo.criticidad == 'baja' %}
-                <span class="badge badge-success">Baja</span>
-            {% else %}
-                <span style="color: #999;">-</span>
-            {% endif %}
-        </td>
-        <td style="font-size: 12px; color: #666;">
-            {{ activo.obtener_ruta_completa }}
-        </td>
-         <td>
-            {% if activo.nivel_jerarquia.corresponde_iso_14224 %}
-                <span class="badge badge-info">Nivel {{ activo.nivel_jerarquia.corresponde_iso_14224 }}</span>
-            {% else %}
-                <span style="color: #999;">No definido</span>
-            {% endif %}
-        </td>
-        <td>
-            <a href="{% url 'activos:detalle_activo' activo.id %}" 
-               style="color: #e52d27; text-decoration: none; margin-right: 10px;">Ver</a>
-            <a href="{% url 'activos:editar_activo' activo.id %}" 
-               style="color: #0066cc; text-decoration: none; margin-right: 10px;">Editar</a>
-            <a href="{% url 'activos:crear_activo_hijo' activo.id %}" 
-               style="color: #28a745; text-decoration: none;">+ Hijo</a>
-        </td>
-    </tr>
-    {% endwith %}
-    {% empty %}
-    <tr>
-        <td colspan="7" style="text-align: center; padding: 40px; color: #999;">
-            No hay activos registrados. 
-            <a href="{% url 'activos:crear_activo' %}" style="color: #e52d27;">Crear el primero</a>
-        </td>
-    </tr>
-    {% endfor %}
-</tbody>
-
+            <tbody>
+                {% for activo in activos %}
+                {% with padding=activo.tree_depth|multiply:20 %}
+                <tr>
+                    <td>
+                        <strong>{{ activo.tag|default:activo.codigo }}</strong>
+                    </td>
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <div class="node-dot depth-{{ activo.tree_depth|default:0 }}"></div>
+                            <div>
+                                <div style="font-weight: 600; color: #333;">{{ activo.nombre }}</div>
+                                {% if activo.parent %}
+                                    <div style="font-size: 12px; color: #888;">Depende de {{ activo.parent.nombre }}</div>
+                                {% else %}
+                                    <div style="font-size: 12px; color: #888;">Nodo raíz</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="badge badge-info">{{ activo.nivel_jerarquia.nombre_nivel }}</span>
+                    </td>
+                    <td>
+                        {% if activo.estado == 'activo' %}
+                            <span class="badge badge-success">Activo</span>
+                        {% elif activo.estado == 'mantenimiento' %}
+                            <span class="badge badge-warning">Mantenimiento</span>
+                        {% else %}
+                            <span class="badge badge-danger">{{ activo.get_estado_display }}</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if activo.criticidad == 'alta' %}
+                            <span class="badge badge-danger">Alta</span>
+                        {% elif activo.criticidad == 'media' %}
+                            <span class="badge badge-warning">Media</span>
+                        {% elif activo.criticidad == 'baja' %}
+                            <span class="badge badge-success">Baja</span>
+                        {% else %}
+                            <span style="color: #999;">-</span>
+                        {% endif %}
+                    </td>
+                    <td style="font-size: 12px; color: #666;">
+                        {{ activo.obtener_ruta_completa }}
+                    </td>
+                    <td>
+                        <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                            {% if activo.nivel_jerarquia.corresponde_iso_14224 %}
+                                <span class="badge badge-info">Nivel {{ activo.nivel_jerarquia.corresponde_iso_14224 }}</span>
+                            {% else %}
+                                <span style="color: #999;">Nivel no definido</span>
+                            {% endif %}
+                            <div style="display: flex; gap: 10px; align-items: center;">
+                                <a href="{% url 'activos:detalle_activo' activo.id %}" 
+                                   style="color: #e52d27; text-decoration: none;">Ver</a>
+                                <a href="{% url 'activos:editar_activo' activo.id %}" 
+                                   style="color: #0066cc; text-decoration: none;">Editar</a>
+                                <a href="{% url 'activos:crear_activo_hijo' activo.id %}" 
+                                   style="color: #28a745; text-decoration: none;">+ Hijo</a>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                {% endwith %}
+                {% empty %}
+                <tr>
+                    <td colspan="7" style="text-align: center; padding: 40px; color: #999;">
+                        No hay activos registrados. 
+                        <a href="{% url 'activos:crear_activo' %}" style="color: #e52d27;">Crear el primero</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
         </table>
     </div>
 </div>

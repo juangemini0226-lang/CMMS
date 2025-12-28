@@ -513,8 +513,6 @@ def vista_arbol_activos(request):
     organizacion = Organizacion.objects.first()  # Ajustar según tu lógica
     
     # Obtener filtros
-    nivel_id = request.GET.get('nivel')
-    estado = request.GET.get('estado')
     busqueda = (request.GET.get('q') or '').strip()
     
     # Query base
@@ -525,10 +523,6 @@ def vista_arbol_activos(request):
     )
 
     # Aplicar filtros
-    if nivel_id:
-        activos = activos.filter(nivel_jerarquia_id=nivel_id)
-    if estado:
-        activos = activos.filter(estado=estado)
     if busqueda:
         activos = activos.filter(
             Q(nombre__icontains=busqueda) |
@@ -537,19 +531,13 @@ def vista_arbol_activos(request):
         )
 
     total_filtrados = activos.count()
-
-    # Niveles para filtro
-    niveles = NivelJerarquia.objects.filter(organizacion=organizacion)
     
     context = {
         'organizacion': organizacion,
         'activos': activos,
-        'niveles': niveles,
-        'nivel_seleccionado': nivel_id,
-        'estado_seleccionado': estado,
         'busqueda': busqueda,
         'total_filtrados': total_filtrados,
-        'filtros_activos': any([busqueda, nivel_id, estado]),
+        'filtros_activos': any([busqueda]),
     }
     
     return render(request, 'activos/arbol_activos.html', context)

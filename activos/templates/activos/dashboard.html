@@ -233,64 +233,74 @@
     </div>
 
     <div class="split-grid">
-        <div class="panel">
-            <div class="panel-header">
+        <details class="panel collapsible">
+            <summary class="panel-header collapsible-header">
                 <div>
                     <h3 class="panel-title">Activos por Nivel</h3>
-                    <div class="panel-subtitle">Visibilidad de inventario por escalón</div>
+                    <div class="panel-subtitle">Opcional: despliega para ver la visibilidad de inventario por escalón.</div>
                 </div>
-                <span class="pill">{{ activos_por_nivel|length }} niveles</span>
+                <div class="summary-meta">
+                    <span class="pill">{{ activos_por_nivel|length }} niveles</span>
+                    <span class="toggle-hint">Ver detalle</span>
+                </div>
+            </summary>
+            <div class="collapsible-body">
+                <div class="table-responsive">
+                    <table class="table table-sm mb-0">
+                        <thead>
+                            <tr>
+                                <th>Nivel</th>
+                                <th style="width: 130px;" class="text-end">Cantidad</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in activos_por_nivel %}
+                            <tr>
+                                <td>{{ item.nivel }}</td>
+                                <td class="text-end"><strong>{{ item.total }}</strong></td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="2" class="empty-state">No hay activos registrados</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
             </div>
-            <div class="table-responsive">
-                <table class="table table-sm mb-0">
-                    <thead>
-                        <tr>
-                            <th>Nivel</th>
-                            <th style="width: 130px;" class="text-end">Cantidad</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for item in activos_por_nivel %}
-                        <tr>
-                            <td>{{ item.nivel }}</td>
-                            <td class="text-end"><strong>{{ item.total }}</strong></td>
-                        </tr>
-                        {% empty %}
-                        <tr>
-                            <td colspan="2" class="empty-state">No hay activos registrados</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
+        </details>
 
-        <div class="panel">
-            <div class="panel-header">
+        <details class="panel collapsible">
+            <summary class="panel-header collapsible-header">
                 <div>
                     <h3 class="panel-title">Familias con más activos</h3>
-                    <div class="panel-subtitle">Instantánea del inventario</div>
+                    <div class="panel-subtitle">Opcional: despliega para ver la instantánea del inventario.</div>
                 </div>
-                <span class="pill">Top 5</span>
+                <div class="summary-meta">
+                    <span class="pill">Top 5</span>
+                    <span class="toggle-hint">Ver detalle</span>
+                </div>
+            </summary>
+            <div class="collapsible-body">
+                {% if top_familias %}
+                <ul class="progress-list">
+                    {% for item in top_familias %}
+                    <li class="progress-item">
+                        <div class="insight-row">
+                            <strong>{{ item.nombre }}</strong>
+                            <span>{{ item.total }} ({{ item.porcentaje }}%)</span>
+                        </div>
+                        <div class="progress-track">
+                            <div class="progress-bar" data-progress="{{ item.porcentaje }}"></div>
+                        </div>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <div class="empty-state">No hay familias con activos registrados.</div>
+                {% endif %}
             </div>
-            {% if top_familias %}
-            <ul class="progress-list">
-                {% for item in top_familias %}
-                <li class="progress-item">
-                    <div class="insight-row">
-                        <strong>{{ item.nombre }}</strong>
-                        <span>{{ item.total }} ({{ item.porcentaje }}%)</span>
-                    </div>
-                    <div class="progress-track">
-                        <div class="progress-bar" data-progress="{{ item.porcentaje }}"></div>
-                    </div>
-                </li>
-                {% endfor %}
-            </ul>
-            {% else %}
-            <div class="empty-state">No hay familias con activos registrados.</div>
-            {% endif %}
-        </div>
+        </details>
     </div>
 
     <div class="split-grid">
