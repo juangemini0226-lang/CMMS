@@ -1,3 +1,5 @@
+from collections import defaultdict
+
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse, HttpResponse, QueryDict
@@ -381,54 +383,47 @@ def dashboard_activos(request):
     except Organizacion.DoesNotExist:
         return redirect('activos:crear_organizacion')
     
+    # Solo considerar activos en el nivel de equipo (nivel 5 equivalente)
+    filtro_nivel_equipo = Q(nivel_jerarquia__es_nivel_equipo=True) | Q(
+        nivel_jerarquia__corresponde_iso_14224=5
+    ) | Q(nivel_jerarquia__numero_nivel=5)
+    activos_equipo = NodoActivo.objects.filter(organizacion=organizacion).filter(
+        filtro_nivel_equipo
+    )
+
     # Estadísticas
-    total_activos = NodoActivo.objects.filter(organizacion=organizacion).count()
-    activos_activos = NodoActivo.objects.filter(
-        organizacion=organizacion, 
-        estado='activo'
-    ).count()
-    activos_criticos = NodoActivo.objects.filter(
-        organizacion=organizacion,
-        criticidad='alta'
-    ).count()
-    activos_mantenimiento = NodoActivo.objects.filter(
-        organizacion=organizacion,
-        estado='mantenimiento',
-    ).count()
-    activos_fuera_servicio = NodoActivo.objects.filter(
-        organizacion=organizacion,
-        estado='fuera_servicio',
-    ).count()
-    
+    total_activos = activos_equipo.count()
+    activos_activos = activos_equipo.filter(estado='activo').count()
+    activos_criticos = activos_equipo.filter(criticidad='alta').count()
+    activos_mantenimiento = activos_equipo.filter(estado='mantenimiento').count()
+    activos_fuera_servicio = activos_equipo.filter(estado='fuera_servicio').count()
+
     # Activos por nivel
     activos_por_nivel_raw = (
-        NodoActivo.objects.filter(organizacion=organizacion)
+        activos_equipo
         .values("nivel_jerarquia__nombre_nivel")
         .annotate(total=Count("id"))
         .order_by("-total")
     )
     # Distribuciones para análisis rápido
     activos_por_estado_raw = (
-        NodoActivo.objects.filter(organizacion=organizacion)
+        activos_equipo
         .values("estado")
         .annotate(total=Count("id"))
         .order_by("-total")
     )
     activos_por_criticidad_raw = (
-        NodoActivo.objects.filter(organizacion=organizacion)
+        activos_equipo
         .values("criticidad")
         .annotate(total=Count("id"))
         .order_by("-total")
     )
-    top_familias_raw = NodoActivo.objects.filter(
-        organizacion=organizacion,
+    top_familias_raw = activos_equipo.filter(
         familia__isnull=False,
     ).values('familia__nombre').annotate(total=Count('id')).order_by('-total')[:5]
     estado_labels = dict(NodoActivo.ESTADOS)
     criticidad_labels = dict(NodoActivo.CRITICIDADES)
-    activos_recientes = NodoActivo.objects.filter(
-        organizacion=organizacion,
-    ).select_related('familia', 'nivel_jerarquia').order_by('-creado_el')[:5]
+    activos_recientes = activos_equipo.select_related('familia', 'nivel_jerarquia').order_by('-creado_el')[:5]
     activos_recientes_info = [
         {
             'nombre': activo.nombre,
@@ -513,6 +508,8 @@ def vista_arbol_activos(request):
     organizacion = Organizacion.objects.first()  # Ajustar según tu lógica
     
     # Obtener filtros
+    nivel_id = (request.GET.get('nivel') or '').strip()
+    estado = (request.GET.get('estado') or '').strip()
     busqueda = (request.GET.get('q') or '').strip()
     
     # Query base
@@ -523,6 +520,10 @@ def vista_arbol_activos(request):
     )
 
     # Aplicar filtros
+    if nivel_id:
+        activos = activos.filter(nivel_jerarquia_id=nivel_id)
+    if estado:
+        activos = activos.filter(estado=estado)
     if busqueda:
         activos = activos.filter(
             Q(nombre__icontains=busqueda) |
@@ -530,14 +531,77 @@ def vista_arbol_activos(request):
             Q(tag__icontains=busqueda)
         )
 
-    total_filtrados = activos.count()
+    activos = activos.order_by('id')
+    activos_list = list(activos)
+    total_filtrados = len(activos_list)
+
+    # Niveles para filtro
+    niveles = NivelJerarquia.objects.filter(organizacion=organizacion)
     
+    filtros_activos = any([busqueda, nivel_id, estado])
+    arbol_por_raiz = []
+    ids_filtrados = {activo.id for activo in activos_list}
+
+    if filtros_activos and activos_list:
+        todos_activos = list(
+            NodoActivo.objects.filter(organizacion=organizacion)
+            .select_related('nivel_jerarquia', 'parent')
+        )
+
+        nodo_por_id = {nodo.id: nodo for nodo in todos_activos}
+        hijos_por_padre = defaultdict(list)
+        for nodo in todos_activos:
+            hijos_por_padre[nodo.parent_id].append(nodo)
+
+        for hijos in hijos_por_padre.values():
+            hijos.sort(key=lambda x: (x.nivel_jerarquia.numero_nivel, x.nombre.lower()))
+
+        def obtener_raiz(nodo):
+            actual = nodo
+            while actual and actual.parent_id:
+                actual = nodo_por_id.get(actual.parent_id)
+            return actual
+
+        raices_en_orden = []
+        raices_vistas = set()
+        for nodo in activos_list:
+            raiz = obtener_raiz(nodo)
+            if raiz and raiz.id not in raices_vistas:
+                raices_vistas.add(raiz.id)
+                raices_en_orden.append(raiz)
+
+        for raiz in raices_en_orden:
+            filas = []
+
+            def recorrer(nodo, profundidad=0):
+                filas.append({'nodo': nodo, 'profundidad': profundidad})
+                for hijo in hijos_por_padre.get(nodo.id, []):
+                    recorrer(hijo, profundidad + 1)
+
+            recorrer(raiz)
+            niveles_presentes = sorted(
+                {fila['nodo'].nivel_jerarquia.nombre_nivel for fila in filas}
+            )
+            arbol_por_raiz.append(
+                {
+                    'raiz': raiz,
+                    'filas': filas,
+                    'componentes': max(len(filas) - 1, 0),
+                    'niveles_presentes': niveles_presentes,
+                }
+            )
+
     context = {
         'organizacion': organizacion,
-        'activos': activos,
+        'activos': activos_list,
+        'niveles': niveles,
+        'nivel_seleccionado': nivel_id,
+        'estado_seleccionado': estado,
         'busqueda': busqueda,
         'total_filtrados': total_filtrados,
-        'filtros_activos': any([busqueda]),
+        'filtros_activos': filtros_activos,
+        'arbol_por_raiz': arbol_por_raiz,
+        'ids_filtrados': ids_filtrados,
     }
     
     return render(request, 'activos/arbol_activos.html', context)
