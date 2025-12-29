@@ -1,32 +1,187 @@
+{% extends "base.html" %}
 {% load static %}
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Seleccionar Reporte</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
-</head>
-<body class="bg-light">
-<div class="container my-5">
-  <div class="row justify-content-center">
-    <div class="col-md-8">
-      <div class="card shadow">
-        <div class="card-header bg-danger text-white">
-          <h4 class="mb-0">Seleccionar Tipo de Reporte</h4>
-        </div>
-        <div class="card-body">
-          <form method="post">
-            {% csrf_token %}
-            <div class="mb-3">
-              {{ form.tipo_reporte.label_tag }}
-              {{ form.tipo_reporte }}
-            </div>
 
-            <button type="submit" class="btn btn-danger">Generar Reporte</button>
-          </form>
-        </div>
-      </div>
+{% block extra_head %}
+<style>
+    .report-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 22px;
+        align-items: start;
+    }
+    .report-card, .report-aside {
+        background: #ffffff;
+        border-radius: 16px;
+        border: 1px solid #e5e7eb;
+        box-shadow: 0 10px 28px rgba(0,0,0,0.06);
+        padding: 22px;
+    }
+    .report-card__header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        flex-wrap: wrap;
+        margin-bottom: 16px;
+    }
+    .report-card__title {
+        margin: 0;
+        color: #b31217;
+        font-size: 1.5rem;
+        letter-spacing: 0.01em;
+    }
+    .report-card__subtitle {
+        color: #4b5563;
+        margin: 6px 0 0;
+        line-height: 1.5;
+    }
+    .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 14px;
+        border-radius: 999px;
+        background: rgba(179, 18, 23, 0.08);
+        color: #b31217;
+        font-weight: 700;
+        border: 1px solid rgba(179, 18, 23, 0.16);
+    }
+    .report-form {
+        display: grid;
+        gap: 16px;
+    }
+    .report-form label {
+        font-weight: 700;
+        color: #374151;
+        margin-bottom: 6px;
+        display: inline-block;
+    }
+    .report-form .form-select {
+        width: 100%;
+        padding: 12px;
+        border-radius: 12px;
+        border: 1px solid #e5e7eb;
+        background: #f9fafb;
+        font-size: 1rem;
+    }
+    .report-actions {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+    .report-actions .btn-primary {
+        background: linear-gradient(135deg, #e52d27, #b31217);
+        color: #fff;
+        border: none;
+        padding: 11px 18px;
+        border-radius: 12px;
+        font-weight: 800;
+        box-shadow: 0 12px 22px rgba(179, 18, 23, 0.18);
+    }
+    .report-actions .btn-secondary {
+        border: 1px solid #e5e7eb;
+        background: #fff;
+        color: #374151;
+        padding: 10px 14px;
+        border-radius: 12px;
+        font-weight: 700;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        text-decoration: none;
+    }
+    .report-steps {
+        display: grid;
+        gap: 14px;
+    }
+    .step {
+        display: grid;
+        gap: 6px;
+        padding: 12px;
+        border-radius: 12px;
+        background: #f9fafb;
+        border: 1px solid #e5e7eb;
+    }
+    .step strong {
+        color: #111827;
+    }
+    .step span {
+        color: #4b5563;
+    }
+    .summary {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 14px;
+        border-radius: 12px;
+        background: #ecfdf3;
+        color: #166534;
+        border: 1px solid #bbf7d0;
+        font-weight: 600;
+    }
+    @media (max-width: 960px) {
+        .report-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block toolbar %}
+<div class="page-toolbar">
+    <button type="button" class="back-button" id="back-button">⬅️ Volver</button>
+    <div class="toolbar-actions">
+        <span class="pill">🧾 Generación de reportes</span>
     </div>
-  </div>
+    </div>
+{% endblock toolbar %}
+
+{% block content %}
+<div class="report-grid">
+    <section class="report-card">
+        <div class="report-card__header">
+            <div>
+                <p class="eyebrow" style="letter-spacing:0.08em; text-transform:uppercase; color:#6b7280; font-weight:800; margin:0;">Centro de reportes</p>
+                <h1 class="report-card__title">Selecciona el tipo de reporte</h1>
+                <p class="report-card__subtitle">Genera reportes listos para compartir y mantener la trazabilidad de activos y taxonomía.</p>
+            </div>
+            <span class="pill">⚡ Listo en un clic</span>
+        </div>
+        <form method="post" class="report-form">
+            {% csrf_token %}
+            <div>
+                {{ form.tipo_reporte.label_tag }}
+                {{ form.tipo_reporte }}
+            </div>
+            <div class="report-actions">
+                <button type="submit" class="btn btn-primary">Generar reporte</button>
+                <a class="btn-secondary" href="{% url 'reportes:carga_interactiva' %}">
+                    📁 Ir a cargas
+                </a>
+            </div>
+        </form>
+    </section>
+
+    <aside class="report-aside">
+        <div class="summary">
+            ✅ El menú lateral ahora se mantiene visible en todo el módulo de reportes.
+        </div>
+        <div class="report-steps">
+            <div class="step">
+                <strong>1. Elige el tipo</strong>
+                <span>Selecciona si necesitas el reporte de activos o el de taxonomía ISO.</span>
+            </div>
+            <div class="step">
+                <strong>2. Genera al instante</strong>
+                <span>El archivo PDF se genera y abre directamente en el navegador.</span>
+            </div>
+            <div class="step">
+                <strong>3. Comparte y registra</strong>
+                <span>Guarda el reporte o acompáñalo con evidencias desde la sección de cargas.</span>
+            </div>
+        </div>
+    </aside>
 </div>
-</body>
-</html>
+{% endblock content %}
