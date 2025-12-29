@@ -17,73 +17,15 @@
         Puedes personalizarla según las necesidades de tu empresa, siguiendo o no la norma ISO 14224.
     </div>
     
-    {% if niveles %}
-    <h3 style="margin-bottom: 15px; color: #333;">Niveles Configurados</h3>
-    <table>
-        <thead>
-            <tr>
-                <th>Nivel</th>
-                <th>Nombre</th>
-                <th>ISO 14224</th>
-                <th>Es Nivel Equipo</th>
-                <th>Requiere TAG</th>
-                <th>Prefijo TAG</th>
-                <th>Formato TAG</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for nivel in niveles %}
-            <tr>
-                <td><strong>{{ nivel.numero_nivel }}</strong></td>
-                <td>{{ nivel.nombre_nivel }}</td>
-                <td>
-                    {% if nivel.corresponde_iso_14224 %}
-                        <span class="badge badge-info">Nivel {{ nivel.corresponde_iso_14224 }}</span>
-                    {% else %}
-                        <span style="color: #999;">-</span>
-                    {% endif %}
-                </td>
-                <td>
-                    {% if nivel.es_nivel_equipo %}
-                        <span class="badge badge-success">Sí</span>
-                    {% else %}
-                        <span style="color: #999;">No</span>
-                    {% endif %}
-                </td>
-                <td>
-                    {% if nivel.requiere_tag %}
-                        <span class="badge badge-success">Sí</span>
-                    {% else %}
-                        <span style="color: #999;">No</span>
-                    {% endif %}
-                </td>
-                <td>
-                    {% if nivel.prefijo_tag %}
-                        <code style="background: #f0f0f0; padding: 2px 8px; border-radius: 3px;">{{ nivel.prefijo_tag }}</code>
-                    {% else %}
-                        <span style="color: #999;">-</span>
-                    {% endif %}
-                </td>
-                <td>
-                    {% if nivel.formato_tag %}
-                        <code style="background: #f0f0f0; padding: 2px 8px; border-radius: 3px; font-size: 11px;">{{ nivel.formato_tag }}</code>
-                    {% else %}
-                        <span style="color: #999;">-</span>
-                    {% endif %}
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-    {% else %}
-    <div style="text-align: center; padding: 40px; color: #999;">
-        <p style="font-size: 18px; margin-bottom: 15px;">No hay niveles de jerarquía configurados</p>
-        <p>Para configurar la jerarquía, accede al panel de administración</p>
-        <a href="{% url 'admin:activos_niveljerarquia_add' %}" class="btn btn-primary" style="margin-top: 20px;">
-            Ir al Admin
-        </a>
+    <div id="niveles-container"
+         data-endpoint="{% url 'activos:niveles_jerarquia_datos' %}"
+         data-admin-url="{% url 'admin:activos_niveljerarquia_add' %}">
+        {% include 'activos/partials/niveles_jerarquia_table.html' with niveles=niveles %}
     </div>
-    {% endif %}
+
+    <div style="margin-top: 15px; text-align: right;">
+        <button id="btn-refrescar-niveles" class="btn btn-primary btn-sm">Refrescar</button>
+    </div>
     
     <div style="margin-top: 30px; padding-top: 20px; border-top: 2px solid #f0f0f0;">
         <h3 style="margin-bottom: 15px; color: #333;">Ejemplo de Jerarquía ISO 14224</h3>
@@ -95,7 +37,7 @@
                     <th>Descripción</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody id="tabla-ejemplo-iso">
                 <tr><td>1</td><td>Industria</td><td>Tipo de industria (Petróleo, Gas, etc.)</td></tr>
                 <tr><td>2</td><td>Negocio</td><td>Línea de negocio</td></tr>
                 <tr><td>3</td><td>Instalación</td><td>Tipo de instalación</td></tr>
@@ -116,4 +58,115 @@
         <a href="{% url 'activos:dashboard_activos' %}" class="btn btn-secondary">Volver</a>
     </div>
 </div>
+{% block extra_js %}
+<script>
+    (function() {
+        const container = document.getElementById('niveles-container');
+        const refreshBtn = document.getElementById('btn-refrescar-niveles');
+        if (!container || !refreshBtn) return;
+
+        const endpoint = container.dataset.endpoint;
+        const ejemploIso = document.getElementById('tabla-ejemplo-iso');
+
+        const boolBadge = (value) => value
+            ? '<span class="badge badge-success">Sí</span>'
+            : '<span style="color: #999;">No</span>';
+
+        const formatBadge = (iso) => iso
+            ? `<span class="badge badge-info">Nivel ${iso}</span>`
+            : '<span style="color: #999;">-</span>';
+
+        const safeText = (text) => (text || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+        const renderFilas = (niveles) => niveles.map((nivel) => `
+            <tr>
+                <td><strong>${nivel.numero_nivel}</strong></td>
+                <td>${safeText(nivel.nombre_nivel)}</td>
+                <td>${formatBadge(nivel.corresponde_iso_14224)}</td>
+                <td>${boolBadge(nivel.es_nivel_equipo)}</td>
+                <td>${boolBadge(nivel.requiere_tag)}</td>
+                <td>${nivel.prefijo_tag ? `<code style="background: #f0f0f0; padding: 2px 8px; border-radius: 3px;">${safeText(nivel.prefijo_tag)}</code>` : '<span style="color: #999;">-</span>'}</td>
+                <td>${nivel.formato_tag ? `<code style="background: #f0f0f0; padding: 2px 8px; border-radius: 3px; font-size: 11px;">${safeText(nivel.formato_tag)}</code>` : '<span style="color: #999;">-</span>'}</td>
+            </tr>
+        `).join('');
+
+        const renderTabla = (niveles) => {
+            if (!niveles.length) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: #999;">
+                        <p style="font-size: 18px; margin-bottom: 15px;">No hay niveles de jerarquía configurados</p>
+                        <p>Para configurar la jerarquía, accede al panel de administración</p>
+                        <a href="${container.dataset.adminUrl}" class="btn btn-primary" style="margin-top: 20px;">
+                            Ir al Admin
+                        </a>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = `
+                <h3 style="margin-bottom: 15px; color: #333;">Niveles Configurados</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Nivel</th>
+                            <th>Nombre</th>
+                            <th>ISO 14224</th>
+                            <th>Es Nivel Equipo</th>
+                            <th>Requiere TAG</th>
+                            <th>Prefijo TAG</th>
+                            <th>Formato TAG</th>
+                        </tr>
+                    </thead>
+                    <tbody>${renderFilas(niveles)}</tbody>
+                </table>
+            `;
+        };
+
+        const updateEjemploIso = (niveles) => {
+            if (!ejemploIso) return;
+            const isoRows = niveles
+                .filter((n) => n.corresponde_iso_14224)
+                .sort((a, b) => a.corresponde_iso_14224 - b.corresponde_iso_14224)
+                .map((n) => `
+                    <tr>
+                        <td>${n.corresponde_iso_14224}</td>
+                        <td>${safeText(n.nombre_nivel)}</td>
+                        <td>${n.es_nivel_equipo ? '<strong>Clase de equipo (Nivel principal)</strong>' : 'Nivel según configuración personalizada'}</td>
+                    </tr>
+                `)
+                .join('');
+
+            if (isoRows) {
+                ejemploIso.innerHTML = isoRows;
+            }
+        };
+
+        const refrescar = async () => {
+            refreshBtn.disabled = true;
+            refreshBtn.textContent = 'Actualizando...';
+            try {
+                const response = await fetch(endpoint, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+                if (!response.ok) throw new Error('Error al cargar niveles');
+                const payload = await response.json();
+                renderTabla(payload.niveles || []);
+                updateEjemploIso(payload.niveles || []);
+            } catch (err) {
+                console.error(err);
+                refreshBtn.textContent = 'Reintentar';
+            } finally {
+                refreshBtn.disabled = false;
+                if (refreshBtn.textContent !== 'Reintentar') {
+                    refreshBtn.textContent = 'Refrescar';
+                }
+            }
+        };
+
+        refreshBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            refrescar();
+        });
+    })();
+</script>
+{% endblock %}
 {% endblock %}

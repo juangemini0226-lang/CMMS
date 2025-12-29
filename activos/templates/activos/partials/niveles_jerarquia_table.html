@@ -1,0 +1,67 @@
+{% if niveles %}
+<h3 style="margin-bottom: 15px; color: #333;">Niveles Configurados</h3>
+<table>
+    <thead>
+        <tr>
+            <th>Nivel</th>
+            <th>Nombre</th>
+            <th>ISO 14224</th>
+            <th>Es Nivel Equipo</th>
+            <th>Requiere TAG</th>
+            <th>Prefijo TAG</th>
+            <th>Formato TAG</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for nivel in niveles %}
+        <tr>
+            <td><strong>{{ nivel.numero_nivel }}</strong></td>
+            <td>{{ nivel.nombre_nivel }}</td>
+            <td>
+                {% if nivel.corresponde_iso_14224 %}
+                    <span class="badge badge-info">Nivel {{ nivel.corresponde_iso_14224 }}</span>
+                {% else %}
+                    <span style="color: #999;">-</span>
+                {% endif %}
+            </td>
+            <td>
+                {% if nivel.es_nivel_equipo %}
+                    <span class="badge badge-success">Sí</span>
+                {% else %}
+                    <span style="color: #999;">No</span>
+                {% endif %}
+            </td>
+            <td>
+                {% if nivel.requiere_tag %}
+                    <span class="badge badge-success">Sí</span>
+                {% else %}
+                    <span style="color: #999;">No</span>
+                {% endif %}
+            </td>
+            <td>
+                {% if nivel.prefijo_tag %}
+                    <code style="background: #f0f0f0; padding: 2px 8px; border-radius: 3px;">{{ nivel.prefijo_tag }}</code>
+                {% else %}
+                    <span style="color: #999;">-</span>
+                {% endif %}
+            </td>
+            <td>
+                {% if nivel.formato_tag %}
+                    <code style="background: #f0f0f0; padding: 2px 8px; border-radius: 3px; font-size: 11px;">{{ nivel.formato_tag }}</code>
+                {% else %}
+                    <span style="color: #999;">-</span>
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<div style="text-align: center; padding: 40px; color: #999;">
+    <p style="font-size: 18px; margin-bottom: 15px;">No hay niveles de jerarquía configurados</p>
+    <p>Para configurar la jerarquía, accede al panel de administración</p>
+    <a href="{% url 'admin:activos_niveljerarquia_add' %}" class="btn btn-primary" style="margin-top: 20px;">
+        Ir al Admin
+    </a>
+</div>
+{% endif %}

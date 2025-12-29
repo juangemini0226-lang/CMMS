@@ -501,6 +501,50 @@ def configurar_jerarquia(request):
     
     return render(request, 'activos/configurar_jerarquia.html', context)
 
+@login_required
+def niveles_jerarquia_datos(request):
+    """Devuelve la lista de niveles de jerarquía en formato JSON para refrescar la vista."""
+    organizacion = Organizacion.objects.first()
+    niveles = NivelJerarquia.objects.filter(organizacion=organizacion).order_by('numero_nivel') if organizacion else []
+
+    data = [
+        {
+            'numero_nivel': nivel.numero_nivel,
+            'nombre_nivel': nivel.nombre_nivel,
+            'corresponde_iso_14224': nivel.corresponde_iso_14224,
+            'es_nivel_equipo': nivel.es_nivel_equipo,
+            'requiere_tag': nivel.requiere_tag,
+            'prefijo_tag': nivel.prefijo_tag,
+            'formato_tag': nivel.formato_tag,
+        }
+        for nivel in niveles
+    ]
+
+    return JsonResponse({'niveles': data})
+
+
+@login_required
+def niveles_jerarquia_datos(request):
+    """Devuelve la lista de niveles de jerarquía en formato JSON para refrescar la vista."""
+    organizacion = Organizacion.objects.first()
+    niveles = NivelJerarquia.objects.filter(organizacion=organizacion).order_by('numero_nivel') if organizacion else []
+
+    data = [
+        {
+            'numero_nivel': nivel.numero_nivel,
+            'nombre_nivel': nivel.nombre_nivel,
+            'corresponde_iso_14224': nivel.corresponde_iso_14224,
+            'es_nivel_equipo': nivel.es_nivel_equipo,
+            'requiere_tag': nivel.requiere_tag,
+            'prefijo_tag': nivel.prefijo_tag,
+            'formato_tag': nivel.formato_tag,
+        }
+        for nivel in niveles
+    ]
+
+    return JsonResponse({'niveles': data})
+
+
 
 @login_required
 def vista_arbol_activos(request):
@@ -525,11 +569,13 @@ def vista_arbol_activos(request):
     if estado:
         activos = activos.filter(estado=estado)
     if busqueda:
-        activos = activos.filter(
-            Q(nombre__icontains=busqueda) |
-            Q(codigo__icontains=busqueda) |
-            Q(tag__icontains=busqueda)
-        )
+        terminos = [t for t in busqueda.split() if t]
+        for termino in terminos:
+            activos = activos.filter(
+                Q(nombre__icontains=termino) |
+                Q(codigo__icontains=termino) |
+                Q(tag__icontains=termino)
+            )
 
     activos = activos.order_by('id')
     activos_list = list(activos)

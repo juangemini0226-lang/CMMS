@@ -115,12 +115,13 @@
     </style>
     
     <!-- Filtros -->
-    <form method="get" style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+    <form id="filtro-arbol-form" method="get" style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; align-items: end;">
             <div>
                 <label style="display: block; margin-bottom: 5px; font-size: 14px; font-weight: 600;">Buscar</label>
-                <input type="text" name="q" value="{{ busqueda }}" placeholder="Nombre, código o TAG" 
+                <input id="buscador-arbol" type="text" name="q" value="{{ busqueda }}" placeholder="Nombre, código o TAG (se puede escribir parcialmente)" 
                        style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 5px;">
+                <small style="color: #6b7280;">Escribe las iniciales y presiona Enter o espera un instante para filtrar.</small>
             </div>
             
             <div>
@@ -138,7 +139,57 @@
             <div>
                 <label style="display: block; margin-bottom: 5px; font-size: 14px; font-weight: 600;">Estado</label>
                 <select name="estado" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 5px;">
-@@ -58,119 +155,148 @@
+                    <option value="">Todos</option>
+                    <option value="activo" {% if estado_seleccionado == 'activo' %}selected{% endif %}>Activo</option>
+                    <option value="mantenimiento" {% if estado_seleccionado == 'mantenimiento' %}selected{% endif %}>Mantenimiento</option>
+                    <option value="fuera_servicio" {% if estado_seleccionado == 'fuera_servicio' %}selected{% endif %}>Fuera de servicio</option>
+                </select>
+            </div>
+
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                <button type="submit" class="btn btn-primary" style="min-width: 120px;">Buscar</button>
+                <button type="button" class="btn btn-outline-secondary" style="min-width: 120px;" onclick="document.getElementById('filtro-arbol-form').reset(); document.getElementById('filtro-arbol-form').submit();">
+                    Limpiar
+                </button>
+            </div>
+        </div>
+    </form>
+
+    <script>
+        (function() {
+            const form = document.getElementById('filtro-arbol-form');
+            const buscador = document.getElementById('buscador-arbol');
+            if (!form || !buscador) return;
+
+            const selects = form.querySelectorAll('select');
+            let debounceTimer;
+
+            const submitForm = () => {
+                if (typeof form.requestSubmit === 'function') {
+                    form.requestSubmit();
+                } else {
+                    form.submit();
+                }
+            };
+
+            buscador.addEventListener('input', () => {
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(submitForm, 450);
+            });
+
+            buscador.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    submitForm();
+                }
+            });
+
+            selects.forEach((select) => {
+                select.addEventListener('change', submitForm);
+            });
+        })();
+    </script>
+
     <div class="alert alert-info" style="display: grid; gap: 6px; margin-bottom: 20px;">
         <div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: center;">
             <strong>Resultados de trazabilidad</strong>
