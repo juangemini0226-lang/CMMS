@@ -194,8 +194,52 @@
         border-radius: 10px;
         font-size: 12px;
     }
+.quick-nav {
+        background: #f9fafb;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 14px 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+    .quick-nav__title {
+        font-size: 14px;
+        font-weight: 700;
+        color: #1f2933;
+        letter-spacing: 0.2px;
+    }
+    .quick-nav__links {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+    .quick-nav__links a {
+        padding: 10px 14px;
+        border-radius: 10px;
+        border: 1px solid #e5e7eb;
+        background: #fff;
+        text-decoration: none;
+        font-weight: 600;
+        color: #374151;
+        transition: all 0.2s ease;
+    }
+    .quick-nav__links a:hover {
+        border-color: #b31217;
+        color: #b31217;
+        box-shadow: 0 6px 16px rgba(179, 18, 23, 0.12);
+    }
+    .card {
+        position: relative;
+    }
+    .anchor-target {
+        position: absolute;
+        top: -90px;
+        height: 1px;
+        width: 1px;
+    }
 </style>
-<div class="card">
+<div class="card" id="resumen">
     <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
         <div>
             <div class="fw-bold">Dashboard de Activos - {{ organizacion.nombre }}</div>
@@ -209,6 +253,20 @@
         </div>
     </div>
 
+    <div class="quick-nav">
+        <div class="quick-nav__title">Navega rápidamente entre tarjetas y pantallas</div>
+        <div class="quick-nav__links">
+            <a href="#resumen">Ir al resumen</a>
+            <a href="#indicadores">Indicadores clave</a>
+            <a href="#detalles-inventario">Inventario</a>
+            <a href="#condicion">Condición y estado</a>
+            <a href="#actividad">Actividad reciente</a>
+            <a href="{% url 'activos:dashboard_activos' %}">Volver al inicio</a>
+            <a href="{% url 'activos:vista_arbol_activos' %}">Ir a activos</a>
+        </div>
+    </div>
+
+    <span id="indicadores" class="anchor-target"></span>
     <div class="dashboard-kpis">
         <div class="kpi-card gradient-indigo">
             <h3>{{ total_activos }}</h3>
@@ -232,6 +290,7 @@
         </div>
     </div>
 
+    <span id="detalles-inventario" class="anchor-target"></span>
     <div class="split-grid">
         <details class="panel collapsible">
             <summary class="panel-header collapsible-header">
@@ -303,7 +362,8 @@
         </details>
     </div>
 
-    <div class="split-grid">
+    <span id="condicion" class="anchor-target"></span>
+    <div class="split-grid"></div>
      <details class="panel collapsible">
             <summary class="panel-header collapsible-header">
                 <div>
@@ -369,6 +429,7 @@
         </details>
     </div>
 
+    <span id="actividad" class="anchor-target"></span>
     <div class="panel">
         <div class="panel-header">
             <div>
