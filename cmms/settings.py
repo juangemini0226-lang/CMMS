@@ -15,17 +15,43 @@ import os
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+def load_env_file(path: Path) -> None:
+    """Load a simple .env file into os.environ if present."""
+
+    if not path.exists():
+        return
+
+    for raw_line in path.read_text().splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith("#"):
+            continue
+
+        if "=" not in line:
+            continue
+
+        key, value = line.split("=", 1)
+        key = key.strip()
+        value = value.strip().strip('"').strip("'")
+        if key:
+            os.environ.setdefault(key, value)
+
+
+load_env_file(BASE_DIR / ".env")
+
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-t%oj$!9&_od*l3xgn2m@b_r4xff15zp_*=vqgzpz^!q)ui47#8'
+SECRET_KEY = os.getenv(
+    "SECRET_KEY", "django-insecure-t%oj$!9&_od*l3xgn2m@b_r4xff15zp_*=vqgzpz^!q)ui47#8"
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv("DEBUG", "True").lower() in ("1", "true", "yes", "on")
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [host.strip() for host in os.getenv("ALLOWED_HOSTS", "").split(",") if host.strip()]
+
 
 
 # Application definition
@@ -78,19 +104,25 @@ WSGI_APPLICATION = 'cmms.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
+DB_ENGINE = os.getenv("DB_ENGINE", "django.db.backends.mysql")
+DB_NAME = os.getenv("DB_NAME", "DB_activos")
+DB_USER = os.getenv("DB_USER", "root")
+DB_PASSWORD = os.getenv("DB_PASSWORD", "Admin123")
+DB_HOST = os.getenv("DB_HOST", "127.0.0.1")
+DB_PORT = os.getenv("DB_PORT", "3306")
+
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.mysql",
-        "NAME": "DB_activos",
-        "USER": "root",
-        "PASSWORD": "Admin123",
-        "HOST": "127.0.0.1",
-        "PORT": "3306",
-        "OPTIONS": {
-            "charset": "utf8mb4",
-        },
+        "ENGINE": DB_ENGINE,
+        "NAME": DB_NAME,
+        "USER": DB_USER,
+        "PASSWORD": DB_PASSWORD,
+        "HOST": DB_HOST,
+        "PORT": DB_PORT,
+        "OPTIONS": {"charset": "utf8mb4"} if "mysql" in DB_ENGINE else {},
     }
 }
+
 
 
 
@@ -128,10 +160,11 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-STATIC_URL = '/static/'
+STATIC_URL = os.getenv("STATIC_URL", "/static/")
 STATICFILES_DIRS = [
     BASE_DIR / 'accounts' / 'static',
 ]
+
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
@@ -143,6 +176,6 @@ LOGOUT_REDIRECT_URL = 'home'
 LOGIN_URL = 'login'
 
 
-# Media files (para imágenes y documentos)
-MEDIA_URL = '/media/'
+#  Media files (para imágenes y documentos)
+MEDIA_URL = os.getenv("MEDIA_URL", "/media/")
 MEDIA_ROOT = BASE_DIR / 'media'
