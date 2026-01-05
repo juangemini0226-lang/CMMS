@@ -166,6 +166,7 @@ DB_URL = (
     or os.getenv("DATABASE_URL")
     or os.getenv("MYSQL_URL")
     or os.getenv("MYSQL_PUBLIC_URL")
+    or os.getenv("MYSQL_MYSQL_URL")
 )
 
 DB_ENGINE = os.getenv("DB_ENGINE", "django.db.backends.mysql")
