@@ -87,15 +87,51 @@ def build_allowed_hosts() -> list[str]:
 
 ALLOWED_HOSTS = build_allowed_hosts()
 
+
+def normalize_origin(value: str) -> str | None:
+    cleaned = value.strip()
+    if not cleaned:
+        return None
+
+    if cleaned.startswith(("http://", "https://")):
+        return cleaned
+
+    if cleaned.startswith("."):
+        cleaned = f"*.{cleaned.lstrip('.') }"
+
+    return f"https://{cleaned}"
+
+
+def build_csrf_trusted_origins() -> list[str]:
+    # Defaults for Railway deployments (covers app-name.up.railway.app)
+    defaults = ["https://*.up.railway.app"]
+
+    # Optional explicit list from env (comma-separated)
+    env_origins = [
+        x.strip()
+        for x in os.getenv("CSRF_TRUSTED_ORIGINS", "").split(",")
+        if x.strip()
+    ]
+
+    # Railway public domain env vars
+    railway_domain = (
+        os.getenv("RAILWAY_PUBLIC_DOMAIN")
+        or os.getenv("RAILWAY_STATIC_URL")
+        or os.getenv("RAILWAY_URL")
+    )
+
+    normalized: list[str] = []
+    for origin in defaults + env_origins + ([railway_domain] if railway_domain else []):
+        normalized_origin = normalize_origin(origin)
+        if normalized_origin and normalized_origin not in normalized:
+            normalized.append(normalized_origin)
+
+    return normalized
+
+
 # CSRF trusted origins (important on Railway if you use POST forms)
 # Put in env like: CSRF_TRUSTED_ORIGINS=https://*.up.railway.app,https://tu-dominio.com
-CSRF_TRUSTED_ORIGINS = [
-    x.strip()
-    for x in os.getenv("CSRF_TRUSTED_ORIGINS", "").split(",")
-    if x.strip()
-]
-
-
+CSRF_TRUSTED_ORIGINS = build_csrf_trusted_origins()
 # ----------------------------
 # APPLICATION DEFINITION
 # ----------------------------
