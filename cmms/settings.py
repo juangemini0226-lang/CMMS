@@ -40,6 +40,31 @@ def load_env_file(path: Path) -> None:
 load_env_file(BASE_DIR / ".env")
 
 
+def parse_database_url(url: str) -> dict[str, str]:
+    """Parse a database URL (e.g. mysql://user:pass@host:port/name)."""
+
+    parsed = urlparse(url)
+
+    engine_map = {
+        "mysql": "django.db.backends.mysql",
+        "mariadb": "django.db.backends.mysql",
+        "postgres": "django.db.backends.postgresql",
+        "postgresql": "django.db.backends.postgresql",
+        "postgresql+psycopg2": "django.db.backends.postgresql",
+    }
+
+    engine = engine_map.get(parsed.scheme, parsed.scheme)
+
+    return {
+        "ENGINE": engine,
+        "NAME": parsed.path.lstrip("/"),
+        "USER": parsed.username or "",
+        "PASSWORD": parsed.password or "",
+        "HOST": parsed.hostname or "",
+        "PORT": str(parsed.port or ""),
+    }
+
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
@@ -136,6 +161,13 @@ WSGI_APPLICATION = 'cmms.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
+DB_URL = (
+    os.getenv("DB_URL")
+    or os.getenv("DATABASE_URL")
+    or os.getenv("MYSQL_URL")
+    or os.getenv("MYSQL_PUBLIC_URL")
+)
+
 DB_ENGINE = os.getenv("DB_ENGINE", "django.db.backends.mysql")
 DB_NAME = os.getenv("DB_NAME", "DB_activos")
 DB_USER = os.getenv("DB_USER", "root")
@@ -143,17 +175,29 @@ DB_PASSWORD = os.getenv("DB_PASSWORD", "Admin123")
 DB_HOST = os.getenv("DB_HOST", "127.0.0.1")
 DB_PORT = os.getenv("DB_PORT", "3306")
 
-DATABASES = {
-    "default": {
-        "ENGINE": DB_ENGINE,
-        "NAME": DB_NAME,
-        "USER": DB_USER,
-        "PASSWORD": DB_PASSWORD,
-        "HOST": DB_HOST,
-        "PORT": DB_PORT,
-        "OPTIONS": {"charset": "utf8mb4"} if "mysql" in DB_ENGINE else {},
-    }
-}
+
+def build_database_config() -> dict[str, str | dict]:
+    if DB_URL:
+        config = parse_database_url(DB_URL)
+    else:
+        config = {
+            "ENGINE": DB_ENGINE,
+            "NAME": DB_NAME,
+            "USER": DB_USER,
+            "PASSWORD": DB_PASSWORD,
+            "HOST": DB_HOST,
+            "PORT": DB_PORT,
+        }
+
+    if "mysql" in config.get("ENGINE", ""):
+        options = config.get("OPTIONS", {})
+        options.setdefault("charset", "utf8mb4")
+        config["OPTIONS"] = options
+
+    return config
+
+
+DATABASES = {"default": build_database_config()}
 
 
 
