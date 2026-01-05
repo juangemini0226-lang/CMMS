@@ -111,22 +111,64 @@
         }
         .fila-activo .indentador {
             flex-shrink: 0;
+        }.filtro-arbol {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .filtro-arbol-grid {
+            display: grid;
+            grid-template-columns: minmax(260px, 2fr) repeat(2, minmax(180px, 1fr)) auto;
+            gap: 16px;
+            align-items: end;
+        }
+        .filtro-arbol label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        .filtro-arbol .form-control {
+            width: 100%;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 9px 12px;
+            box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.03);
+        }
+        .filtro-arbol .acciones-filtro {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: flex-start;
+        }
+        .filtro-arbol-ayuda {
+            color: #6b7280;
+            font-size: 13px;
+            margin: 12px 0 0;
+        }
+        @media (max-width: 992px) {
+            .filtro-arbol-grid {
+                grid-template-columns: 1fr;
+            }
+            .filtro-arbol .acciones-filtro {
+                justify-content: stretch;
+            }
         }
     </style>
     
     <!-- Filtros -->
-    <form id="filtro-arbol-form" method="get" style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; align-items: end;">
+    <form id="filtro-arbol-form" method="get" class="filtro-arbol">
+        <div class="filtro-arbol-grid">
             <div>
-                <label style="display: block; margin-bottom: 5px; font-size: 14px; font-weight: 600;">Buscar</label>
+                <label for="buscador-arbol">Buscar</label>
                 <input id="buscador-arbol" type="text" name="q" value="{{ busqueda }}" placeholder="Nombre, código o TAG (se puede escribir parcialmente)" 
-                       style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 5px;">
-                <small style="color: #6b7280;">Escribe las iniciales y presiona Enter o espera un instante para filtrar.</small>
+                       class="form-control">
             </div>
             
             <div>
-                <label style="display: block; margin-bottom: 5px; font-size: 14px; font-weight: 600;">Nivel</label>
-                <select name="nivel" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 5px;">
+                <label for="nivel">Nivel</label>
+                <select id="nivel" name="nivel" class="form-control">
                     <option value="">Todos los niveles</option>
                     {% for nivel in niveles %}
                     <option value="{{ nivel.id }}" {% if nivel_seleccionado == nivel.id|stringformat:"s" %}selected{% endif %}>
@@ -137,8 +179,8 @@
             </div>
             
             <div>
-                <label style="display: block; margin-bottom: 5px; font-size: 14px; font-weight: 600;">Estado</label>
-                <select name="estado" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 5px;">
+                <label for="estado">Estado</label>
+                <select id="estado" name="estado" class="form-control">
                     <option value="">Todos</option>
                     <option value="activo" {% if estado_seleccionado == 'activo' %}selected{% endif %}>Activo</option>
                     <option value="mantenimiento" {% if estado_seleccionado == 'mantenimiento' %}selected{% endif %}>Mantenimiento</option>
@@ -146,13 +188,14 @@
                 </select>
             </div>
 
-            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <div class="acciones-filtro">
                 <button type="submit" class="btn btn-primary" style="min-width: 120px;">Buscar</button>
                 <button type="button" class="btn btn-outline-secondary" style="min-width: 120px;" onclick="document.getElementById('filtro-arbol-form').reset(); document.getElementById('filtro-arbol-form').submit();">
                     Limpiar
                 </button>
             </div>
         </div>
+        <p class="filtro-arbol-ayuda">Escribe las iniciales y presiona Enter o espera un instante para filtrar.</p>
     </form>
 
     <script>
