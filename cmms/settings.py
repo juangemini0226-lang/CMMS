@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 import os
+from urllib.parse import urlparse
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -50,9 +51,38 @@ SECRET_KEY = os.getenv(
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv("DEBUG", "True").lower() in ("1", "true", "yes", "on")
 
-ALLOWED_HOSTS = [host.strip() for host in os.getenv("ALLOWED_HOSTS", "").split(",") if host.strip()]
+def build_allowed_hosts() -> list[str]:
+    """Collect allowed hosts from defaults, Railway and environment."""
+
+    defaults = ["localhost", "127.0.0.1", "[::1]", ".up.railway.app"]
+    env_hosts = [
+        host.strip()
+        for host in os.getenv("ALLOWED_HOSTS", "").split(",")
+        if host.strip()
+    ]
+
+    railway_host = os.getenv("RAILWAY_PUBLIC_DOMAIN") or os.getenv(
+        "RAILWAY_STATIC_URL"
+    )
+
+    hosts = defaults + [railway_host] + env_hosts
+    normalized: list[str] = []
+
+    for host in hosts:
+        if not host:
+            continue
+
+        cleaned = host.strip()
+        if cleaned.startswith(("http://", "https://")):
+            cleaned = urlparse(cleaned).netloc
+
+        if cleaned and cleaned not in normalized:
+            normalized.append(cleaned)
+
+    return normalized
 
 
+ALLOWED_HOSTS = build_allowed_hosts()
 
 # Application definition
 
