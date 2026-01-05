@@ -167,7 +167,9 @@ STATICFILES_DIRS = [
     BASE_DIR / 'accounts' / 'static',
 ]
 
-
+STATIC_ROOT = (
+    Path(os.getenv("STATIC_ROOT")) if os.getenv("STATIC_ROOT") else BASE_DIR / "staticfiles"
+)
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
