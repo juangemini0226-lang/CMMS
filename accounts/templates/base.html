@@ -63,11 +63,33 @@
             display: inline-block;
         }
 
-       .topbar-actions {
+ .topbar-actions {
             display: flex;
-            flex-direction: column;
-            align-items: flex-end;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .topbar-button {
+            text-decoration: none;
+            padding: 8px 12px;
+            border-radius: 12px;
+            display: inline-flex;
+            align-items: center;
             gap: 8px;
+            font-weight: 700;
+            border: 1px solid var(--border);
+            background: #fff;
+            color: var(--text);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .topbar-button:hover {
+            border-color: var(--brand);
+            color: var(--brand);
         }
 
         .chip {
@@ -80,6 +102,12 @@
             display: inline-flex;
             align-items: center;
             gap: 8px;
+        }
+
+.chip--compact {
+            padding: 6px 10px;
+            gap: 6px;
+            font-size: 14px;
         }
 
         .icon-button {
@@ -349,9 +377,9 @@
             </a>
         </div>
         <div class="topbar-actions">
-            <a href="{% url 'home' %}" class="link-button" style="text-decoration:none; padding:10px 14px; border-radius:10px; display:inline-flex; align-items:center; gap:6px; font-weight:700;">Volver al inicio</a>
+            <a href="{% url 'home' %}" class="topbar-button">Volver al inicio</a>
             {% if user.is_authenticated %}
-            <span class="chip">Conectado como <strong>{{ user.username }}</strong></span>
+            <span class="chip chip--compact">Conectado como <strong>{{ user.username }}</strong></span>
             {% endif %}
         </div>
     </header>
