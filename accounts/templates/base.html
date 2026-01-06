@@ -108,6 +108,25 @@
             align-items: center;
             gap: 8px;
         }
+.chip--mode {
+            border-color: rgba(179, 18, 23, 0.3);
+            color: #b31217;
+            background: linear-gradient(135deg, rgba(179, 18, 23, 0.12) 0%, rgba(255, 255, 255, 0.8) 100%);
+        }
+
+.chip--tecnico {
+            background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%);
+            border-color: #c7d2fe;
+            color: #312e81;
+        }
+
+.chip--admin {
+            background: linear-gradient(135deg, #fef9c3 0%, #fff7ed 100%);
+            border-color: #fcd34d;
+            color: #92400e;
+        }
+
+
 
 .chip--compact {
             padding: 6px 10px;
@@ -236,6 +255,18 @@
 
         .logout-button:hover {
             transform: translateY(-1px);
+        }
+
+
+        .sidebar__notice {
+            margin: 12px 0 4px;
+            padding: 10px 12px;
+            border-radius: 12px;
+            background: #eef2ff;
+            color: #312e81;
+            font-weight: 600;
+            border: 1px solid #e0e7ff;
+            box-shadow: 0 6px 16px rgba(49, 46, 129, 0.08);
         }
 
         .page-content {
@@ -384,7 +415,12 @@
         <div class="topbar-actions">
             <a href="{% url 'home' %}" class="topbar-button">Volver al inicio</a>
             {% if user.is_authenticated %}
-            <span class="chip chip--compact">Conectado como <strong>{{ user.username }}</strong></span>
+                {% if solo_tarjetas_tecnico %}
+                    <span class="chip chip--compact chip--mode chip--tecnico">🔧 Modo técnico</span>
+                {% else %}
+                    <span class="chip chip--compact chip--mode chip--admin">🛡️ Modo administrador</span>
+                {% endif %}
+                <span class="chip chip--compact">Conectado como <strong>{{ user.username }}</strong></span>
             {% endif %}
         </div>
     </header>
@@ -415,6 +451,9 @@
                     {% endif %}
                 {% endif %}
             </nav>
+            {% if solo_tarjetas_tecnico %}
+            <div class="sidebar__notice">Solo verás las opciones necesarias para tus órdenes y novedades.</div>
+            {% endif %}
             <div class="sidebar__footer">
                 <div>
                     <div class="sidebar__title" style="letter-spacing:0;">Sesión</div>

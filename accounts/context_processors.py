@@ -1,7 +1,16 @@
-
 from typing import Any, Dict
 
 from personal.models import TecnicoOperativo
+
+# Grupos que identifican a un técnico aunque no exista aún el perfil extendido.
+GRUPOS_TECNICO = {
+    "tecnico",
+    "técnico",
+    "tecnico_actual",
+    "Tecnico",
+    "Tecnico_Taller",
+    "tecnico_taller",
+}
 
 
 def tecnico_flags(request) -> Dict[str, Any]:
@@ -11,6 +20,8 @@ def tecnico_flags(request) -> Dict[str, Any]:
         return {
             "tecnico_en_sesion": None,
             "solo_tarjetas_tecnico": False,
+            "es_tecnico": False,
+            "rol_portal": "visitante",
         }
 
     try:
@@ -18,15 +29,15 @@ def tecnico_flags(request) -> Dict[str, Any]:
     except TecnicoOperativo.DoesNotExist:
         tecnico = None
 
-    tiene_grupo_tecnico = user.groups.filter(name="tecnico_actual").exists()
-    solo_tarjetas = bool(
-        tecnico
-        and not user.is_staff
-        and not user.is_superuser
-        and (tiene_grupo_tecnico or True)
-    )
+    pertenece_grupo_tecnico = user.groups.filter(name__in=GRUPOS_TECNICO).exists()
+    es_tecnico = bool(tecnico or pertenece_grupo_tecnico)
+    es_admin = bool(user.is_staff or user.is_superuser)
+    solo_tarjetas = es_tecnico and not es_admin
+    rol_portal = "tecnico" if solo_tarjetas else ("admin" if es_admin else "usuario")
 
     return {
         "tecnico_en_sesion": tecnico,
         "solo_tarjetas_tecnico": solo_tarjetas,
+        "es_tecnico": es_tecnico,
+        "rol_portal": rol_portal,
     }
