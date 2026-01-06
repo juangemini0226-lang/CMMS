@@ -1,3 +1,4 @@
+import json
 from datetime import date
 
 from django.contrib import messages
@@ -141,7 +142,7 @@ def lista_novedades(request):
 def crear_novedad(request):
     if request.method == "POST":
         form = NovedadForm(request.POST)
-        formset = NovedadDetalleFormSet(request.POST)
+        formset = NovedadDetalleFormSet(request.POST, request.FILES)
         if form.is_valid() and formset.is_valid():
             novedad = form.save()
             detalles = formset.save(commit=False)
@@ -154,10 +155,31 @@ def crear_novedad(request):
         form = NovedadForm()
         formset = NovedadDetalleFormSet()
 
+    hijos_json = json.dumps(
+        list(
+            CampoHijo.objects.filter(activo=True)
+            .values("id", "padre_id", "nombre")
+            .order_by("padre__nombre", "nombre")
+        ),
+        ensure_ascii=False,
+    )
+    subopciones_json = json.dumps(
+        list(
+            SubopcionCampo.objects.filter(campo_hijo__activo=True)
+            .values("id", "campo_hijo_id", "nombre")
+            .order_by("campo_hijo__padre__nombre", "campo_hijo__nombre", "nombre")
+        ),
+        ensure_ascii=False,
+    )
     return render(
         request,
         "novedades/novedad_form.html",
-        {"form": form, "formset": formset},
+        {
+            "form": form,
+            "formset": formset,
+            "hijos_json": hijos_json,
+            "subopciones_json": subopciones_json,
+        },
     )
 
 

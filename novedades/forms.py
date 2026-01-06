@@ -116,14 +116,22 @@ class NovedadDetalleForm(forms.ModelForm):
         self.fields["campo_padre"].queryset = CampoPadre.objects.filter(
             activo=True
         ).order_by("nombre")
+        padre_id = self._get_field_value("campo_padre")
+        hijo_id = self._get_field_value("campo_hijo")
         self.fields["campo_hijo"].queryset = (
-            CampoHijo.objects.filter(activo=True)
+            CampoHijo.objects.filter(activo=True, padre_id=padre_id)
             .select_related("padre")
-            .order_by("padre__nombre", "nombre")
+            .order_by("nombre")
+            if padre_id
+            else CampoHijo.objects.none()
         )
-        self.fields["subopcion"].queryset = SubopcionCampo.objects.select_related(
-            "campo_hijo", "campo_hijo__padre"
-        ).order_by("campo_hijo__padre__nombre", "campo_hijo__nombre", "nombre")
+        self.fields["subopcion"].queryset = (
+            SubopcionCampo.objects.filter(campo_hijo_id=hijo_id)
+            .select_related("campo_hijo", "campo_hijo__padre")
+            .order_by("nombre")
+            if hijo_id
+            else SubopcionCampo.objects.none()
+        )
         self.fields["subopcion"].required = False
         self.fields["evidencia"].required = False
 
@@ -146,6 +154,21 @@ class NovedadDetalleForm(forms.ModelForm):
                 attrs={"class": "form-control detalle-evidencia", "accept": "image/*"}
             ),
         }
+
+    def _get_field_value(self, field_name):
+        data_key = f"{self.prefix}-{field_name}" if self.prefix else field_name
+        if data_key in self.data and self.data.get(data_key):
+            try:
+                return int(self.data.get(data_key))
+            except (TypeError, ValueError):
+                return None
+        initial_value = self.initial.get(field_name)
+        if initial_value:
+            return getattr(initial_value, "id", initial_value)
+        instance_value = getattr(self.instance, f"{field_name}_id", None)
+        if instance_value:
+            return instance_value
+        return None
 
     def clean(self):
         cleaned_data = super().clean()

@@ -168,12 +168,13 @@
         subopcionesPorHijo[sub.campo_hijo_id].push(sub);
     });
 
-    function resetOptions(select, placeholder) {
+     function resetOptions(select, placeholder, disabledState = true) {
         select.innerHTML = '';
         const option = document.createElement('option');
         option.value = '';
         option.textContent = placeholder;
         select.appendChild(option);
+        select.disabled = disabledState;
     }
 
     function actualizarHijos(padreSelect, hijoSelect, subopcionSelect) {
@@ -187,6 +188,7 @@
             option.textContent = hijo.nombre;
             hijoSelect.appendChild(option);
         });
+        hijoSelect.disabled = false;
     }
 
     function actualizarSubopciones(hijoSelect, subopcionSelect) {
@@ -199,6 +201,7 @@
             option.textContent = sub.nombre;
             subopcionSelect.appendChild(option);
         });
+        subopcionSelect.disabled = false;
     }
 
     function wireRowEvents(row) {
