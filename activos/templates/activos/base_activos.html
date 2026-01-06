@@ -5,6 +5,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Gestión de Activos{% endblock %} - Gestión de Activos Estra</title>
+    {% block favicon %}
+    <link rel="icon" href="{% static 'accounts/logo1.png' %}" type="image/png" sizes="0.5x0.5">
+    {% endblock %}
     <style>
         :root {
             --brand: #b31217;
@@ -64,6 +67,8 @@
             display: inline-block;
         }
 
+
+        
         .topbar-actions {
             display: flex;
             align-items: center;

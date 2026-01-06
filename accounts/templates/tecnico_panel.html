@@ -1,0 +1,233 @@
+{% extends "base.html" %}
+
+{% block toolbar %}{% endblock %}
+
+{% block extra_head %}
+<style>
+    .panel-shell {
+        display: grid;
+        gap: 18px;
+    }
+
+    .panel-hero {
+        background: linear-gradient(120deg, #fff7ed, #fff);
+        border: 1px solid #fed7aa;
+        padding: 20px;
+        border-radius: 16px;
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 14px;
+        align-items: center;
+        box-shadow: 0 12px 32px rgba(249, 115, 22, 0.12);
+    }
+
+    .panel-hero h1 {
+        margin: 0 0 6px 0;
+        color: #b31217;
+    }
+
+    .panel-hero p {
+        margin: 0;
+        color: #4b5563;
+    }
+
+    .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 14px;
+        border-radius: 999px;
+        background: #fff;
+        border: 1px solid #fecdd3;
+        color: #9f1239;
+        font-weight: 700;
+        box-shadow: 0 8px 18px rgba(248, 113, 113, 0.16);
+    }
+
+    .cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 14px;
+    }
+
+    .card {
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: 14px;
+        padding: 16px;
+        display: grid;
+        gap: 10px;
+        text-decoration: none;
+        color: #111827;
+        box-shadow: 0 10px 24px rgba(0,0,0,0.05);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 16px 32px rgba(0,0,0,0.08);
+    }
+
+    .card h3 {
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: #0f172a;
+    }
+
+    .card p {
+        margin: 0;
+        color: #4b5563;
+        line-height: 1.45;
+    }
+
+    .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 10px;
+        border-radius: 10px;
+        background: #f3f4f6;
+        color: #111827;
+        font-weight: 700;
+        width: fit-content;
+    }
+
+    .board {
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: 16px;
+        padding: 16px;
+        box-shadow: 0 8px 22px rgba(0,0,0,0.04);
+    }
+
+    .board h2 {
+        margin: 0 0 12px 0;
+        color: #0f172a;
+    }
+
+    .order-list {
+        display: grid;
+        gap: 10px;
+    }
+
+    .order-item {
+        border: 1px solid #e5e7eb;
+        padding: 12px;
+        border-radius: 12px;
+        display: grid;
+        gap: 6px;
+        background: #fafafa;
+    }
+
+    .order-title {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+        font-weight: 700;
+        color: #111827;
+    }
+
+    .order-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        color: #6b7280;
+        font-weight: 600;
+    }
+
+    .priority {
+        padding: 6px 10px;
+        border-radius: 10px;
+        font-weight: 800;
+        text-transform: capitalize;
+    }
+
+    .priority.alta { background: rgba(248, 113, 113, 0.18); color: #b91c1c; }
+    .priority.media { background: rgba(251, 191, 36, 0.18); color: #92400e; }
+    .priority.baja { background: rgba(74, 222, 128, 0.18); color: #166534; }
+
+    .empty {
+        padding: 12px;
+        border: 1px dashed #e5e7eb;
+        border-radius: 12px;
+        color: #6b7280;
+        background: #f9fafb;
+        text-align: center;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="panel-shell">
+    <section class="panel-hero">
+        <div>
+            <p class="pill">Panel exclusivo para técnicos</p>
+            <h1>Hola, {{ tecnico.user.get_full_name|default:tecnico.user.username }}</h1>
+            <p>Visualiza las novedades y las órdenes asignadas con prioridad para tu rol.</p>
+        </div>
+        <div class="badge">OT asignadas: {{ resumen_ot.total }}</div>
+    </section>
+
+    <section class="cards" aria-label="Accesos rápidos para técnicos">
+        <a class="card" href="{% url 'novedades:novedad_list' %}">
+            <h3>🗒️ Novedades</h3>
+            <p>Ingresa directamente a la bandeja de novedades para revisar las más recientes.</p>
+            <span class="badge">Acceso dedicado</span>
+        </a>
+        <div class="card" aria-label="Órdenes asignadas">
+            <h3>🛠️ Órdenes de trabajo (técnico)</h3>
+            <p>Vista filtrada a tus tareas asignadas con prioridad y estado actual.</p>
+            <span class="badge">Pendientes: {{ resumen_ot.pendientes }} · Activas: {{ resumen_ot.activas }}</span>
+        </div>
+    </section>
+
+    <section class="board" aria-label="Órdenes pendientes por prioridad">
+        <h2>Órdenes pendientes</h2>
+        {% if ordenes_pendientes %}
+            <div class="order-list">
+                {% for orden in ordenes_pendientes %}
+                    <article class="order-item">
+                        <div class="order-title">
+                            <span>{{ orden.codigo }} · {{ orden.titulo }}</span>
+                            <span class="priority {{ orden.prioridad }}">{{ orden.get_prioridad_display }}</span>
+                        </div>
+                        <div class="order-meta">
+                            <span>Equipo: {{ orden.equipo }}</span>
+                            <span>Estado: {{ orden.get_estado_display }}</span>
+                            {% if orden.fecha_programada %}<span>Programada: {{ orden.fecha_programada }}</span>{% endif %}
+                        </div>
+                    </article>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty">No tienes órdenes pendientes en este momento.</div>
+        {% endif %}
+    </section>
+
+    <section class="board" aria-label="Órdenes activas">
+        <h2>Órdenes activas</h2>
+        {% if ordenes_activas %}
+            <div class="order-list">
+                {% for orden in ordenes_activas %}
+                    <article class="order-item">
+                        <div class="order-title">
+                            <span>{{ orden.codigo }} · {{ orden.titulo }}</span>
+                            <span class="priority {{ orden.prioridad }}">{{ orden.get_prioridad_display }}</span>
+                        </div>
+                        <div class="order-meta">
+                            <span>Equipo: {{ orden.equipo }}</span>
+                            <span>Estado: {{ orden.get_estado_display }}</span>
+                            <span>Actualizada: {{ orden.fecha_actualizacion|date:"d/m/Y H:i" }}</span>
+                        </div>
+                    </article>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty">No tienes órdenes activas.</div>
+        {% endif %}
+    </section>
+</div>
+{% endblock %}

@@ -177,9 +177,14 @@
             {% endif %}
         </div>
         <div class="cta-stack">
-            {% if user.is_authenticated %}
-                <a class="pill-cta" href="{% url 'reportes:seleccionar_reporte' %}">📊 Ir a reportes</a>
-                <a class="pill-cta" href="{% url 'reportes:carga_interactiva' %}">⬆️ Subir datos</a>
+           {% if user.is_authenticated %}
+                {% if solo_tarjetas_tecnico %}
+                    <a class="pill-cta" href="{% url 'panel_tecnico' %}">🧰 Ir a mis órdenes</a>
+                    <a class="pill-cta" href="{% url 'novedades:novedad_list' %}">🗒️ Ver novedades</a>
+                {% else %}
+                    <a class="pill-cta" href="{% url 'reportes:seleccionar_reporte' %}">📊 Ir a reportes</a>
+                    <a class="pill-cta" href="{% url 'reportes:carga_interactiva' %}">⬆️ Subir datos</a>
+                {% endif %}
             {% else %}
                 <a class="pill-cta" href="{% url 'login' %}">🔐 Iniciar sesión</a>
             {% endif %}
@@ -191,41 +196,65 @@
         <div class="section-header">
             <div>
                 <div class="eyebrow" style="margin: 0;">Accesos rápidos</div>
+              {% if solo_tarjetas_tecnico %}
+                <p style="color: #6b7280; margin-top: 6px;">Acceso limitado para técnicos: solo novedades y órdenes asignadas.</p>
+                {% else %}
                 <p style="color: #6b7280; margin-top: 6px;">Accede a las áreas clave sin perder la esencia del flujo original.</p>
+                {% endif %}
             </div>
         </div>
         <div class="cards">
-            <a class="card" href="{% url 'activos:dashboard_activos' %}">
-                <h3>📦 Gestión de Activos</h3>
-                <p>Visualiza activos, familias y estados en un panel centrado.</p>
-                <span class="tag">Inventario</span>
-            </a>
-            <a class="card" href="{% url 'personal:tecnico_list' %}">
-                <h3>👷 Gestión de Personal</h3>
-                <p>Revisa técnicos, roles y asignaciones de manera ordenada.</p>
-                <span class="tag">Equipo</span>
-            </a>
-            <a class="card" href="{% url 'reportes:carga_interactiva' %}">
-                <h3>📁 Cargar reportes y órdenes</h3>
-                <p>Integra nueva información y mantén actualizada la operación.</p>
-                <span class="tag">Carga</span>
-            </a>
-            <a class="card" href="{% url 'ot:orden_list' %}">
-                <h3>🛠️ Órdenes de trabajo</h3>
-                <p>Consulta y gestiona las órdenes sin perder trazabilidad.</p>
-                <span class="tag">OT</span>
-            </a>
-            <a class="card" href="{% url 'novedades:novedad_list' %}">
-                <h3>🗒️ Novedades</h3>
-                <p>Revisa novedades registradas y mantén al equipo informado.</p>
-                <span class="tag">Comunicación</span>
-            </a>
-            {% if user.is_staff %}
-            <a class="card" href="{% url 'admin:index' %}">
-                <h3>⚙️ Administración</h3>
-                <p>Configura la plataforma y gestiona permisos con control.</p>
-                <span class="tag">Administrar</span>
-            </a>
+            {% if solo_tarjetas_tecnico %}
+                <a class="card" href="{% url 'panel_tecnico' %}">
+                    <h3>🧰 Órdenes asignadas</h3>
+                    <p>Revisa tus OT pendientes y activas en una vista exclusiva.</p>
+                    <span class="tag">Técnicos</span>
+                </a>
+                <a class="card" href="{% url 'novedades:novedad_list' %}">
+                    <h3>🗒️ Novedades</h3>
+                    <p>Accede a las novedades registradas y mantente informado.</p>
+                    <span class="tag">Comunicación</span>
+                </a>
+            {% else %}
+                <a class="card" href="{% url 'activos:dashboard_activos' %}">
+                    <h3>📦 Gestión de Activos</h3>
+                    <p>Visualiza activos, familias y estados en un panel centrado.</p>
+                    <span class="tag">Inventario</span>
+                </a>
+                {% if tecnico_actual %}
+                <a class="card" href="{% url 'panel_tecnico' %}">
+                    <h3>🧰 Panel de técnico</h3>
+                    <p>Acceso directo a novedades y órdenes asignadas solo para tu perfil.</p>
+                    <span class="tag">Técnicos</span>
+                </a>
+                {% endif %}
+                <a class="card" href="{% url 'personal:tecnico_list' %}">
+                    <h3>👷 Gestión de Personal</h3>
+                    <p>Revisa técnicos, roles y asignaciones de manera ordenada.</p>
+                    <span class="tag">Equipo</span>
+                </a>
+                <a class="card" href="{% url 'reportes:carga_interactiva' %}">
+                    <h3>📁 Cargar reportes y órdenes</h3>
+                    <p>Integra nueva información y mantén actualizada la operación.</p>
+                    <span class="tag">Carga</span>
+                </a>
+                <a class="card" href="{% url 'ot:orden_list' %}">
+                    <h3>🛠️ Órdenes de trabajo</h3>
+                    <p>Consulta y gestiona las órdenes sin perder trazabilidad.</p>
+                    <span class="tag">OT</span>
+                </a>
+                <a class="card" href="{% url 'novedades:novedad_list' %}">
+                    <h3>🗒️ Novedades</h3>
+                    <p>Revisa novedades registradas y mantén al equipo informado.</p>
+                    <span class="tag">Comunicación</span>
+                </a>
+                {% if user.is_staff %}
+                <a class="card" href="{% url 'admin:index' %}">
+                    <h3>⚙️ Administración</h3>
+                    <p>Configura la plataforma y gestiona permisos con control.</p>
+                    <span class="tag">Administrar</span>
+                </a>
+                {% endif %}
             {% endif %}
         </div>
     </section>
