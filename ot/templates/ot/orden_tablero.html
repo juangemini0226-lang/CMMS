@@ -504,7 +504,7 @@
     {% for novedad in novedades_pendientes %}
     <div class="novedad-item">
         <div>
-            <div style="font-weight:700;">{{ novedad.titulo }}</div>
+            <div style="font-weight:700;">{{ novedad.titulo|default:novedad.get_atencion_en_display }}</div>
             <div class="meta">{{ novedad.equipo }} · {{ novedad.fecha }}</div>
         </div>
         <a class="btn-link" href="{% url 'ot:orden_desde_novedad' novedad.id %}">Crear OT →</a>

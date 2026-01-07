@@ -76,7 +76,14 @@ class Novedad(models.Model):
         ("finalizada", "Finalizada"),
     ]
     fecha = models.DateField(default=timezone.now, verbose_name="Fecha de la novedad")
-    titulo = models.CharField(max_length=200, verbose_name="Título")
+    actividad = models.ForeignKey(
+        "ActividadNovedad",
+        on_delete=models.PROTECT,
+        related_name="novedades",
+        null=True,
+        blank=True,
+        verbose_name="Actividad",
+    )
     descripcion = models.TextField(blank=True, verbose_name="Descripción")
     estado = models.CharField(
         max_length=20,
@@ -97,8 +104,21 @@ class Novedad(models.Model):
         ordering = ["-fecha", "-id"]
 
     def __str__(self):
-        return f"{self.fecha} - {self.titulo}"
+        actividad = self.actividad.nombre if self.actividad else "Sin actividad"
+        return f"{self.fecha} - {actividad}"
 
+
+class ActividadNovedad(models.Model):
+    nombre = models.CharField(max_length=150, unique=True, verbose_name="Actividad")
+    activo = models.BooleanField(default=True, verbose_name="Activo")
+
+    class Meta:
+        verbose_name = "Actividad de novedad"
+        verbose_name_plural = "Actividades de novedades"
+        ordering = ["nombre"]
+
+    def __str__(self):
+        return self.nombre
 
 class NovedadDetalle(models.Model):
     novedad = models.ForeignKey(

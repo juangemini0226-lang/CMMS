@@ -45,7 +45,7 @@
 
 <div class="page-toolbar">
     <div>
-        <h1>{{ novedad.titulo }}</h1>
+        <h1>{{ novedad.actividad|default:"Sin actividad" }}</h1>
         <p class="text-muted">Fecha: {{ novedad.fecha }} · Equipo/Molde: {{ novedad.equipo }}</p>
     </div>
     <div class="toolbar-actions">

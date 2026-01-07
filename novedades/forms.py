@@ -3,7 +3,14 @@ from django.forms import inlineformset_factory
 
 from activos.models import NodoActivo
 
-from .models import CampoHijo, CampoPadre, Novedad, NovedadDetalle, SubopcionCampo
+from .models import (
+    ActividadNovedad,
+    CampoHijo,
+    CampoPadre,
+    Novedad,
+    NovedadDetalle,
+    SubopcionCampo,
+)
 
 
 class CampoPadreForm(forms.ModelForm):
@@ -80,6 +87,11 @@ class SubopcionCampoForm(forms.ModelForm):
 
 
 class NovedadForm(forms.ModelForm):
+    actividad = forms.ModelChoiceField(
+        queryset=ActividadNovedad.objects.filter(activo=True).order_by("nombre"),
+        label="Actividad",
+        widget=forms.Select(attrs={"class": "form-select"}),
+    )
     equipo = forms.ModelChoiceField(
         queryset=NodoActivo.objects.order_by("nombre"),
         label="Equipo o molde",
@@ -88,16 +100,10 @@ class NovedadForm(forms.ModelForm):
 
     class Meta:
         model = Novedad
-        fields = ["fecha", "titulo", "equipo", "estado", "descripcion"]
+        fields = ["fecha", "actividad", "equipo", "estado", "descripcion"]
         widgets = {
             "fecha": forms.DateInput(
                 attrs={"class": "form-control", "type": "date"}
-            ),
-            "titulo": forms.TextInput(
-                attrs={
-                    "class": "form-control",
-                    "placeholder": "Título de la novedad",
-                }
             ),
             "descripcion": forms.Textarea(
                 attrs={
@@ -108,8 +114,6 @@ class NovedadForm(forms.ModelForm):
             ),
             "estado": forms.RadioSelect(attrs={"class": "estado-radio"}),
         }
-
-
 class NovedadDetalleForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

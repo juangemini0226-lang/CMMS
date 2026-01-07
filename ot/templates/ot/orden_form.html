@@ -62,7 +62,7 @@
 
 {% if novedad_preseleccionada %}
     <div class="note">
-        Esta OT nace de la novedad <strong>{{ novedad_preseleccionada.titulo }}</strong> reportada para <strong>{{ novedad_preseleccionada.equipo }}</strong>. Puedes ajustar el alcance pero mantendremos el vínculo para trazabilidad.
+        Esta OT nace de la novedad <strong>{{ novedad_preseleccionada.titulo|default:novedad_preseleccionada.get_atencion_en_display }}</strong> reportada para <strong>{{ novedad_preseleccionada.equipo }}</strong>. Puedes ajustar el alcance pero mantendremos el vínculo para trazabilidad.
     </div>
 {% endif %}
 

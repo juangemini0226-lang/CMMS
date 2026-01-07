@@ -120,7 +120,7 @@ def lista_novedades(request):
         filtro_dia = date.today()
     novedades = (
         Novedad.objects.filter(fecha=filtro_dia)
-        .select_related("equipo")
+        .select_related("equipo", "actividad")
         .prefetch_related(
             Prefetch(
                 "detalles",
@@ -136,7 +136,6 @@ def lista_novedades(request):
         "novedades/novedad_list.html",
         {"novedades": novedades, "dia": filtro_dia},
     )
-
 
 @login_required
 def crear_novedad(request):
@@ -186,7 +185,7 @@ def crear_novedad(request):
 @login_required
 def novedad_detalle(request, pk):
     novedad = get_object_or_404(
-        Novedad.objects.select_related("equipo").prefetch_related(
+        Novedad.objects.select_related("equipo", "actividad").prefetch_related(
             Prefetch(
                 "detalles",
                 queryset=NovedadDetalle.objects.select_related(

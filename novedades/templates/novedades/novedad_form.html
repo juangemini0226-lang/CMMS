@@ -27,6 +27,25 @@
         grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
         gap: 12px;
     }
+    .general-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 16px;
+        align-items: start;
+    }
+    .general-stack {
+        display: grid;
+        gap: 12px;
+    }
+    .field-group {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+    .helper-text {
+        font-size: 0.85rem;
+        color: #6b7280;
+    }
     .detalle-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -81,11 +100,27 @@
     }
     .estado-group .estado-radio {
         display: flex;
+        flex-wrap: wrap;
         gap: 12px;
     }
     .estado-group label {
         font-weight: 600;
         color: #374151;
+    }
+    .detalle-wrapper {
+        display: grid;
+        gap: 10px;
+    }
+    .detalle-row {
+        padding: 12px;
+        border-radius: 12px;
+        border: 1px solid #e5e7eb;
+        background: #f9fafb;
+    }
+    @media (min-width: 960px) {
+        .detalle-grid {
+            grid-template-columns: 1.1fr 1.1fr 1fr 1.2fr 1.2fr;
+        }
     }
 </style>
 
@@ -107,7 +142,7 @@
         {{ form.non_field_errors }}
         <div class="form-grid">
             <div>{{ form.fecha.label_tag }}{{ form.fecha }}</div>
-            <div>{{ form.titulo.label_tag }}{{ form.titulo }}</div>
+            <div>{{ form.actividad.label_tag }}{{ form.actividad }}</div>
             <div>{{ form.equipo.label_tag }}{{ form.equipo }}</div>
         </div>
         <div style="margin-top: 12px;">
@@ -122,7 +157,7 @@
     <div class="novedades-card">
         <div class="pill">Campos padre e hijo</div>
         <p class="text-muted">Selecciona qué campo padre e hijo se usa en esta novedad y elige la subopción correspondiente. Deja en blanco los renglones que no necesites.</p>
-        <div id="detalles-formset">
+        <div id="detalles-formset" class="detalle-wrapper">
             {{ formset.management_form }}
             {% for detalle_form in formset.forms %}
             <div class="detalle-grid detalle-row">
@@ -150,6 +185,8 @@
     const totalFormsInput = formsetContainer.querySelector('input[name$="-TOTAL_FORMS"]');
     const hijosPorPadre = {};
     const subopcionesPorHijo = {};
+    const equipoSearch = document.getElementById('equipo-search');
+    const equipoSelect = document.getElementById('id_equipo');
 
     const hijosData = JSON.parse('{{ hijos_json|escapejs }}');
     const subopcionesData = JSON.parse('{{ subopciones_json|escapejs }}');
@@ -239,6 +276,18 @@
     document.querySelectorAll('.detalle-row').forEach((row) => {
         wireRowEvents(row);
     });
+
+    if (equipoSearch && equipoSelect) {
+        const opciones = Array.from(equipoSelect.options);
+        equipoSearch.addEventListener('input', () => {
+            const filtro = equipoSearch.value.toLowerCase().trim();
+            opciones.forEach((option) => {
+                if (!option.value) return;
+                const visible = option.textContent.toLowerCase().includes(filtro);
+                option.hidden = !visible;
+            });
+        });
+    }
 
     addButton.addEventListener('click', () => {
         const totalForms = parseInt(totalFormsInput.value, 10);

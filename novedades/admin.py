@@ -1,7 +1,13 @@
 from django.contrib import admin
 
-from .models import CampoHijo, CampoPadre, Novedad, NovedadDetalle, SubopcionCampo
-
+from .models import (
+    ActividadNovedad,
+    CampoHijo,
+    CampoPadre,
+    Novedad,
+    NovedadDetalle,
+    SubopcionCampo,
+)
 
 class SubopcionCampoInline(admin.TabularInline):
     model = SubopcionCampo
@@ -29,16 +35,22 @@ class SubopcionCampoAdmin(admin.ModelAdmin):
     list_filter = ("campo_hijo",)
     search_fields = ("nombre", "campo_hijo__nombre", "codigo")
 
+@admin.register(ActividadNovedad)
+class ActividadNovedadAdmin(admin.ModelAdmin):
+    list_display = ("nombre", "activo")
+    list_filter = ("activo",)
+    search_fields = ("nombre",)
+
+
 
 class NovedadDetalleInline(admin.TabularInline):
     model = NovedadDetalle
     extra = 0
 
-
 @admin.register(Novedad)
 class NovedadAdmin(admin.ModelAdmin):
-    list_display = ("titulo", "fecha", "equipo")
+    list_display = ("actividad", "fecha", "equipo")
     list_filter = ("fecha",)
-    search_fields = ("titulo", "descripcion", "equipo__nombre", "equipo__tag")
+    search_fields = ("actividad__nombre", "descripcion", "equipo__nombre", "equipo__tag")
     date_hierarchy = "fecha"
     inlines = [NovedadDetalleInline]
