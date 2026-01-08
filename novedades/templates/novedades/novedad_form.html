@@ -138,12 +138,13 @@
         <p class="text-muted">Registra la novedad diaria con los campos alineados a ISO 14224.</p>
     </div>
     <div class="toolbar-actions">
+        <button type="submit" class="back-button" form="novedad-form">📝 Registrar novedad</button>
         <a class="back-button" href="{% url 'novedades:configuracion_campos' %}">⚙️ Configurar campos</a>
         <a class="back-button" href="{% url 'novedades:novedad_list' %}">← Volver al reporte diario</a>
     </div>
 </div>
 
-<form method="post" enctype="multipart/form-data">
+<form method="post" enctype="multipart/form-data" id="novedad-form">
     {% csrf_token %}
     <div class="novedades-card">
         <div class="pill">Datos generales</div>

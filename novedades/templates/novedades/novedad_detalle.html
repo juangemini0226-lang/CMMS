@@ -50,7 +50,10 @@
     </div>
     <div class="toolbar-actions">
         <a class="back-button" href="{% url 'novedades:novedad_list' %}">← Volver al reporte</a>
+        <a class="back-button" href="{% url 'novedades:novedad_crear' %}">📝 Registrar novedad</a>
+        {% if not solo_tarjetas_tecnico %}
         <a class="back-button" href="{% url 'ot:orden_desde_novedad' novedad.pk %}">🛠️ Crear OT</a>
+        {% endif %}
     </div>
 </div>
 
