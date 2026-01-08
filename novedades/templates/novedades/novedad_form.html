@@ -98,14 +98,22 @@
         font-weight: 600;
         text-align: center;
     }
-    .estado-group .estado-radio {
+.estado-group .estado-radio {
         display: flex;
         flex-wrap: wrap;
         gap: 12px;
+        list-style: none;
+        padding: 0;
+        margin: 0;
     }
     .estado-group label {
         font-weight: 600;
         color: #374151;
+    }
+    .estado-group .estado-radio li {
+        display: flex;
+        align-items: center;
+        gap: 6px;
     }
     .detalle-wrapper {
         display: grid;
@@ -143,6 +151,10 @@
         <div class="form-grid">
             <div>{{ form.fecha.label_tag }}{{ form.fecha }}</div>
             <div>{{ form.actividad.label_tag }}{{ form.actividad }}</div>
+            <div class="estado-group">
+                {{ form.estado.label_tag }}
+                {{ form.estado }}
+            </div>
             <div class="field-group">
                 <label for="equipo-search"><strong>Buscar equipo o molde</strong></label>
                 <input
