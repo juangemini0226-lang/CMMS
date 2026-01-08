@@ -117,3 +117,30 @@ class WorkOrderEvento(models.Model):
         ordering = ["-creado_el"]
     def __str__(self):
         return f"{self.orden.codigo} - {self.get_estado_display()} ({self.creado_el:%Y-%m-%d %H:%M})"
+
+
+class WorkOrderEventoFoto(models.Model):
+    evento = models.ForeignKey(
+        WorkOrderEvento,
+        on_delete=models.CASCADE,
+        related_name="fotos",
+        verbose_name="Evento de OT",
+    )
+    imagen = models.ImageField(upload_to="ot/eventos/%Y/%m/%d/", verbose_name="Foto")
+    creado_el = models.DateTimeField(auto_now_add=True, verbose_name="Creado el")
+    creado_por = models.ForeignKey(
+        get_user_model(),
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="eventos_ot_fotos",
+        verbose_name="Registrado por",
+    )
+
+    class Meta:
+        verbose_name = "Foto de evento de OT"
+        verbose_name_plural = "Fotos de eventos de OT"
+        ordering = ["-creado_el"]
+
+    def __str__(self):
+        return f"{self.evento.orden.codigo} - Foto {self.pk}"

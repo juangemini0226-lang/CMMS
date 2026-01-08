@@ -5,6 +5,10 @@ from novedades.models import ActividadNovedad, Novedad
 from .models import WorkOrder
 
 
+class MultipleFileInput(forms.ClearableFileInput):
+    allow_multiple_selected = True
+
+
 class WorkOrderForm(forms.ModelForm):
     class Meta:
         model = WorkOrder
@@ -50,4 +54,9 @@ class WorkOrderEstadoForm(forms.Form):
             attrs={"rows": 3, "placeholder": "Notas, riesgos, avances o pendientes."}
         ),
         label="Comentario",
+    )
+    fotos = forms.FileField(
+        required=False,
+        label="Fotos (opcional)",
+        widget=MultipleFileInput(attrs={"multiple": True, "accept": "image/*"}),
     )

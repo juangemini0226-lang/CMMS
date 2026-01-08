@@ -8,7 +8,7 @@ from django.views.generic import CreateView, DetailView, TemplateView, UpdateVie
 from novedades.models import Novedad
 
 from .forms import WorkOrderEstadoForm, WorkOrderForm
-from .models import WorkOrder, WorkOrderEvento
+from .models import WorkOrder, WorkOrderEvento, WorkOrderEventoFoto
 
 
 class WorkOrderBoardView(LoginRequiredMixin, TemplateView):
@@ -195,9 +195,8 @@ class WorkOrderDetailView(LoginRequiredMixin, DetailView):
                 "estado_form": WorkOrderEstadoForm(
                     initial={"estado": self.object.estado}
                 ),
-                "eventos": self.object.eventos.select_related("creado_por")[
-                    :20
-                ],
+                 "eventos": self.object.eventos.select_related("creado_por")
+                .prefetch_related("fotos")[:20],
             }
         )
         return context
@@ -208,7 +207,8 @@ def actualizar_estado(request, pk):
     if request.method != "POST":
         return redirect("ot:orden_detalle", pk=pk)
 
-    form = WorkOrderEstadoForm(request.POST)
+    form = WorkOrderEstadoForm(request.POST, request.FILES)
+    fotos = request.FILES.getlist("fotos")
     if form.is_valid():
         nuevo_estado = form.cleaned_data["estado"]
         nota = form.cleaned_data["nota"]
@@ -221,14 +221,23 @@ def actualizar_estado(request, pk):
         if cambios:
             orden.save(update_fields=["estado", "fecha_actualizacion"])
 
-        if nota or cambios:
-            WorkOrderEvento.objects.create(
+        if nota or cambios or fotos:
+            descripcion = nota or "Estado actualizado."
+            if not nota and fotos and not cambios:
+                descripcion = "Registro fotográfico."
+            evento = WorkOrderEvento.objects.create(
                 orden=orden,
                 estado=orden.estado,
-                descripcion=nota or "Estado actualizado.",
+                descripcion=descripcion,
                 creado_por=request.user if request.user.is_authenticated else None,
             )
-            messages.success(request, "Movimos la OT y registramos el comentario.")
+            for foto in fotos:
+                WorkOrderEventoFoto.objects.create(
+                    evento=evento,
+                    imagen=foto,
+                    creado_por=request.user if request.user.is_authenticated else None,
+                )
+            messages.success(request, "Movimos la OT y registramos la actividad.")
         else:
             messages.info(request, "No registramos cambios porque el estado es el mismo.")
 
