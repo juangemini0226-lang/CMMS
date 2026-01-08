@@ -143,12 +143,16 @@
         <div class="form-grid">
             <div>{{ form.fecha.label_tag }}{{ form.fecha }}</div>
             <div>{{ form.actividad.label_tag }}{{ form.actividad }}</div>
-            <div>{{ form.equipo.label_tag }}{{ form.equipo }}</div>
-        </div>
-        <div style="margin-top: 12px;">
-            <label><strong>Estado:</strong></label>
-            <div class="estado-group">
-                {{ form.estado }}
+            <div class="field-group">
+                <label for="equipo-search"><strong>Buscar equipo o molde</strong></label>
+                <input
+                    type="text"
+                    id="equipo-search"
+                    class="form-control"
+                    placeholder="Escribe para filtrar la lista"
+                />
+                {{ form.equipo.label_tag }}{{ form.equipo }}
+                <span class="helper-text">Usa el buscador para filtrar rápidamente por nombre.</span>
             </div>
         </div>
         <div style="margin-top: 12px;">{{ form.descripcion.label_tag }}{{ form.descripcion }}</div>
