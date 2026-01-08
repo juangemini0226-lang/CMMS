@@ -34,13 +34,15 @@ class WorkOrderBoardView(LoginRequiredMixin, TemplateView):
                 Q(titulo__icontains=busqueda)
                 | Q(descripcion__icontains=busqueda)
                 | Q(equipo__nombre__icontains=busqueda)
+                | Q(equipo__codigo__icontains=busqueda)
+                | Q(equipo__tag__icontains=busqueda)
+                | Q(equipo__numero_serie__icontains=busqueda)
                 | (
                     Q(consecutivo=consecutivo_busqueda)
                     if consecutivo_busqueda is not None
                     else Q()
                 )
             )
-
         agrupadas = {estado: [] for estado, _ in WorkOrder.ESTADOS}
         for orden in queryset.order_by("-fecha_creacion"):
             agrupadas[orden.estado].append(orden)
@@ -106,9 +108,7 @@ class WorkOrderBoardView(LoginRequiredMixin, TemplateView):
                 "busqueda": busqueda or "",
                 "estado_filtro": estado_filtro or "",
                 "estados_tablero": estados_definidos,
-                "novedades_pendientes": Novedad.objects.filter(estado="pendiente")
-                .select_related("equipo")
-                .order_by("-fecha")[:8],
+                
             }
         )
         return context

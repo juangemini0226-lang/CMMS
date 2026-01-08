@@ -497,21 +497,7 @@
     </div>
 </form>
 
-{% if novedades_pendientes %}
-<div class="novedades-panel">
-    <h3>📌 Novedades pendientes que necesitan OT</h3>
-    <p class="meta" style="margin-bottom:8px;">Toma las novedades y conviértelas en orden de trabajo.</p>
-    {% for novedad in novedades_pendientes %}
-    <div class="novedad-item">
-        <div>
-            <div style="font-weight:700;">{{ novedad.actividad|default:"Sin actividad" }}</div>
-            <div class="meta">{{ novedad.equipo }} · {{ novedad.fecha }}</div>
-        </div>
-        <a class="btn-link" href="{% url 'ot:orden_desde_novedad' novedad.id %}">Crear OT →</a>
-    </div>
-    {% endfor %}
-</div>
-{% endif %}
+
 
 <div class="board-wrapper">
     <div class="board-toolbar">

@@ -57,6 +57,12 @@
         gap: 12px;
         flex-wrap: wrap;
         margin-bottom: 12px;
+    }.filters label {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        font-size: 0.9rem;
+        color: #374151;
     }
     .btn-primary {
         background: linear-gradient(135deg, #e52d27, #b31217);
@@ -78,6 +84,35 @@
     .small-link:hover {
         text-decoration: underline;
     }
+    .registro-banner {
+        border-radius: 16px;
+        padding: 16px 18px;
+        background: linear-gradient(135deg, rgba(179, 18, 23, 0.12), rgba(14, 165, 233, 0.15));
+        border: 1px solid rgba(179, 18, 23, 0.25);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 16px;
+    }
+    .registro-highlight {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #111827;
+    }
+    .registro-metrics {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+    .registro-pill {
+        padding: 6px 12px;
+        border-radius: 999px;
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        font-weight: 600;
+        color: #111827;
+    }
 </style>
 
 <div class="page-toolbar">
@@ -92,16 +127,65 @@
 </div>
 
 <div class="novedades-card">
+    <div class="registro-banner">
+        <div>
+            <div class="registro-highlight">✅ Nuevas actividades registradas</div>
+            <div class="text-muted">Total de novedades filtradas: {{ novedades_total }}</div>
+        </div>
+        <div class="registro-metrics">
+            <span class="registro-pill">🗒️ Novedades hoy: {{ novedades_hoy }}</span>
+            <span class="registro-pill">🛠️ OT creadas hoy: {{ ots_hoy }}</span>
+        </div>
+    </div>
     <form method="get" class="filters">
         <label>
-            Seleccionar día:
-            <input type="date" name="dia" value="{{ dia|date:'Y-m-d' }}" class="form-control">
+            Desde:
+            <input type="date" name="desde" value="{{ desde|date:'Y-m-d' }}" class="form-control">
+        </label>
+        <label>
+            Hasta:
+            <input type="date" name="hasta" value="{{ hasta|date:'Y-m-d' }}" class="form-control">
+        </label>
+        <label>
+            Estado:
+            <select name="estado" class="form-select">
+                <option value="">Todos</option>
+                {% for estado in estados %}
+                    <option value="{{ estado.id }}" {% if estado_filtro == estado.id %}selected{% endif %}>{{ estado.label }}</option>
+                {% endfor %}
+            </select>
+        </label>
+        <label>
+            Actividad:
+            <select name="actividad" class="form-select">
+                <option value="">Todas</option>
+                {% for actividad in actividades %}
+                    <option value="{{ actividad.id }}" {% if actividad_filtro|stringformat:"s" == actividad.id|stringformat:"s" %}selected{% endif %}>{{ actividad.nombre }}</option>
+                {% endfor %}
+            </select>
+        </label>
+        <label>
+            Equipo:
+            <select name="equipo" class="form-select">
+                <option value="">Todos</option>
+                {% for equipo in equipos %}
+                    <option value="{{ equipo.id }}" {% if equipo_filtro|stringformat:"s" == equipo.id|stringformat:"s" %}selected{% endif %}>{{ equipo.nombre }}</option>
+                {% endfor %}
+            </select>
+        </label>
+        <label>
+            OT asociada:
+            <select name="con_ot" class="form-select">
+                <option value="">Todas</option>
+                <option value="si" {% if con_ot_filtro == "si" %}selected{% endif %}>Con OT</option>
+                <option value="no" {% if con_ot_filtro == "no" %}selected{% endif %}>Sin OT</option>
+            </select>
         </label>
         <button type="submit" class="btn-primary">Actualizar</button>
-        <span class="pill">Día en revisión: {{ dia|date:"l d \\d\\e F Y" }}</span>
+        <span class="pill">Rango: {{ desde|date:"d M Y" }} → {{ hasta|date:"d M Y" }}</span>
     </form>
 
-    {% if agrupadas %}
+    {% if novedades_total %}
         {% for grupo, items in agrupadas.items %}
             <h3 style="margin-top:16px;">{{ grupo }}</h3>
             {% if items %}
@@ -111,6 +195,13 @@
                         <div>
                            <strong>{{ novedad.actividad|default:"Sin actividad" }}</strong><br>
                             <small class="text-muted">{{ novedad.equipo }}</small>
+                            {% if novedad.ordenes_trabajo.all %}
+                                {% with orden=novedad.ordenes_trabajo.all|first %}
+                                    <div class="text-muted">OT asociada: <a href="{% url 'ot:orden_detalle' orden.pk %}" class="small-link">{{ orden.codigo }}</a></div>
+                                {% endwith %}
+                            {% else %}
+                                <div class="text-muted">OT asociada: sin OT</div>
+                            {% endif %}
                         </div>
                         <a href="{% url 'novedades:novedad_detalle' novedad.pk %}" class="small-link">Ver detalle →</a>
                     </div>
@@ -129,7 +220,7 @@
             {% endif %}
         {% endfor %}
     {% else %}
-        <p class="text-muted">No hay novedades registradas para este día.</p>
+        <p class="text-muted">No hay novedades registradas en el rango seleccionado.</p>
     {% endif %}
 </div>
 {% endblock %}

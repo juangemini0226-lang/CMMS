@@ -6,6 +6,9 @@ from django.contrib.auth.decorators import login_required
 from django.db.models import Prefetch
 from django.shortcuts import get_object_or_404, redirect, render
 
+from activos.models import NodoActivo
+from ot.models import WorkOrder
+
 from .forms import (
     CampoHijoForm,
     CampoPadreForm,
@@ -13,7 +16,14 @@ from .forms import (
     NovedadForm,
     SubopcionCampoForm,
 )
-from .models import CampoHijo, CampoPadre, Novedad, NovedadDetalle, SubopcionCampo
+from .models import (
+    ActividadNovedad,
+    CampoHijo,
+    CampoPadre,
+    Novedad,
+    NovedadDetalle,
+    SubopcionCampo,
+)
 
 
 @login_required
@@ -114,13 +124,40 @@ def editar_subopcion_campo(request, pk):
 @login_required
 def lista_novedades(request):
     dia = request.GET.get("dia")
-    try:
-        filtro_dia = date.fromisoformat(dia) if dia else date.today()
-    except ValueError:
-        filtro_dia = date.today()
+    desde_param = request.GET.get("desde") or dia
+    hasta_param = request.GET.get("hasta") or dia
+    estado = request.GET.get("estado") or ""
+    actividad_id = request.GET.get("actividad") or ""
+    equipo_id = request.GET.get("equipo") or ""
+    con_ot = request.GET.get("con_ot") or ""
+
+    def _parse_date(value):
+        if not value:
+            return None
+        try:
+            return date.fromisoformat(value)
+        except ValueError:
+            return None
+
+    filtro_desde = _parse_date(desde_param) or date.today()
+    filtro_hasta = _parse_date(hasta_param) or filtro_desde
+    if filtro_desde > filtro_hasta:
+        filtro_desde, filtro_hasta = filtro_hasta, filtro_desde
+
+    novedades_qs = Novedad.objects.filter(fecha__range=(filtro_desde, filtro_hasta))
+    if estado:
+        novedades_qs = novedades_qs.filter(estado=estado)
+    if actividad_id:
+        novedades_qs = novedades_qs.filter(actividad_id=actividad_id)
+    if equipo_id:
+        novedades_qs = novedades_qs.filter(equipo_id=equipo_id)
+    if con_ot == "si":
+        novedades_qs = novedades_qs.filter(ordenes_trabajo__isnull=False)
+    if con_ot == "no":
+        novedades_qs = novedades_qs.filter(ordenes_trabajo__isnull=True)
+
     novedades = (
-        Novedad.objects.filter(fecha=filtro_dia)
-        .select_related("equipo", "actividad")
+        novedades_qs.select_related("equipo", "actividad")
         .prefetch_related(
             Prefetch(
                 "detalles",
@@ -128,14 +165,50 @@ def lista_novedades(request):
                     "campo_padre", "campo_hijo", "subopcion"
                 ),
             ),
+            Prefetch(
+                "ordenes_trabajo",
+                queryset=WorkOrder.objects.select_related("equipo").order_by(
+                    "-fecha_creacion"
+                ),
+            ),
         )
-        .order_by("-id")
+        .order_by("-fecha", "-id")
+        .distinct()
     )
+
+    estados = [{"id": key, "label": label} for key, label in Novedad.ESTADOS]
+    agrupadas = {label: [] for _, label in Novedad.ESTADOS}
+    for novedad in novedades:
+        agrupadas[dict(Novedad.ESTADOS).get(novedad.estado, novedad.estado)].append(
+            novedad
+        )
+
+    hoy = date.today()
+    novedades_hoy = Novedad.objects.filter(fecha=hoy).count()
+    ots_hoy = WorkOrder.objects.filter(fecha_creacion__date=hoy).count()
     return render(
         request,
         "novedades/novedad_list.html",
-        {"novedades": novedades, "dia": filtro_dia},
+        {
+            "agrupadas": agrupadas,
+            "dia": filtro_desde,
+            "desde": filtro_desde,
+            "hasta": filtro_hasta,
+            "estado_filtro": estado,
+            "actividad_filtro": actividad_id,
+            "equipo_filtro": equipo_id,
+            "con_ot_filtro": con_ot,
+            "estados": estados,
+            "actividades": ActividadNovedad.objects.filter(activo=True).order_by(
+                "nombre"
+            ),
+            "equipos": NodoActivo.objects.order_by("nombre"),
+            "novedades_total": novedades.count(),
+            "novedades_hoy": novedades_hoy,
+            "ots_hoy": ots_hoy,
+        },
     )
+
 
 @login_required
 def crear_novedad(request):
