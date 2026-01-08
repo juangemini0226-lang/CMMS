@@ -90,6 +90,10 @@
             <strong>{{ orden.responsable|default:"Sin asignar" }}</strong>
         </div>
         <div class="item">
+            <span>Actividad</span>
+            <strong>{{ orden.actividad|default:"Sin clasificar" }}</strong>
+        </div>
+        <div class="item">
             <span>Vínculo con novedad</span>
             {% if orden.novedad_origen %}
                 <strong>{{ orden.novedad_origen.titulo }}</strong> · {{ orden.novedad_origen.fecha }}

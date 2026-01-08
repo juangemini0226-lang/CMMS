@@ -1,6 +1,6 @@
 from django import forms
 
-from novedades.models import Novedad
+from novedades.models import ActividadNovedad, Novedad
 
 from .models import WorkOrder
 
@@ -13,6 +13,7 @@ class WorkOrderForm(forms.ModelForm):
             "descripcion",
             "equipo",
             "responsable",
+            "actividad",
             "prioridad",
             "estado",
             "fecha_programada",
@@ -34,11 +35,12 @@ class WorkOrderForm(forms.ModelForm):
             )
         self.fields["novedad_origen"].queryset = novedad_qs.select_related("equipo")
         self.fields["novedad_origen"].required = False
+        self.fields["actividad"].queryset = ActividadNovedad.objects.filter(activo=True)
+        self.fields["actividad"].required = False
         self.fields["titulo"].widget.attrs.update({"placeholder": "Reparación, inspección, ajuste..."})
         self.fields["descripcion"].widget.attrs.update(
             {"placeholder": "Agrega alcance, riesgos, materiales o pasos clave."}
         )
-
 
 class WorkOrderEstadoForm(forms.Form):
     estado = forms.ChoiceField(label="Mover a estado", choices=WorkOrder.ESTADOS)

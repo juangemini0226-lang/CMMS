@@ -28,6 +28,14 @@ class WorkOrder(models.Model):
     prioridad = models.CharField(
         max_length=10, choices=PRIORIDADES, default="media", verbose_name="Prioridad"
     )
+    actividad = models.ForeignKey(
+        "novedades.ActividadNovedad",
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="ordenes_trabajo",
+        verbose_name="Actividad",
+    )
     equipo = models.ForeignKey(
         "activos.NodoActivo",
         on_delete=models.PROTECT,
@@ -107,6 +115,5 @@ class WorkOrderEvento(models.Model):
         verbose_name = "Evento de OT"
         verbose_name_plural = "Eventos de OT"
         ordering = ["-creado_el"]
-
     def __str__(self):
         return f"{self.orden.codigo} - {self.get_estado_display()} ({self.creado_el:%Y-%m-%d %H:%M})"

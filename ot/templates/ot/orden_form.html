@@ -1,12 +1,25 @@
 {% extends "base.html" %}
 {% block content %}
 <style>
+    .ot-form-wrapper {
+        max-width: 760px;
+        margin: 0 auto;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
     .form-card {
         background: white;
         border-radius: 14px;
         padding: 20px;
         box-shadow: 0 12px 28px rgba(0,0,0,0.06);
         border: 1px solid #e5e7eb;
+    }
+    .form-card .section-title {
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: #111827;
+        margin-bottom: 10px;
     }
     .form-group {
         margin-bottom: 14px;
@@ -21,18 +34,6 @@
         border-radius: 12px;
         border: 1px solid #d1d5db;
         margin-top: 6px;
-    }
-    .search-input {
-        margin-top: 6px;
-        margin-bottom: 0;
-    }
-    .search-input + select {
-        margin-top: 2px;
-    }
-    .search-help {
-        font-size: 12px;
-        color: #6b7280;
-        margin: 2px 0 0;
     }
     .form-actions {
         display: flex;
@@ -57,93 +58,140 @@
         margin-bottom: 12px;
         color: #854d0e;
     }
+    .page-toolbar {
+        align-items: flex-start;
+    }
+    @media (max-width: 900px) {
+        .page-toolbar {
+            flex-direction: column;
+            gap: 12px;
+        }
+        .toolbar-actions {
+            width: 100%;
+            justify-content: flex-start;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+    }
 </style>
 
-    </div>
-</div>
-{% if novedad_preseleccionada %}
-   <div class="note">
-        Esta OT nace de la novedad <strong>{{ novedad_preseleccionada.actividad|default:"Sin actividad" }}</strong> reportada para <strong>{{ novedad_preseleccionada.equipo }}</strong>. Puedes ajustar el alcance pero mantendremos el vínculo para trazabilidad.
-    </div>
-{% endif %}
-
-{% if messages %}
-    <div class="note" style="background:#eef2ff; border-color:#c7d2fe; color:#312e81;">
-        <ul style="margin:0; padding-left:18px;">
-            {% for message in messages %}
-                <li>{{ message }}</li>
-            {% endfor %}
-        </ul>
-    </div>
-{% endif %}
-
-<div class="form-card">
-    <form method="post">
-        {% csrf_token %}
-        {% for field in form %}
-            <div class="form-group">
-                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-                {% if field.name == "equipo" %}
-                    <input
-                        type="search"
-                        placeholder="Buscar equipo por nombre, código o serie..."
-                        aria-label="Buscar equipo"
-                        data-equipo-search
-                    />
-                {% endif %}
-                {{ field }}
-                {% if field.help_text %}<p class="meta">{{ field.help_text }}</p>{% endif %}
-                {% for error in field.errors %}
-                    <p style="color:#b31217;">{{ error }}</p>
-                {% endfor %}
-            </div>
-        {% endfor %}
-        <div class="form-actions">
-            <button type="submit" class="btn-primary">Guardar OT</button>
+<div class="ot-form-wrapper">
+    <div class="page-toolbar">
+        <div>
+            <h1>{% if form.instance.pk %}Actualizar OT {{ form.instance.codigo }}{% else %}Crear nueva OT{% endif %}</h1>
+            <p class="meta">Define alcance, prioridad, responsable y vínculo con la novedad.</p>
         </div>
-    </form>
+        <div class="toolbar-actions">
+            <a class="back-button" href="{% url 'ot:orden_list' %}">← Regresar al tablero</a>
+            {% if form.instance.pk %}
+            <a class="back-button" href="{% url 'ot:orden_detalle' form.instance.pk %}">👁 Ver detalle</a>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if novedad_preseleccionada %}
+       <div class="note">
+            Esta OT nace de la novedad <strong>{{ novedad_preseleccionada.actividad|default:"Sin actividad" }}</strong> reportada para <strong>{{ novedad_preseleccionada.equipo }}</strong>. Puedes ajustar el alcance pero mantendremos el vínculo para trazabilidad.
+        </div>
+    {% endif %}
+
+    {% if messages %}
+        <div class="note" style="background:#eef2ff; border-color:#c7d2fe; color:#312e81;">
+            <ul style="margin:0; padding-left:18px;">
+                {% for message in messages %}
+                    <li>{{ message }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% endif %}
+
+    <div class="form-card">
+        <div class="section-title">Detalles de la OT</div>
+        <form method="post">
+            {% csrf_token %}
+            {% for field in form %}
+                {% if field.name == "equipo" %}
+                    <div class="form-group">
+                        <label for="equipo-search">Buscar equipo o activo</label>
+                        <input
+                            type="search"
+                            id="equipo-search"
+                            class="form-control"
+                            placeholder="Escribe para filtrar la lista"
+                            autocomplete="off"
+                        />
+                        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                        {{ field }}
+                        <p class="meta">Usa el buscador para filtrar rápidamente por nombre.</p>
+                        {% for error in field.errors %}
+                            <p style="color:#b31217;">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="form-group">
+                        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.help_text %}<p class="meta">{{ field.help_text }}</p>{% endif %}
+                        {% for error in field.errors %}
+                            <p style="color:#b31217;">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endfor %}
+            <div class="form-actions">
+                <button type="submit" class="btn-primary">Guardar OT</button>
+            </div>
+        </form>
+    </div>
 </div>
 
 <script>
-    const equipoSearch = document.querySelector("[data-equipo-search]");
-    const equipoSelect = document.getElementById("id_equipo");
+    const equipoSearch = document.getElementById('equipo-search');
+    const equipoSelect = document.getElementById('id_equipo');
 
     if (equipoSearch && equipoSelect) {
         const originalOptions = Array.from(equipoSelect.options).map((option) => ({
             value: option.value,
-            label: option.textContent || "",
+            text: option.text,
         }));
 
-        const normalizeText = (value) =>
-            value
-                .toLowerCase()
-                .normalize("NFD")
-                .replace(/[\u0300-\u036f]/g, "");
-
-        const renderOptions = (query) => {
-            const normalizedQuery = normalizeText(query.trim());
+        const rebuildOptions = (query = '') => {
+            const normalizedQuery = query.trim().toLowerCase();
             const selectedValue = equipoSelect.value;
-            const nextOptions = normalizedQuery
-                ? originalOptions.filter((option) =>
-                      normalizeText(option.label).includes(normalizedQuery)
-                  )
-                : originalOptions;
+            let selectedOption = null;
 
-            equipoSelect.innerHTML = "";
-            nextOptions.forEach((option) => {
-                const optionElement = document.createElement("option");
-                optionElement.value = option.value;
-                optionElement.textContent = option.label;
-                equipoSelect.appendChild(optionElement);
+            equipoSelect.innerHTML = '';
+
+            originalOptions.forEach((option) => {
+                const matches =
+                    !normalizedQuery ||
+                    option.text.toLowerCase().includes(normalizedQuery);
+
+                if (option.value === selectedValue) {
+                    selectedOption = option;
+                }
+
+                if (matches || option.value === selectedValue) {
+                    const newOption = new Option(option.text, option.value);
+                    if (option.value === selectedValue) {
+                        newOption.selected = true;
+                    }
+                    equipoSelect.add(newOption);
+                }
             });
 
-            if (selectedValue) {
-                equipoSelect.value = selectedValue;
+            if (selectedValue && !equipoSelect.querySelector(`option[value="${selectedValue}"]`)) {
+                const fallback = selectedOption || originalOptions.find((option) => option.value === selectedValue);
+                if (fallback) {
+                    const newOption = new Option(fallback.text, fallback.value);
+                    newOption.selected = true;
+                    equipoSelect.add(newOption, equipoSelect.options[0] || null);
+                }
             }
         };
 
-        equipoSearch.addEventListener("input", (event) => {
-            renderOptions(event.target.value);
+        equipoSearch.addEventListener('input', (event) => {
+            rebuildOptions(event.target.value);
         });
     }
 </script>

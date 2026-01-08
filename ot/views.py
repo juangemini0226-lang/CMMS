@@ -19,7 +19,7 @@ class WorkOrderBoardView(LoginRequiredMixin, TemplateView):
         estado_filtro = self.request.GET.get("estado")
         busqueda = self.request.GET.get("q")
         queryset = WorkOrder.objects.select_related(
-            "equipo", "responsable__user", "novedad_origen"
+             "equipo", "responsable__user", "novedad_origen", "actividad"
         )
 
         if estado_filtro:
@@ -134,6 +134,8 @@ class WorkOrderCreateView(LoginRequiredMixin, CreateView):
                 initial.setdefault("titulo", f"Atender novedad: {actividad}")
                 initial.setdefault("descripcion", novedad.descripcion)
                 initial.setdefault("equipo", novedad.equipo_id)
+                if novedad.actividad_id:
+                    initial.setdefault("actividad", novedad.actividad_id)
             except Novedad.DoesNotExist:
                 pass
         return initial
