@@ -125,8 +125,13 @@ class WorkOrderCreateView(LoginRequiredMixin, CreateView):
         if novedad_id:
             try:
                 novedad = Novedad.objects.select_related("equipo").get(pk=novedad_id)
+                actividad = (
+                    novedad.actividad.nombre
+                    if novedad.actividad
+                    else "Novedad sin actividad"
+                )
                 initial.setdefault("novedad_origen", novedad.pk)
-                initial.setdefault("titulo", f"Atender novedad: {novedad.titulo}")
+                initial.setdefault("titulo", f"Atender novedad: {actividad}")
                 initial.setdefault("descripcion", novedad.descripcion)
                 initial.setdefault("equipo", novedad.equipo_id)
             except Novedad.DoesNotExist:

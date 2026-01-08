@@ -109,7 +109,7 @@
                 <div class="novedad-row">
                     <div style="display:flex; justify-content: space-between; align-items: center; gap: 10px;">
                         <div>
-                            <strong>{{ novedad.titulo }}</strong><br>
+                           <strong>{{ novedad.actividad|default:"Sin actividad" }}</strong><br>
                             <small class="text-muted">{{ novedad.equipo }}</small>
                         </div>
                         <a href="{% url 'novedades:novedad_detalle' novedad.pk %}" class="small-link">Ver detalle →</a>
