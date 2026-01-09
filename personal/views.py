@@ -145,7 +145,7 @@ class AgendaResumenView(PermissionedMixin, View):
                 "start": turno.fecha_inicio.isoformat(),
                 "end": turno.fecha_fin.isoformat(),
                 "color": turno.color,
-                "tecnicos": [t.user.get_full_name() or t.user.username for t in turno.tecnicos.all()],
+                "tecnicos": [t.nombre_display for t in turno.tecnicos.all()],
             }
             for turno in Turno.objects.filter(fecha_fin__gte=hoy - timedelta(days=7)).order_by('fecha_inicio')
         ]

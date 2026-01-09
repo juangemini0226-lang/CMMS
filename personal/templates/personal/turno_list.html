@@ -49,7 +49,7 @@
                     <td>
                         <div class="tag-list">
                             {% for tecnico in turno.tecnicos.all %}
-                            <span>{{ tecnico.user.get_full_name|default:tecnico.user.username }}</span>
+                            <span>{{ tecnico.nombre_display }}</span>
                             {% empty %}
                             <span>Sin asignaciones</span>
                             {% endfor %}

@@ -165,7 +165,7 @@
     <section class="panel-hero">
         <div>
             <p class="pill">Panel exclusivo para técnicos</p>
-            <h1>Hola, {{ tecnico.user.get_full_name|default:tecnico.user.username }}</h1>
+           <h1>Hola, {{ tecnico.nombre_display }}</h1>
             <p>Visualiza las novedades y las órdenes asignadas con prioridad para tu rol.</p>
         </div>
         <div class="badge">OT asignadas: {{ resumen_ot.total }}</div>

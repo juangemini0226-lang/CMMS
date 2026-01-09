@@ -6,6 +6,7 @@ from .models import Ausencia, TecnicoOperativo, Turno
 @admin.register(TecnicoOperativo)
 class TecnicoOperativoAdmin(admin.ModelAdmin):
     list_display = (
+        "nombre_display",
         "user",
         "perfil",
         "numero_identificacion",
@@ -13,9 +14,15 @@ class TecnicoOperativoAdmin(admin.ModelAdmin):
         "estado",
         "fecha_ingreso",
     )
-    search_fields = ("user__username", "user__first_name", "user__last_name", "numero_identificacion", "especialidad")
+    search_fields = (
+        "nombre",
+        "user__username",
+        "user__first_name",
+        "user__last_name",
+        "numero_identificacion",
+        "especialidad",
+    )
     list_filter = ("estado", "perfil__organizacion")
-
 
 @admin.register(Turno)
 class TurnoAdmin(admin.ModelAdmin):

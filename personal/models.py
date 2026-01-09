@@ -4,7 +4,6 @@ from django.utils import timezone
 
 from activos.models import PerfilUsuario
 
-
 class TecnicoOperativo(models.Model):
     """Perfil extendido para técnicos operativos vinculados a un usuario."""
 
@@ -19,6 +18,15 @@ class TecnicoOperativo(models.Model):
         on_delete=models.CASCADE,
         related_name="tecnico_operativo",
         verbose_name="Usuario",
+        null=True,
+        blank=True,
+        help_text="Asocia un usuario del sistema si el técnico inicia sesión.",
+    )
+    nombre = models.CharField(
+        max_length=150,
+        blank=True,
+        verbose_name="Nombre del técnico",
+        help_text="Usa este campo si el técnico no tiene usuario.",
     )
     perfil = models.ForeignKey(
         PerfilUsuario,
@@ -52,11 +60,16 @@ class TecnicoOperativo(models.Model):
     class Meta:
         verbose_name = "Técnico operativo"
         verbose_name_plural = "Técnicos operativos"
-        ordering = ["user__last_name", "user__first_name"]
+        ordering = ["user__last_name", "user__first_name", "nombre"]
 
     def __str__(self) -> str:
-        return f"{self.user.get_full_name() or self.user.username} ({self.especialidad})"
+        return f"{self.nombre_display} ({self.especialidad})"
 
+    @property
+    def nombre_display(self) -> str:
+        if self.user_id:
+            return self.user.get_full_name() or self.user.username
+        return self.nombre or "Sin nombre"
     @property
     def organizacion(self):
         return self.perfil.organizacion

@@ -7,6 +7,9 @@ from .models import Ausencia, TecnicoOperativo, Turno
 class BaseStyledModelForm(forms.ModelForm):
     """Añade clases tailwind/bootstrap-like para inputs modernos."""
 
+    class Meta:
+        fields = "__all__"
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         for field in self.fields.values():
@@ -21,6 +24,7 @@ class TecnicoOperativoForm(BaseStyledModelForm):
         model = TecnicoOperativo
         fields = [
             "user",
+            "nombre",
             "perfil",
             "numero_identificacion",
             "especialidad",
@@ -34,6 +38,17 @@ class TecnicoOperativoForm(BaseStyledModelForm):
             "fecha_ingreso": forms.DateInput(attrs={"type": "date"}),
         }
 
+    def clean(self):
+        cleaned_data = super().clean()
+        user = cleaned_data.get("user")
+        nombre = (cleaned_data.get("nombre") or "").strip()
+        if not user and not nombre:
+            error = "Debes ingresar un usuario o el nombre del técnico."
+            self.add_error("user", error)
+            self.add_error("nombre", error)
+        return cleaned_data
+
+
 
 class TurnoForm(BaseStyledModelForm):
     fecha_inicio = forms.DateTimeField(
@@ -46,44 +61,10 @@ class TurnoForm(BaseStyledModelForm):
     )
 
     class Meta:
-        model = Turno
-        fields = [
-            "nombre",
-            "descripcion",
-            "fecha_inicio",
-            "fecha_fin",
-            "color",
-            "tecnicos",
-        ]
-        widgets = {
-            "color": forms.TextInput(attrs={"type": "color"}),
-            "tecnicos": forms.SelectMultiple(attrs={"class": "form-control-modern select-multiple"}),
-        }
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        tz = timezone.get_current_timezone()
-        for field_name in ("fecha_inicio", "fecha_fin"):
-            value = self.initial.get(field_name) or getattr(self.instance, field_name, None)
-            if value:
-                try:
-                    localized = timezone.localtime(value, timezone=tz)
-                except ValueError:
-                    localized = value
-                self.initial[field_name] = localized.strftime("%Y-%m-%dT%H:%M")
-
-    def clean(self):
-        cleaned_data = super().clean()
-        inicio = cleaned_data.get("fecha_inicio")
-        fin = cleaned_data.get("fecha_fin")
-        if inicio and fin and fin <= inicio:
-            self.add_error("fecha_fin", "El fin del turno debe ser posterior al inicio.")
-        return cleaned_data
-
-
-class AusenciaForm(BaseStyledModelForm):
-    class Meta:
-        model = Ausencia
+        class TurnoForm(BaseStyledModelForm):
+            class AusenciaForm(BaseStyledModelForm):
+                class Meta:
+                    model = Ausencia
         fields = [
             "tecnico",
             "tipo",
