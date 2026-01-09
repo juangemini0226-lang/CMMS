@@ -1,6 +1,10 @@
+from pathlib import Path
+
 from django.contrib.auth import get_user_model
 from django.db import models
 from django.db.models import Max
+
+VIDEO_EXTENSIONS = {".mp4", ".webm", ".mov", ".avi", ".mkv", ".m4v"}
 
 
 class WorkOrder(models.Model):
@@ -123,10 +127,10 @@ class WorkOrderEventoFoto(models.Model):
     evento = models.ForeignKey(
         WorkOrderEvento,
         on_delete=models.CASCADE,
-        related_name="fotos",
+        related_name="adjuntos",
         verbose_name="Evento de OT",
     )
-    imagen = models.ImageField(upload_to="ot/eventos/%Y/%m/%d/", verbose_name="Foto")
+    imagen = models.FileField(upload_to="ot/eventos/%Y/%m/%d/", verbose_name="Archivo")
     creado_el = models.DateTimeField(auto_now_add=True, verbose_name="Creado el")
     creado_por = models.ForeignKey(
         get_user_model(),
@@ -138,9 +142,44 @@ class WorkOrderEventoFoto(models.Model):
     )
 
     class Meta:
-        verbose_name = "Foto de evento de OT"
-        verbose_name_plural = "Fotos de eventos de OT"
+        verbose_name = "Archivo de evento de OT"
+        verbose_name_plural = "Archivos de eventos de OT"
         ordering = ["-creado_el"]
 
+    @property
+    def es_video(self):
+        return Path(self.imagen.name).suffix.lower() in VIDEO_EXTENSIONS
+
     def __str__(self):
-        return f"{self.evento.orden.codigo} - Foto {self.pk}"
+        return f"{self.evento.orden.codigo} - Archivo {self.pk}"
+
+
+class WorkOrderAdjunto(models.Model):
+    orden = models.ForeignKey(
+        WorkOrder,
+        on_delete=models.CASCADE,
+        related_name="adjuntos",
+        verbose_name="Orden de trabajo",
+    )
+    archivo = models.FileField(upload_to="ot/adjuntos/%Y/%m/%d/", verbose_name="Archivo")
+    creado_el = models.DateTimeField(auto_now_add=True, verbose_name="Creado el")
+    creado_por = models.ForeignKey(
+        get_user_model(),
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="ot_adjuntos",
+        verbose_name="Registrado por",
+    )
+
+    class Meta:
+        verbose_name = "Archivo de OT"
+        verbose_name_plural = "Archivos de OT"
+        ordering = ["-creado_el"]
+
+    @property
+    def es_video(self):
+        return Path(self.archivo.name).suffix.lower() in VIDEO_EXTENSIONS
+
+    def __str__(self):
+        return f"{self.orden.codigo} - Archivo {self.pk}"

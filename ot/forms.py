@@ -9,7 +9,25 @@ class MultipleFileInput(forms.ClearableFileInput):
     allow_multiple_selected = True
 
 
+class MultiFileField(forms.FileField):
+    def clean(self, data, initial=None):
+        if not data:
+            if self.required:
+                super().clean(data, initial)
+            return []
+        files = data if isinstance(data, (list, tuple)) else [data]
+        return [super().clean(file, initial) for file in files]
+
+
 class WorkOrderForm(forms.ModelForm):
+    adjuntos = MultiFileField(
+        required=False,
+        label="Fotos o videos (opcional)",
+        widget=MultipleFileInput(
+            attrs={"multiple": True, "accept": "image/*,video/*"}
+        ),
+    )
+
     class Meta:
         model = WorkOrder
         fields = [
@@ -55,8 +73,10 @@ class WorkOrderEstadoForm(forms.Form):
         ),
         label="Comentario",
     )
-    fotos = forms.FileField(
+    adjuntos = MultiFileField(
         required=False,
-        label="Fotos (opcional)",
-        widget=MultipleFileInput(attrs={"multiple": True, "accept": "image/*"}),
+        label="Fotos o videos (opcional)",
+        widget=MultipleFileInput(
+            attrs={"multiple": True, "accept": "image/*,video/*"}
+        ),
     )

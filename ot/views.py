@@ -8,7 +8,7 @@ from django.views.generic import CreateView, DetailView, TemplateView, UpdateVie
 from novedades.models import Novedad
 
 from .forms import WorkOrderEstadoForm, WorkOrderForm
-from .models import WorkOrder, WorkOrderEvento, WorkOrderEventoFoto
+from .models import WorkOrder, WorkOrderAdjunto, WorkOrderEvento, WorkOrderEventoFoto
 
 
 class WorkOrderBoardView(LoginRequiredMixin, TemplateView):
@@ -142,6 +142,12 @@ class WorkOrderCreateView(LoginRequiredMixin, CreateView):
 
     def form_valid(self, form):
         response = super().form_valid(form)
+        for archivo in form.cleaned_data.get("adjuntos", []):
+            WorkOrderAdjunto.objects.create(
+                orden=self.object,
+                archivo=archivo,
+                creado_por=self.request.user,
+            )
         WorkOrderEvento.objects.create(
             orden=self.object,
             estado=self.object.estado,
@@ -174,6 +180,12 @@ class WorkOrderUpdateView(LoginRequiredMixin, UpdateView):
 
     def form_valid(self, form):
         response = super().form_valid(form)
+        for archivo in form.cleaned_data.get("adjuntos", []):
+            WorkOrderAdjunto.objects.create(
+                orden=self.object,
+                archivo=archivo,
+                creado_por=self.request.user,
+            )
         messages.success(
             self.request, f"Datos de la OT {self.object.codigo} actualizados."
         )
@@ -181,6 +193,11 @@ class WorkOrderUpdateView(LoginRequiredMixin, UpdateView):
 
     def get_success_url(self):
         return reverse("ot:orden_detalle", args=[self.object.pk])
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["adjuntos"] = self.object.adjuntos.select_related("creado_por")[:12]
+        return context
 
 
 class WorkOrderDetailView(LoginRequiredMixin, DetailView):
@@ -195,8 +212,9 @@ class WorkOrderDetailView(LoginRequiredMixin, DetailView):
                 "estado_form": WorkOrderEstadoForm(
                     initial={"estado": self.object.estado}
                 ),
-                 "eventos": self.object.eventos.select_related("creado_por")
-                .prefetch_related("fotos")[:20],
+                "eventos": self.object.eventos.select_related("creado_por")
+                .prefetch_related("adjuntos")[:20],
+                "adjuntos": self.object.adjuntos.select_related("creado_por")[:12],
             }
         )
         return context
@@ -208,10 +226,10 @@ def actualizar_estado(request, pk):
         return redirect("ot:orden_detalle", pk=pk)
 
     form = WorkOrderEstadoForm(request.POST, request.FILES)
-    fotos = request.FILES.getlist("fotos")
     if form.is_valid():
         nuevo_estado = form.cleaned_data["estado"]
         nota = form.cleaned_data["nota"]
+        adjuntos = form.cleaned_data.get("adjuntos", [])
         cambios = []
 
         if nuevo_estado != orden.estado:
@@ -221,20 +239,20 @@ def actualizar_estado(request, pk):
         if cambios:
             orden.save(update_fields=["estado", "fecha_actualizacion"])
 
-        if nota or cambios or fotos:
+        if nota or cambios or adjuntos:
             descripcion = nota or "Estado actualizado."
-            if not nota and fotos and not cambios:
-                descripcion = "Registro fotográfico."
+            if not nota and adjuntos and not cambios:
+                descripcion = "Registro de archivos."
             evento = WorkOrderEvento.objects.create(
                 orden=orden,
                 estado=orden.estado,
                 descripcion=descripcion,
                 creado_por=request.user if request.user.is_authenticated else None,
             )
-            for foto in fotos:
+            for archivo in adjuntos:
                 WorkOrderEventoFoto.objects.create(
                     evento=evento,
-                    imagen=foto,
+                    imagen=archivo,
                     creado_por=request.user if request.user.is_authenticated else None,
                 )
             messages.success(request, "Movimos la OT y registramos la actividad.")

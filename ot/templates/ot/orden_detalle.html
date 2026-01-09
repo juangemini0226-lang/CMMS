@@ -56,13 +56,14 @@
         background: #eef2ff;
         color: #4338ca;
     }
-    .photo-grid {
+     .photo-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
         gap: 8px;
         margin-top: 8px;
     }
-    .photo-grid img {
+    .photo-grid img,
+    .photo-grid video {
         width: 100%;
         height: 120px;
         object-fit: cover;
@@ -135,10 +136,34 @@
             {{ estado_form.estado }}
             <label for="{{ estado_form.nota.id_for_label }}">{{ estado_form.nota.label }}</label>
             {{ estado_form.nota }}
-            <label for="{{ estado_form.fotos.id_for_label }}">{{ estado_form.fotos.label }}</label>
-            {{ estado_form.fotos }}
+            <label for="{{ estado_form.adjuntos.id_for_label }}">{{ estado_form.adjuntos.label }}</label>
+            {{ estado_form.adjuntos }}
             <button type="submit">Guardar movimiento</button>
         </form>
+    </div>
+
+    <div class="card" style="grid-column: 1 / -1;">
+        <div style="display:flex; justify-content: space-between; align-items: center;">
+            <h3>Archivos de la OT</h3>
+            <span class="pill">{{ adjuntos|length }} archivos</span>
+        </div>
+        {% if adjuntos %}
+        <div class="photo-grid">
+            {% for adjunto in adjuntos %}
+                {% if adjunto.es_video %}
+                    <video controls>
+                        <source src="{{ adjunto.archivo.url }}">
+                    </video>
+                {% else %}
+                    <a href="{{ adjunto.archivo.url }}" target="_blank" rel="noopener">
+                        <img src="{{ adjunto.archivo.url }}" alt="Archivo de la OT {{ orden.codigo }}">
+                    </a>
+                {% endif %}
+            {% endfor %}
+        </div>
+        {% else %}
+            <p class="meta">Sin archivos aún. Puedes agregarlos al editar la OT.</p>
+        {% endif %}
     </div>
     <div class="card" style="grid-column: 1 / -1;">
         <div style="display:flex; justify-content: space-between; align-items: center;">
@@ -155,12 +180,18 @@
                 </div>
                 <div class="meta">Registrado por: {{ evento.creado_por|default:"-" }}</div>
                 {% if evento.descripcion %}<p>{{ evento.descripcion }}</p>{% endif %}
-                {% if evento.fotos.all %}
+                {% if evento.adjuntos.all %}
                 <div class="photo-grid">
-                    {% for foto in evento.fotos.all %}
-                        <a href="{{ foto.imagen.url }}" target="_blank" rel="noopener">
-                            <img src="{{ foto.imagen.url }}" alt="Foto de la OT {{ orden.codigo }}">
-                        </a>
+                    {% for adjunto in evento.adjuntos.all %}
+                        {% if adjunto.es_video %}
+                            <video controls>
+                                <source src="{{ adjunto.imagen.url }}">
+                            </video>
+                        {% else %}
+                            <a href="{{ adjunto.imagen.url }}" target="_blank" rel="noopener">
+                                <img src="{{ adjunto.imagen.url }}" alt="Archivo de la OT {{ orden.codigo }}">
+                            </a>
+                        {% endif %}
                     {% endfor %}
                 </div>
                 {% endif %}

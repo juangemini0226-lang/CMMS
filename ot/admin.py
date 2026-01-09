@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import WorkOrder, WorkOrderEvento, WorkOrderEventoFoto
+from .models import WorkOrder, WorkOrderAdjunto, WorkOrderEvento, WorkOrderEventoFoto
 
 
 @admin.register(WorkOrder)
@@ -22,3 +22,9 @@ class WorkOrderEventoAdmin(admin.ModelAdmin):
 class WorkOrderEventoFotoAdmin(admin.ModelAdmin):
     list_display = ("evento", "creado_por", "creado_el")
     search_fields = ("evento__orden__titulo",)
+
+
+@admin.register(WorkOrderAdjunto)
+class WorkOrderAdjuntoAdmin(admin.ModelAdmin):
+    list_display = ("orden", "creado_por", "creado_el")
+    search_fields = ("orden__titulo",)
