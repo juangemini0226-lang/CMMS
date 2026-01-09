@@ -7,6 +7,8 @@ app_name = "ot"
 urlpatterns = [
     path("", views.WorkOrderBoardView.as_view(), name="orden_list"),
     path("carga-masiva/", views.WorkOrderBulkUploadView.as_view(), name="orden_carga_masiva"),
+     path("carga-masiva/plantilla/", views.descargar_plantilla_carga_masiva, name="orden_carga_masiva_plantilla",
+    ),
     path("nueva/", views.WorkOrderCreateView.as_view(), name="orden_crear"),
     path(
         "desde-novedad/<int:novedad_id>/",

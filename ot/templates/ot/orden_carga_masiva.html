@@ -86,10 +86,22 @@
         <div class="actions">
             <button type="submit" class="primary-btn">Importar órdenes</button>
             <a class="secondary-btn" href="{% url 'ot:orden_list' %}">Volver al tablero</a>
+          <a class="secondary-btn" href="{% url 'ot:orden_carga_masiva_plantilla' %}">Descargar plantilla</a>
         </div>
     </form>
 
     <div class="upload-grid">
+        <div class="helper-box">
+            <h3 style="margin-top:0;">Plantilla con ejemplo</h3>
+            <p style="margin:8px 0 0;">
+                Descarga el archivo con una OT existente para usarla como referencia.
+            </p>
+            <ul style="margin:8px 0 0 18px;">
+                <li>Completa la hoja <strong>plantilla</strong>.</li>
+                <li>Usa la hoja <strong>ejemplo</strong> como referencia.</li>
+                <li>Consulta la hoja <strong>guia</strong> para validar valores.</li>
+            </ul>
+        </div>
         <div class="helper-box">
             <h3 style="margin-top:0;">Columnas obligatorias</h3>
             <ul style="margin:8px 0 0 18px;">

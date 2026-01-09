@@ -1,9 +1,15 @@
+from io import BytesIO
+import io 
+import pandas as pd
+
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db import transaction
 from django.db.models import Count, Q
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
+from django.views import View
 from django.views.generic import CreateView, DetailView, FormView, TemplateView, UpdateView
 
 import pandas as pd
@@ -14,6 +20,92 @@ from personal.models import TecnicoOperativo
 
 from .forms import WorkOrderBulkUploadForm, WorkOrderEstadoForm, WorkOrderForm
 from .models import WorkOrder, WorkOrderAdjunto, WorkOrderEvento, WorkOrderEventoFoto
+
+from django.contrib.auth.decorators import login_required
+@login_required
+def descargar_plantilla_carga_masiva(request):
+    columnas = [
+        "titulo",
+        "equipo_codigo",
+        "equipo_tag",
+        "descripcion",
+        "responsable_identificacion",
+        "actividad",
+        "estado",
+        "prioridad",
+        "fecha_programada",
+        "fecha_cierre_compromiso",
+    ]
+    plantilla_df = pd.DataFrame(columns=columnas)
+    ejemplo_df = pd.DataFrame(
+        [
+            {
+                "titulo": "Cambio de aceite preventivo",
+                "equipo_codigo": "EQ-001",
+                "equipo_tag": "",
+                "descripcion": "Mantenimiento preventivo del motor principal",
+                "responsable_identificacion": "10203040",
+                "actividad": "Inspección general",
+                "estado": "pendiente",
+                "prioridad": "media",
+                "fecha_programada": "2025-01-15",
+                "fecha_cierre_compromiso": "2025-01-20",
+            }
+        ]
+    )
+    guia_df = pd.DataFrame(
+        [
+            {
+                "campo": "titulo",
+                "obligatorio": "Sí",
+                "descripcion": "Nombre corto de la orden",
+                "ejemplo": "Cambio de aceite preventivo",
+            },
+            {
+                "campo": "equipo_codigo / equipo_tag",
+                "obligatorio": "Sí (uno de los dos)",
+                "descripcion": "Código interno o tag del equipo",
+                "ejemplo": "EQ-001 / TAG-01",
+            },
+            {
+                "campo": "estado",
+                "obligatorio": "No",
+                "descripcion": "pendiente, por_iniciar, en_ejecucion, en_espera, finalizada, cancelada",
+                "ejemplo": "pendiente",
+            },
+            {
+                "campo": "prioridad",
+                "obligatorio": "No",
+                "descripcion": "alta, media, baja",
+                "ejemplo": "media",
+            },
+            {
+                "campo": "fecha_programada / fecha_cierre_compromiso",
+                "obligatorio": "No",
+                "descripcion": "Formato YYYY-MM-DD",
+                "ejemplo": "2025-01-15",
+            },
+        ]
+    )
+
+    output = io.BytesIO()
+    with pd.ExcelWriter(output, engine="openpyxl") as writer:
+        plantilla_df.to_excel(writer, index=False, sheet_name="plantilla")
+        ejemplo_df.to_excel(writer, index=False, sheet_name="ejemplo")
+        guia_df.to_excel(writer, index=False, sheet_name="guia")
+
+    output.seek(0)
+    response = HttpResponse(
+        output.read(),
+        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    )
+    response["Content-Disposition"] = (
+        'attachment; filename="plantilla_carga_ot.xlsx"'
+    )
+    return response
+
+
+
 class WorkOrderBoardView(LoginRequiredMixin, TemplateView):
     template_name = "ot/orden_tablero.html"
 
@@ -411,7 +503,81 @@ class WorkOrderBulkUploadView(LoginRequiredMixin, FormView):
         )
         return redirect("ot:orden_list")
 
+class WorkOrderBulkTemplateView(LoginRequiredMixin, View):
+    def get(self, request, *args, **kwargs):
+        organizacion = getattr(getattr(request.user, "perfil", None), "organizacion", None)
+        if not organizacion:
+            messages.error(request, "No encontramos la organización del usuario.")
+            return redirect("ot:orden_carga_masiva")
 
+        orden = (
+            WorkOrder.objects.select_related("equipo", "responsable", "actividad")
+            .filter(equipo__organizacion=organizacion)
+            .order_by("-fecha_creacion")
+            .first()
+        )
+
+        columnas = [
+            "titulo",
+            "equipo_codigo",
+            "equipo_tag",
+            "descripcion",
+            "responsable_identificacion",
+            "actividad",
+            "estado",
+            "prioridad",
+            "fecha_programada",
+            "fecha_cierre_compromiso",
+        ]
+
+        plantilla_df = pd.DataFrame([{col: "" for col in columnas}])
+
+        ejemplo_data = {
+            "titulo": orden.titulo if orden else "Ejemplo OT",
+            "equipo_codigo": orden.equipo.codigo if orden and orden.equipo else "",
+            "equipo_tag": orden.equipo.tag if orden and orden.equipo else "",
+            "descripcion": orden.descripcion if orden else "Descripción de referencia",
+            "responsable_identificacion": (
+                orden.responsable.numero_identificacion if orden and orden.responsable else ""
+            ),
+            "actividad": orden.actividad.nombre if orden and orden.actividad else "",
+            "estado": orden.estado if orden else "pendiente",
+            "prioridad": orden.prioridad if orden else "media",
+            "fecha_programada": (
+                orden.fecha_programada.isoformat() if orden and orden.fecha_programada else ""
+            ),
+            "fecha_cierre_compromiso": (
+                orden.fecha_cierre_compromiso.isoformat() if orden and orden.fecha_cierre_compromiso else ""
+            ),
+        }
+
+        ejemplo_df = pd.DataFrame([ejemplo_data])
+
+        guia_df = pd.DataFrame(
+            [
+                {
+                    "campo": "estado",
+                    "valores": "pendiente, por_iniciar, en_ejecucion, en_espera, finalizada, cancelada",
+                },
+                {"campo": "prioridad", "valores": "alta, media, baja"},
+                {"campo": "fecha_programada", "valores": "YYYY-MM-DD"},
+                {"campo": "fecha_cierre_compromiso", "valores": "YYYY-MM-DD"},
+            ]
+        )
+
+        output = BytesIO()
+        with pd.ExcelWriter(output, engine="openpyxl") as writer:
+            plantilla_df.to_excel(writer, index=False, sheet_name="plantilla")
+            ejemplo_df.to_excel(writer, index=False, sheet_name="ejemplo")
+            guia_df.to_excel(writer, index=False, sheet_name="guia")
+        output.seek(0)
+
+        response = HttpResponse(
+            output.getvalue(),
+            content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        )
+        response["Content-Disposition"] = "attachment; filename=plantilla_ot.xlsx"
+        return response
 
 def actualizar_estado(request, pk):
     orden = get_object_or_404(WorkOrder, pk=pk)
