@@ -29,7 +29,7 @@ def descargar_plantilla_carga_masiva(request):
         "equipo_codigo",
         "equipo_tag",
         "descripcion",
-        "responsable_identificacion",
+        "responsable_nombre",
         "actividad",
         "estado",
         "prioridad",
@@ -44,7 +44,7 @@ def descargar_plantilla_carga_masiva(request):
                 "equipo_codigo": "EQ-001",
                 "equipo_tag": "",
                 "descripcion": "Mantenimiento preventivo del motor principal",
-                "responsable_identificacion": "10203040",
+                "responsable_nombre": "Nombre del técnico",
                 "actividad": "Inspección general",
                 "estado": "pendiente",
                 "prioridad": "media",
@@ -331,6 +331,14 @@ class WorkOrderBulkUploadView(LoginRequiredMixin, FormView):
             for col in df.columns
         ]
 
+        df = df.dropna(how="all")
+        if df.empty:
+            messages.error(
+                self.request,
+                "El archivo no tiene filas con información. Completa la hoja plantilla e inténtalo de nuevo.",
+            )
+            return self.form_invalid(form)
+
         required_columns = {"titulo"}
         missing = required_columns - set(df.columns)
         if missing:
@@ -341,9 +349,6 @@ class WorkOrderBulkUploadView(LoginRequiredMixin, FormView):
             return self.form_invalid(form)
 
         organizacion = getattr(getattr(self.request.user, "perfil", None), "organizacion", None)
-        if not organizacion:
-            messages.error(self.request, "No encontramos la organización del usuario.")
-            return self.form_invalid(form)
 
         estado_map = {key: key for key, _ in WorkOrder.ESTADOS}
         estado_map.update({label.lower(): key for key, label in WorkOrder.ESTADOS})
@@ -352,6 +357,12 @@ class WorkOrderBulkUploadView(LoginRequiredMixin, FormView):
 
         errores = []
         filas = []
+        total_filas = len(df)
+        messages.info(
+            self.request,
+            f"Archivo leído correctamente. Filas detectadas: {total_filas}.",
+        )
+
 
         def clean_text(valor):
             if valor is None:
@@ -375,13 +386,15 @@ class WorkOrderBulkUploadView(LoginRequiredMixin, FormView):
             equipo_tag = clean_text(row.get("equipo_tag"))
             equipo = None
             if equipo_codigo:
-                equipo = NodoActivo.objects.filter(
-                    organizacion=organizacion, codigo=equipo_codigo
-                ).first()
+                equipo_qs = NodoActivo.objects.filter(codigo=equipo_codigo)
+                if organizacion:
+                    equipo_qs = equipo_qs.filter(organizacion=organizacion)
+                equipo = equipo_qs.first()
             if not equipo and equipo_tag:
-                equipo = NodoActivo.objects.filter(
-                    organizacion=organizacion, tag=equipo_tag
-                ).first()
+                equipo_qs = NodoActivo.objects.filter(tag=equipo_tag)
+                if organizacion:
+                    equipo_qs = equipo_qs.filter(organizacion=organizacion)
+                equipo = equipo_qs.first()
             if not equipo:
                 errores.append(
                     f"Fila {fila}: equipo no encontrado (usa equipo_codigo o equipo_tag)."
@@ -393,10 +406,12 @@ class WorkOrderBulkUploadView(LoginRequiredMixin, FormView):
                 row.get("responsable_identificacion")
             )
             if responsable_identificacion:
-                responsable = TecnicoOperativo.objects.filter(
-                    perfil=organizacion,
+                responsable_qs = TecnicoOperativo.objects.filter(
                     numero_identificacion=responsable_identificacion,
-                ).first()
+                )
+                if organizacion:
+                    responsable_qs = responsable_qs.filter(perfil=organizacion)
+                responsable = responsable_qs.first()
                 if not responsable:
                     errores.append(
                         f"Fila {fila}: responsable no encontrado ({responsable_identificacion})."
@@ -484,7 +499,15 @@ class WorkOrderBulkUploadView(LoginRequiredMixin, FormView):
                 "No pudimos importar porque hay errores en el archivo.",
             )
             return self.render_to_response(
-                self.get_context_data(form=form, errores=errores)
+                self.get_context_data(
+                    form=form,
+                    errores=errores,
+                    resumen={
+                        "total": total_filas,
+                        "validas": len(filas),
+                        "con_errores": len(errores),
+                    },
+                )
             )
 
         with transaction.atomic():
@@ -502,7 +525,7 @@ class WorkOrderBulkUploadView(LoginRequiredMixin, FormView):
             f"Importamos {len(filas)} órdenes de trabajo correctamente.",
         )
         return redirect("ot:orden_list")
-
+    
 class WorkOrderBulkTemplateView(LoginRequiredMixin, View):
     def get(self, request, *args, **kwargs):
         organizacion = getattr(getattr(request.user, "perfil", None), "organizacion", None)
@@ -522,7 +545,7 @@ class WorkOrderBulkTemplateView(LoginRequiredMixin, View):
             "equipo_codigo",
             "equipo_tag",
             "descripcion",
-            "responsable_identificacion",
+            "responsable_nombre",
             "actividad",
             "estado",
             "prioridad",
@@ -537,8 +560,8 @@ class WorkOrderBulkTemplateView(LoginRequiredMixin, View):
             "equipo_codigo": orden.equipo.codigo if orden and orden.equipo else "",
             "equipo_tag": orden.equipo.tag if orden and orden.equipo else "",
             "descripcion": orden.descripcion if orden else "Descripción de referencia",
-            "responsable_identificacion": (
-                orden.responsable.numero_identificacion if orden and orden.responsable else ""
+             "responsable_nombre": (
+                orden.responsable.nombre_display if orden and orden.responsable else ""
             ),
             "actividad": orden.actividad.nombre if orden and orden.actividad else "",
             "estado": orden.estado if orden else "pendiente",

@@ -209,3 +209,63 @@
 .status-pill.rechazada {
   background: var(--danger);
 }
+
+@media (max-width: 900px) {
+  .personal-header {
+    padding: 24px;
+  }
+
+  .personal-header h1 {
+    font-size: 1.6rem;
+  }
+
+  .personal-actions {
+    width: 100%;
+  }
+
+  .personal-card {
+    padding: 22px;
+  }
+}
+
+@media (max-width: 640px) {
+  .personal-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .personal-actions {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .personal-button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .table-actions {
+    flex-wrap: wrap;
+  }
+
+  .personal-table {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+@media (max-width: 420px) {
+  .personal-header {
+    padding: 20px;
+  }
+
+  .personal-card {
+    padding: 18px;
+  }
+}

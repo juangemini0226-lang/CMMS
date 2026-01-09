@@ -74,6 +74,17 @@
         </div>
     {% endif %}
 
+    {% if resumen %}
+        <div class="novedades-panel" style="margin-top: 14px;">
+            <strong>Resumen de validación:</strong>
+            <ul style="margin:8px 0 0 18px;">
+                <li>Filas detectadas: {{ resumen.total }}</li>
+                <li>Filas listas para importar: {{ resumen.validas }}</li>
+                <li>Errores encontrados: {{ resumen.con_errores }}</li>
+            </ul>
+        </div>
+    {% endif %}
+    
     <form method="post" enctype="multipart/form-data" style="margin-top: 18px;">
         {% csrf_token %}
         <label class="helper-box">
@@ -113,7 +124,7 @@
             <h3 style="margin-top:0;">Columnas opcionales</h3>
             <ul style="margin:8px 0 0 18px;">
                 <li>descripcion</li>
-                <li>responsable_identificacion</li>
+                  <li>responsable_nombre</li>
                 <li>actividad</li>
                 <li>estado (pendiente, por_iniciar, en_ejecucion, en_espera, finalizada, cancelada)</li>
                 <li>prioridad (alta, media, baja)</li>
