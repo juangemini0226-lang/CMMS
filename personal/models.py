@@ -2,7 +2,7 @@ from django.conf import settings
 from django.db import models
 from django.utils import timezone
 
-from activos.models import PerfilUsuario
+from activos.models import Organizacion
 
 class TecnicoOperativo(models.Model):
     """Perfil extendido para técnicos operativos vinculados a un usuario."""
@@ -29,7 +29,7 @@ class TecnicoOperativo(models.Model):
         help_text="Usa este campo si el técnico no tiene usuario.",
     )
     perfil = models.ForeignKey(
-        PerfilUsuario,
+        Organizacion,
         on_delete=models.PROTECT,
         related_name="tecnicos",
         verbose_name="Perfil organizacional",
@@ -72,7 +72,7 @@ class TecnicoOperativo(models.Model):
         return self.nombre or "Sin nombre"
     @property
     def organizacion(self):
-        return self.perfil.organizacion
+        return self.perfil
 
 
 class Turno(models.Model):

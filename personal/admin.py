@@ -22,7 +22,7 @@ class TecnicoOperativoAdmin(admin.ModelAdmin):
         "numero_identificacion",
         "especialidad",
     )
-    list_filter = ("estado", "perfil__organizacion")
+    list_filter = ("estado", "perfil")
 
 @admin.register(Turno)
 class TurnoAdmin(admin.ModelAdmin):

@@ -29,6 +29,11 @@ class TecnicoOperativoCreateView(PermissionedMixin, CreateView):
     success_url = reverse_lazy("personal:tecnico_list")
     permission_required = "personal.add_tecnicooperativo"
 
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["user"] = self.request.user
+        return kwargs
+
 
 class TecnicoOperativoUpdateView(PermissionedMixin, UpdateView):
     model = TecnicoOperativo
@@ -36,6 +41,11 @@ class TecnicoOperativoUpdateView(PermissionedMixin, UpdateView):
     template_name = "personal/tecnico_form.html"
     success_url = reverse_lazy("personal:tecnico_list")
     permission_required = "personal.change_tecnicooperativo"
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["user"] = self.request.user
+        return kwargs
 
 
 class TecnicoOperativoDeleteView(PermissionedMixin, DeleteView):
