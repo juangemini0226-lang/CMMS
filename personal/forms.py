@@ -19,37 +19,6 @@ class BaseStyledModelForm(forms.ModelForm):
                 field.widget.attrs.setdefault("rows", 3)
 
 
-class TecnicoOperativoForm(BaseStyledModelForm):
-    class Meta:
-        model = TecnicoOperativo
-        fields = [
-            "user",
-            "nombre",
-            "perfil",
-            "numero_identificacion",
-            "especialidad",
-            "telefono_contacto",
-            "correo_corporativo",
-            "fecha_ingreso",
-            "estado",
-            "notas",
-        ]
-        widgets = {
-            "fecha_ingreso": forms.DateInput(attrs={"type": "date"}),
-        }
-
-    def clean(self):
-        cleaned_data = super().clean()
-        user = cleaned_data.get("user")
-        nombre = (cleaned_data.get("nombre") or "").strip()
-        if not user and not nombre:
-            error = "Debes ingresar un usuario o el nombre del técnico."
-            self.add_error("user", error)
-            self.add_error("nombre", error)
-        return cleaned_data
-
-
-
 class TurnoForm(BaseStyledModelForm):
     fecha_inicio = forms.DateTimeField(
         widget=forms.DateTimeInput(attrs={"type": "datetime-local"}),
@@ -61,10 +30,32 @@ class TurnoForm(BaseStyledModelForm):
     )
 
     class Meta:
-        class TurnoForm(BaseStyledModelForm):
-            class AusenciaForm(BaseStyledModelForm):
-                class Meta:
-                    model = Ausencia
+        model = Turno
+        fields = [
+            "nombre",
+            "descripcion",
+            "fecha_inicio",
+            "fecha_fin",
+            "color",
+            "tecnicos",
+        ]
+        widgets = {
+            "descripcion": forms.Textarea(attrs={"rows": 4}),
+            "color": forms.TextInput(attrs={"type": "color"}),
+        }
+
+    def clean(self):
+        cleaned_data = super().clean()
+        fecha_inicio = cleaned_data.get("fecha_inicio")
+        fecha_fin = cleaned_data.get("fecha_fin")
+        if fecha_inicio and fecha_fin and fecha_fin < fecha_inicio:
+            self.add_error("fecha_fin", "La fecha de finalización debe ser mayor o igual que la de inicio.")
+        return cleaned_data
+
+
+class AusenciaForm(BaseStyledModelForm):
+    class Meta:
+        model = Ausencia
         fields = [
             "tecnico",
             "tipo",
