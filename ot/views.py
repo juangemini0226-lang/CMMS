@@ -1,16 +1,19 @@
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db import transaction
 from django.db.models import Count, Q
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
-from django.views.generic import CreateView, DetailView, TemplateView, UpdateView
+from django.views.generic import CreateView, DetailView, FormView, TemplateView, UpdateView
 
-from novedades.models import Novedad
+import pandas as pd
 
-from .forms import WorkOrderEstadoForm, WorkOrderForm
+from activos.models import NodoActivo
+from novedades.models import ActividadNovedad, Novedad
+from personal.models import TecnicoOperativo
+
+from .forms import WorkOrderBulkUploadForm, WorkOrderEstadoForm, WorkOrderForm
 from .models import WorkOrder, WorkOrderAdjunto, WorkOrderEvento, WorkOrderEventoFoto
-
-
 class WorkOrderBoardView(LoginRequiredMixin, TemplateView):
     template_name = "ot/orden_tablero.html"
 
@@ -218,6 +221,196 @@ class WorkOrderDetailView(LoginRequiredMixin, DetailView):
             }
         )
         return context
+
+class WorkOrderBulkUploadView(LoginRequiredMixin, FormView):
+    template_name = "ot/orden_carga_masiva.html"
+    form_class = WorkOrderBulkUploadForm
+
+    def form_valid(self, form):
+        archivo = form.cleaned_data["archivo_excel"]
+        try:
+            df = pd.read_excel(archivo)
+        except Exception:
+            messages.error(self.request, "No pudimos leer el archivo. Verifica el formato.")
+            return self.form_invalid(form)
+
+        df.columns = [
+            str(col).strip().lower().replace(" ", "_").replace("-", "_")
+            for col in df.columns
+        ]
+
+        required_columns = {"titulo"}
+        missing = required_columns - set(df.columns)
+        if missing:
+            messages.error(
+                self.request,
+                "Faltan columnas obligatorias: " + ", ".join(sorted(missing)),
+            )
+            return self.form_invalid(form)
+
+        organizacion = getattr(getattr(self.request.user, "perfil", None), "organizacion", None)
+        if not organizacion:
+            messages.error(self.request, "No encontramos la organización del usuario.")
+            return self.form_invalid(form)
+
+        estado_map = {key: key for key, _ in WorkOrder.ESTADOS}
+        estado_map.update({label.lower(): key for key, label in WorkOrder.ESTADOS})
+        prioridad_map = {key: key for key, _ in WorkOrder.PRIORIDADES}
+        prioridad_map.update({label.lower(): key for key, label in WorkOrder.PRIORIDADES})
+
+        errores = []
+        filas = []
+
+        def clean_text(valor):
+            if valor is None:
+                return ""
+            if isinstance(valor, float) and pd.isna(valor):
+                return ""
+            if pd.isna(valor):
+                return ""
+            if isinstance(valor, str):
+                return valor.strip()
+            return str(valor).strip()
+
+        for index, row in df.iterrows():
+            fila = index + 2
+            titulo = clean_text(row.get("titulo"))
+            if not titulo:
+                errores.append(f"Fila {fila}: el título es obligatorio.")
+                continue
+
+            equipo_codigo = clean_text(row.get("equipo_codigo"))
+            equipo_tag = clean_text(row.get("equipo_tag"))
+            equipo = None
+            if equipo_codigo:
+                equipo = NodoActivo.objects.filter(
+                    organizacion=organizacion, codigo=equipo_codigo
+                ).first()
+            if not equipo and equipo_tag:
+                equipo = NodoActivo.objects.filter(
+                    organizacion=organizacion, tag=equipo_tag
+                ).first()
+            if not equipo:
+                errores.append(
+                    f"Fila {fila}: equipo no encontrado (usa equipo_codigo o equipo_tag)."
+                )
+                continue
+
+            responsable = None
+            responsable_identificacion = clean_text(
+                row.get("responsable_identificacion")
+            )
+            if responsable_identificacion:
+                responsable = TecnicoOperativo.objects.filter(
+                    perfil=organizacion,
+                    numero_identificacion=responsable_identificacion,
+                ).first()
+                if not responsable:
+                    errores.append(
+                        f"Fila {fila}: responsable no encontrado ({responsable_identificacion})."
+                    )
+                    continue
+
+            actividad = None
+            actividad_nombre = clean_text(row.get("actividad"))
+            if actividad_nombre:
+                actividad = ActividadNovedad.objects.filter(
+                    nombre__iexact=actividad_nombre
+                ).first()
+                if not actividad:
+                    errores.append(
+                        f"Fila {fila}: actividad no encontrada ({actividad_nombre})."
+                    )
+                    continue
+
+            estado_raw = clean_text(row.get("estado")).lower()
+            if estado_raw:
+                estado = estado_map.get(estado_raw)
+                if not estado:
+                    errores.append(
+                        f"Fila {fila}: estado inválido ({estado_raw})."
+                    )
+                    continue
+            else:
+                estado = "pendiente"
+
+            prioridad_raw = clean_text(row.get("prioridad")).lower()
+            if prioridad_raw:
+                prioridad = prioridad_map.get(prioridad_raw)
+                if not prioridad:
+                    errores.append(
+                        f"Fila {fila}: prioridad inválida ({prioridad_raw})."
+                    )
+                    continue
+            else:
+                prioridad = "media"
+
+            def parse_fecha(valor, campo):
+                if valor is None or (isinstance(valor, float) and pd.isna(valor)):
+                    return None
+                try:
+                    return pd.to_datetime(valor).date()
+                except Exception:
+                    errores.append(f"Fila {fila}: fecha inválida en {campo}.")
+                    return None
+
+            fecha_programada = parse_fecha(row.get("fecha_programada"), "fecha_programada")
+            if fecha_programada is None and any(
+                msg.startswith(f"Fila {fila}: fecha inválida")
+                for msg in errores
+            ):
+                continue
+
+            fecha_cierre = parse_fecha(
+                row.get("fecha_cierre_compromiso"), "fecha_cierre_compromiso"
+            )
+            if fecha_cierre is None and any(
+                msg.startswith(f"Fila {fila}: fecha inválida")
+                for msg in errores
+            ):
+                continue
+
+            descripcion = clean_text(row.get("descripcion"))
+
+            filas.append(
+                {
+                    "titulo": titulo,
+                    "descripcion": descripcion,
+                    "equipo": equipo,
+                    "responsable": responsable,
+                    "actividad": actividad,
+                    "prioridad": prioridad,
+                    "estado": estado,
+                    "fecha_programada": fecha_programada,
+                    "fecha_cierre_compromiso": fecha_cierre,
+                }
+            )
+
+        if errores:
+            messages.error(
+                self.request,
+                "No pudimos importar porque hay errores en el archivo.",
+            )
+            return self.render_to_response(
+                self.get_context_data(form=form, errores=errores)
+            )
+
+        with transaction.atomic():
+            for fila in filas:
+                orden = WorkOrder.objects.create(**fila)
+                WorkOrderEvento.objects.create(
+                    orden=orden,
+                    estado=orden.estado,
+                    descripcion="Orden importada desde carga masiva",
+                    creado_por=self.request.user,
+                )
+
+        messages.success(
+            self.request,
+            f"Importamos {len(filas)} órdenes de trabajo correctamente.",
+        )
+        return redirect("ot:orden_list")
+
 
 
 def actualizar_estado(request, pk):

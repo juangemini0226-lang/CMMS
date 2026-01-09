@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    .upload-card {
+        background: #fff;
+        border-radius: 16px;
+        padding: 20px 24px;
+        border: 1px solid #e5e7eb;
+        box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+    }
+
+    .upload-card h1 {
+        margin-bottom: 8px;
+    }
+
+    .upload-card p {
+        color: #6b7280;
+    }
+
+    .upload-grid {
+        display: grid;
+        gap: 18px;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        margin-top: 18px;
+    }
+
+    .helper-box {
+        background: #f8fafc;
+        border-radius: 12px;
+        padding: 16px;
+        border: 1px dashed #cbd5f5;
+    }
+
+    .upload-input {
+        display: block;
+        width: 100%;
+        border: 2px dashed #cbd5f5;
+        padding: 18px;
+        border-radius: 12px;
+        background: #fff;
+    }
+
+    .actions {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-top: 16px;
+    }
+</style>
+
+<div class="upload-card">
+    <h1>Carga masiva de OT</h1>
+    <p>Importa órdenes de trabajo históricas desde Excel para evitar registros uno a uno.</p>
+
+    {% if messages %}
+        <div class="novedades-panel" style="margin-top: 14px;">
+            <ul style="margin:0; padding-left:18px;">
+                {% for message in messages %}
+                    <li>{{ message }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% endif %}
+
+    {% if errores %}
+        <div class="novedades-panel" style="border-color:#fecaca; background:#fef2f2; color:#991b1b; margin-top: 14px;">
+            <strong>Errores encontrados:</strong>
+            <ul style="margin:8px 0 0 18px;">
+                {% for error in errores %}
+                    <li>{{ error }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% endif %}
+
+    <form method="post" enctype="multipart/form-data" style="margin-top: 18px;">
+        {% csrf_token %}
+        <label class="helper-box">
+            <strong>Archivo Excel</strong>
+            <span style="display:block; margin-top: 8px;">
+                {{ form.archivo_excel }}
+            </span>
+        </label>
+
+        <div class="actions">
+            <button type="submit" class="primary-btn">Importar órdenes</button>
+            <a class="secondary-btn" href="{% url 'ot:orden_list' %}">Volver al tablero</a>
+        </div>
+    </form>
+
+    <div class="upload-grid">
+        <div class="helper-box">
+            <h3 style="margin-top:0;">Columnas obligatorias</h3>
+            <ul style="margin:8px 0 0 18px;">
+                <li><strong>titulo</strong></li>
+                <li><strong>equipo_codigo</strong> o <strong>equipo_tag</strong></li>
+            </ul>
+        </div>
+        <div class="helper-box">
+            <h3 style="margin-top:0;">Columnas opcionales</h3>
+            <ul style="margin:8px 0 0 18px;">
+                <li>descripcion</li>
+                <li>responsable_identificacion</li>
+                <li>actividad</li>
+                <li>estado (pendiente, por_iniciar, en_ejecucion, en_espera, finalizada, cancelada)</li>
+                <li>prioridad (alta, media, baja)</li>
+                <li>fecha_programada (YYYY-MM-DD)</li>
+                <li>fecha_cierre_compromiso (YYYY-MM-DD)</li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

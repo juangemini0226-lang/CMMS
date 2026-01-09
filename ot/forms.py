@@ -80,3 +80,20 @@ class WorkOrderEstadoForm(forms.Form):
             attrs={"multiple": True, "accept": "image/*,video/*"}
         ),
     )
+
+
+class WorkOrderBulkUploadForm(forms.Form):
+    archivo_excel = forms.FileField(
+        label="Archivo Excel",
+        help_text="Carga un archivo .xlsx o .xls con las órdenes históricas.",
+        widget=forms.ClearableFileInput(attrs={"accept": ".xlsx,.xls", "class": "upload-input"}),
+    )
+
+    def clean_archivo_excel(self):
+        archivo = self.cleaned_data["archivo_excel"]
+        nombre = archivo.name.lower()
+        if not nombre.endswith((".xlsx", ".xls")):
+            raise forms.ValidationError(
+                "El archivo debe estar en formato .xlsx o .xls."
+            )
+        return archivo
