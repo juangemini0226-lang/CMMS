@@ -309,6 +309,9 @@
         border: 1px solid #e5e7eb;
         border-radius: 16px;
         padding: 12px;
+        display: flex;
+        flex-direction: column;
+        max-height: 70vh;
     }
 
     .col-head {
@@ -347,12 +350,28 @@
         border: 1px solid var(--estado-color, #e5e7eb);
     }
 
+    .column-cards {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        overflow-y: auto;
+        padding-right: 6px;
+    }
+
+    .column-cards::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .column-cards::-webkit-scrollbar-thumb {
+        background: rgba(148, 163, 184, 0.6);
+        border-radius: 999px;
+    }
+
     .card {
         background: #fff;
         border: 1px solid #e5e7eb;
         border-radius: 14px;
         padding: 12px;
-        margin-bottom: 12px;
         box-shadow: 0 6px 14px rgba(0,0,0,0.04);
     }
 
@@ -520,38 +539,40 @@
                     <div class="col-title">{{ estado.icono }} {{ estado.titulo }}</div>
                     <div class="col-meta">{{ estado.descripcion }}</div>
                 </div>
-                <span class="pill pill-count estado-{{ estado.id }}">{{ estado.total }}</span>
+                 <span class="pill pill-count estado-{{ estado.id }}">{{ estado.total }}</span>
             </div>
             {% with lista=estado.ordenes %}
                 {% if lista %}
-                    {% for orden in lista %}
-                    <div class="card">
-                        <div class="card-header">
-                            <h4>{{ orden.codigo }} · {{ orden.titulo }}</h4>
-                            <span class="tag">{{ orden.get_prioridad_display }}</span>
-                        </div>
-                        <div class="meta">{{ orden.equipo }}{% if orden.responsable %} · Responsable: {{ orden.responsable }}{% endif %}</div>
-                        {% if orden.novedad_origen %}
-                            <div class="meta">Desde novedad: {{ orden.novedad_origen.titulo }}</div>
-                        {% endif %}
-                        <div class="acciones">
-                            <div style="display:flex; gap:10px; flex-wrap: wrap;">
-                                <a href="{% url 'ot:orden_detalle' orden.pk %}">Ver detalle</a>
-                                <a href="{% url 'ot:orden_editar' orden.pk %}">Editar</a>
+                    <div class="column-cards">
+                        {% for orden in lista %}
+                        <div class="card">
+                            <div class="card-header">
+                                <h4>{{ orden.codigo }} · {{ orden.titulo }}</h4>
+                                <span class="tag">{{ orden.get_prioridad_display }}</span>
                             </div>
-                            <form method="post" action="{% url 'ot:orden_actualizar_estado' orden.pk %}">
-                                {% csrf_token %}
-                                <select name="estado">
-                                    {% for opcion, nombre in orden.ESTADOS %}
-                                        <option value="{{ opcion }}" {% if opcion == orden.estado %}selected{% endif %}>{{ nombre }}</option>
-                                    {% endfor %}
-                                </select>
-                                <input type="hidden" name="nota" value="">
-                                <button type="submit">Mover</button>
-                            </form>
+                            <div class="meta">{{ orden.equipo }}{% if orden.responsable %} · Responsable: {{ orden.responsable }}{% endif %}</div>
+                            {% if orden.novedad_origen %}
+                                <div class="meta">Desde novedad: {{ orden.novedad_origen.titulo }}</div>
+                            {% endif %}
+                            <div class="acciones">
+                                <div style="display:flex; gap:10px; flex-wrap: wrap;">
+                                    <a href="{% url 'ot:orden_detalle' orden.pk %}">Ver detalle</a>
+                                    <a href="{% url 'ot:orden_editar' orden.pk %}">Editar</a>
+                                </div>
+                                <form method="post" action="{% url 'ot:orden_actualizar_estado' orden.pk %}">
+                                    {% csrf_token %}
+                                    <select name="estado">
+                                        {% for opcion, nombre in orden.ESTADOS %}
+                                            <option value="{{ opcion }}" {% if opcion == orden.estado %}selected{% endif %}>{{ nombre }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <input type="hidden" name="nota" value="">
+                                    <button type="submit">Mover</button>
+                                </form>
+                            </div>
                         </div>
+                        {% endfor %}
                     </div>
-                    {% endfor %}
                 {% else %}
                     <p class="empty">Sin órdenes en este estado.</p>
                 {% endif %}
