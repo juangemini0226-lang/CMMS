@@ -200,9 +200,7 @@ def lista_novedades(request):
             "equipo_filtro": equipo_id,
             "con_ot_filtro": con_ot,
             "estados": estados,
-            "actividades": ActividadNovedad.objects.filter(activo=True).order_by(
-                "nombre"
-            ),
+             "actividades": ActividadNovedad.visibles_para_novedades(),
             "equipos": NodoActivo.objects.order_by("nombre"),
             "novedades_total": novedades.count(),
             "novedades_hoy": novedades_hoy,

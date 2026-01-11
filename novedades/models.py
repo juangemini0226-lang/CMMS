@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models import Q
 from django.utils import timezone
 
 
@@ -72,7 +73,7 @@ class SubopcionCampo(models.Model):
 class Novedad(models.Model):
     ESTADOS = [
         ("pendiente", "Pendiente"),
-        ("atendida", "Atendida"),
+        
         ("finalizada", "Finalizada"),
     ]
     fecha = models.DateField(default=timezone.now, verbose_name="Fecha de la novedad")
@@ -111,6 +112,14 @@ class Novedad(models.Model):
 class ActividadNovedad(models.Model):
     nombre = models.CharField(max_length=150, unique=True, verbose_name="Actividad")
     activo = models.BooleanField(default=True, verbose_name="Activo")
+
+    @classmethod
+    def visibles_para_novedades(cls):
+        return (
+            cls.objects.filter(activo=True)
+            .filter(Q(nombre__iexact="Alistamiento") | Q(nombre__iexact="Atención planta"))
+            .order_by("nombre")
+        )
 
     class Meta:
         verbose_name = "Actividad de novedad"

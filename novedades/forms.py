@@ -88,7 +88,7 @@ class SubopcionCampoForm(forms.ModelForm):
 
 class NovedadForm(forms.ModelForm):
     actividad = forms.ModelChoiceField(
-        queryset=ActividadNovedad.objects.filter(activo=True).order_by("nombre"),
+        queryset=ActividadNovedad.visibles_para_novedades(),
         label="Actividad",
         widget=forms.Select(attrs={"class": "form-select"}),
     )
