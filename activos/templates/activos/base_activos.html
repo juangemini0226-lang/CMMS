@@ -74,15 +74,19 @@
             display: inline-block;
         }
 
+.topbar-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 0;
+        }
 
-        
         .topbar-actions {
             display: flex;
             align-items: center;
             gap: 12px;
-             flex-wrap: wrap;
+            flex-wrap: wrap;
         }
-
         .chip {
             background: #f9fafb;
             border: 1px solid var(--border);
@@ -576,6 +580,12 @@
                 gap: 8px;
             }
 
+             .topbar-left {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+
             .container {
                 padding: 0 8px;
             }
@@ -599,6 +609,46 @@
                 text-align: center;
             }
 
+            .app-topbar {
+                align-items: stretch;
+            }
+
+            .topbar-left {
+                gap: 10px;
+            }
+
+            .brand {
+                font-size: 0.9rem;
+                line-height: 1.2;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
+            .topbar-actions {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .topbar-actions .btn {
+                width: 100%;
+                text-align: center;
+            }
+
+            .topbar-actions .chip {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .card {
+                padding: 18px;
+            }
+
+            .card-header {
+                font-size: 20px;
+            }
+
+
             table {
                 display: block;
                 width: 100%;
@@ -612,9 +662,21 @@
                 padding: 10px 12px;
             }
 
-            .icon-button {
+           .icon-button {
                 width: 34px;
                 height: 34px;
+            }
+
+            .brand {
+                font-size: 0.85rem;
+            }
+
+            .page-content {
+                padding: 16px 10px;
+            }
+
+            .card {
+                padding: 16px;
             }
         }
         
@@ -623,7 +685,7 @@
 </head>
 <body>
     <header class="app-topbar">
-        <div class="topbar-left" style="display:flex; align-items:center; gap:12px;">
+        <div class="topbar-left">
             <button class="icon-button" id="toggleSidebar" aria-label="Abrir menú">☰</button>
             <a href="{% url 'home' %}" class="brand">
                 <span class="dot"></span> Gestión de Activos - ESTRA
