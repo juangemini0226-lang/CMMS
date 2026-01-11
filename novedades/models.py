@@ -164,3 +164,39 @@ class NovedadDetalle(models.Model):
 
     def __str__(self):
         return f"{self.novedad} - {self.campo_padre}/{self.campo_hijo}"
+    
+
+
+class AtencionPlantaDetalle(models.Model):
+    novedad = models.ForeignKey(
+        Novedad,
+        on_delete=models.CASCADE,
+        related_name="detalles_atencion_planta",
+        verbose_name="Novedad",
+    )
+    novedad_detalle_id = models.PositiveIntegerField(unique=True, db_index=True)
+    fecha_novedad = models.DateField(verbose_name="Fecha de la novedad")
+    equipo = models.ForeignKey(
+        "activos.NodoActivo",
+        on_delete=models.PROTECT,
+        related_name="detalles_atencion_planta",
+        verbose_name="Equipo o molde",
+    )
+    campo_padre = models.CharField(max_length=150, verbose_name="Campo padre")
+    campo_hijo = models.CharField(max_length=150, verbose_name="Campo hijo")
+    subopcion = models.CharField(
+        max_length=150, blank=True, verbose_name="Subopción"
+    )
+    comentario = models.CharField(
+        max_length=255, blank=True, verbose_name="Comentario o detalle"
+    )
+    creado_el = models.DateTimeField(auto_now_add=True, verbose_name="Creado el")
+    actualizado_el = models.DateTimeField(auto_now=True, verbose_name="Actualizado el")
+
+    class Meta:
+        verbose_name = "Detalle Atención Planta"
+        verbose_name_plural = "Detalles Atención Planta"
+        ordering = ["-fecha_novedad", "-id"]
+
+    def __str__(self):
+        return f"{self.novedad} - {self.campo_padre}/{self.campo_hijo}"

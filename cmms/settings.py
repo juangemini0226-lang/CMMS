@@ -146,6 +146,7 @@ INSTALLED_APPS = [
     "activos",
     "reportes",
     "personal",
+    
     "novedades",
     "ot",
 ]

@@ -46,7 +46,7 @@ def descargar_plantilla_carga_masiva(request):
                 "descripcion": "Mantenimiento preventivo del motor principal",
                 "responsable_nombre": "Nombre del técnico",
                 "actividad": "Inspección general",
-                "estado": "pendiente",
+                 "estado": "reportada",
                 "prioridad": "media",
                 "fecha_programada": "2025-01-15",
                 "fecha_cierre_compromiso": "2025-01-20",
@@ -70,8 +70,8 @@ def descargar_plantilla_carga_masiva(request):
             {
                 "campo": "estado",
                 "obligatorio": "No",
-                "descripcion": "pendiente, por_iniciar, en_ejecucion, en_espera, finalizada, cancelada",
-                "ejemplo": "pendiente",
+                 "descripcion": "reportada, por_iniciar, en_ejecucion, en_espera, finalizada, cancelada",
+                "ejemplo": "reportada",
             },
             {
                 "campo": "prioridad",
@@ -151,8 +151,8 @@ class WorkOrderBoardView(LoginRequiredMixin, TemplateView):
 
         estados_definidos = [
             {
-                "id": "pendiente",
-                "titulo": "Pendiente",
+                "id": "reportada",
+                "titulo": "Reportada",
                 "descripcion": "Por revisar o planear",
                 "color": "#f97316",
                 "icono": "⏳",
@@ -439,7 +439,7 @@ class WorkOrderBulkUploadView(LoginRequiredMixin, FormView):
                     )
                     continue
             else:
-                estado = "pendiente"
+                 estado = "reportada"
 
             prioridad_raw = clean_text(row.get("prioridad")).lower()
             if prioridad_raw:
@@ -564,7 +564,7 @@ class WorkOrderBulkTemplateView(LoginRequiredMixin, View):
                 orden.responsable.nombre_display if orden and orden.responsable else ""
             ),
             "actividad": orden.actividad.nombre if orden and orden.actividad else "",
-            "estado": orden.estado if orden else "pendiente",
+             "estado": orden.estado if orden else "reportada",
             "prioridad": orden.prioridad if orden else "media",
             "fecha_programada": (
                 orden.fecha_programada.isoformat() if orden and orden.fecha_programada else ""
@@ -580,7 +580,7 @@ class WorkOrderBulkTemplateView(LoginRequiredMixin, View):
             [
                 {
                     "campo": "estado",
-                    "valores": "pendiente, por_iniciar, en_ejecucion, en_espera, finalizada, cancelada",
+                    "valores": "reportada, por_iniciar, en_ejecucion, en_espera, finalizada, cancelada",
                 },
                 {"campo": "prioridad", "valores": "alta, media, baja"},
                 {"campo": "fecha_programada", "valores": "YYYY-MM-DD"},

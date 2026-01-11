@@ -9,7 +9,7 @@ VIDEO_EXTENSIONS = {".mp4", ".webm", ".mov", ".avi", ".mkv", ".m4v"}
 
 class WorkOrder(models.Model):
     ESTADOS = [
-        ("pendiente", "Pendiente"),
+         ("reportada", "Reportada"),
         ("por_iniciar", "Por iniciar"),
         ("en_ejecucion", "En ejecución"),
         ("en_espera", "En espera"),
@@ -30,7 +30,7 @@ class WorkOrder(models.Model):
         max_length=20, choices=ESTADOS, default="pendiente", verbose_name="Estado"
     )
     prioridad = models.CharField(
-        max_length=10, choices=PRIORIDADES, default="media", verbose_name="Prioridad"
+         max_length=20, choices=ESTADOS, default="reportada", verbose_name="Estado"
     )
     actividad = models.ForeignKey(
         "novedades.ActividadNovedad",
