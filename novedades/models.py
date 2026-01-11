@@ -72,7 +72,7 @@ class SubopcionCampo(models.Model):
 class Novedad(models.Model):
     ESTADOS = [
         ("pendiente", "Pendiente"),
-        
+        ("atendida", "Atendida"),
         ("finalizada", "Finalizada"),
     ]
     fecha = models.DateField(default=timezone.now, verbose_name="Fecha de la novedad")
