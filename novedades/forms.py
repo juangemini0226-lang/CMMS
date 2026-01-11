@@ -92,6 +92,18 @@ class NovedadForm(forms.ModelForm):
         label="Actividad",
         widget=forms.Select(attrs={"class": "form-select"}),
     )
+    tiempo_empleado_min = forms.IntegerField(
+        required=False,
+        min_value=0,
+        label="Tiempo empleado (min)",
+        widget=forms.NumberInput(
+            attrs={
+                "class": "form-control",
+                "placeholder": "Ej: 45",
+                "min": 0,
+            }
+        ),
+    )
     equipo = forms.ModelChoiceField(
         queryset=NodoActivo.objects.order_by("nombre"),
         label="Equipo o molde",

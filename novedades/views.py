@@ -18,6 +18,7 @@ from .forms import (
 )
 from .models import (
     ActividadNovedad,
+     AtencionPlantaDetalle,
     CampoHijo,
     CampoPadre,
     Novedad,
@@ -218,9 +219,14 @@ def crear_novedad(request):
         if form.is_valid() and formset.is_valid():
             novedad = form.save()
             detalles = formset.save(commit=False)
+            tiempo_empleado_min = form.cleaned_data.get("tiempo_empleado_min")
             for detalle in detalles:
                 detalle.novedad = novedad
                 detalle.save()
+                if tiempo_empleado_min is not None:
+                    AtencionPlantaDetalle.objects.filter(
+                        novedad_detalle_id=detalle.pk
+                    ).update(tiempo_empleado_min=tiempo_empleado_min)
             messages.success(request, "Novedad registrada correctamente.")
             return redirect("novedades:novedad_detalle", pk=novedad.pk)
     else:

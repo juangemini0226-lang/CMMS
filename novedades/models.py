@@ -72,7 +72,7 @@ class SubopcionCampo(models.Model):
 class Novedad(models.Model):
     ESTADOS = [
         ("pendiente", "Pendiente"),
-        ("atendida", "Atendida"),
+        
         ("finalizada", "Finalizada"),
     ]
     fecha = models.DateField(default=timezone.now, verbose_name="Fecha de la novedad")
@@ -168,6 +168,10 @@ class NovedadDetalle(models.Model):
 
 
 class AtencionPlantaDetalle(models.Model):
+    ESTADOS_ATENCION = [
+        ("pendiente", "Pendiente"),
+        ("finalizada", "Finalizada"),
+    ]
     novedad = models.ForeignKey(
         Novedad,
         on_delete=models.CASCADE,
@@ -190,6 +194,18 @@ class AtencionPlantaDetalle(models.Model):
     comentario = models.CharField(
         max_length=255, blank=True, verbose_name="Comentario o detalle"
     )
+    estado_atencion = models.CharField(
+        max_length=10,
+        choices=ESTADOS_ATENCION,
+        default="pendiente",
+        verbose_name="Estado de atención",
+    )
+    fecha_cierre = models.DateTimeField(
+        null=True, blank=True, verbose_name="Fecha de cierre"
+    )
+    tiempo_empleado_min = models.IntegerField(
+        null=True, blank=True, verbose_name="Tiempo empleado (min)"
+    )
     creado_el = models.DateTimeField(auto_now_add=True, verbose_name="Creado el")
     actualizado_el = models.DateTimeField(auto_now=True, verbose_name="Actualizado el")
 
@@ -200,3 +216,22 @@ class AtencionPlantaDetalle(models.Model):
 
     def __str__(self):
         return f"{self.novedad} - {self.campo_padre}/{self.campo_hijo}"
+
+    def save(self, *args, **kwargs):
+        if self.pk is None and self.novedad_detalle_id:
+            existente = AtencionPlantaDetalle.objects.filter(
+                novedad_detalle_id=self.novedad_detalle_id
+            ).first()
+            if existente:
+                self.pk = existente.pk
+                if not self.estado_atencion:
+                    self.estado_atencion = existente.estado_atencion
+                if self.fecha_cierre is None:
+                    self.fecha_cierre = existente.fecha_cierre
+                if self.tiempo_empleado_min is None:
+                    self.tiempo_empleado_min = existente.tiempo_empleado_min
+
+        if self.estado_atencion == "finalizada" and self.fecha_cierre is None:
+            self.fecha_cierre = timezone.now()
+
+        super().save(*args, **kwargs)

@@ -7,6 +7,7 @@ from .models import (
     Novedad,
     NovedadDetalle,
     SubopcionCampo,
+    AtencionPlantaDetalle,
 )
 
 class SubopcionCampoInline(admin.TabularInline):
@@ -54,3 +55,24 @@ class NovedadAdmin(admin.ModelAdmin):
     search_fields = ("actividad__nombre", "descripcion", "equipo__nombre", "equipo__tag")
     date_hierarchy = "fecha"
     inlines = [NovedadDetalleInline]
+
+
+@admin.register(AtencionPlantaDetalle)
+class AtencionPlantaDetalleAdmin(admin.ModelAdmin):
+    list_display = (
+        "novedad",
+        "novedad_detalle_id",
+        "fecha_novedad",
+        "equipo",
+        "estado_atencion",
+        "fecha_cierre",
+        "tiempo_empleado_min",
+    )
+    list_filter = ("estado_atencion", "fecha_novedad")
+    search_fields = (
+        "novedad__descripcion",
+        "equipo__nombre",
+        "equipo__tag",
+        "campo_padre",
+        "campo_hijo",
+    )
