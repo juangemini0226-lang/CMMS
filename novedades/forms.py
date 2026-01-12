@@ -93,6 +93,12 @@ class NovedadForm(forms.ModelForm):
         label="Actividad",
         widget=forms.Select(attrs={"class": "form-select"}),
     )
+    equipo_obligatorio_cumplimiento = forms.ModelChoiceField(
+        queryset=NodoActivo.objects.none(),
+        required=False,
+        label="Equipo obligatorio de cumplimiento",
+        widget=forms.Select(attrs={"class": "form-select"}),
+    )
     tiempo_empleado_min = forms.IntegerField(
         required=False,
         min_value=0,
@@ -106,20 +112,22 @@ class NovedadForm(forms.ModelForm):
         ),
     )
     equipo = forms.ModelChoiceField(
-        queryset=NodoActivo.objects.order_by("nombre"),
+        queryset=NodoActivo.objects.none(),
         label="Equipo o molde",
         widget=forms.Select(attrs={"class": "form-select"}),
     )
-equipo_obligatorio_cumplimiento = forms.ModelChoiceField(
-        queryset=NodoActivo.objects.filter(
-            familia__nombre__iexact="Inyectoras"
-        ).order_by("nombre"),
-        label="Equipo obligatorio de cumplimiento",
-        required=False,
-        widget=forms.Select(attrs={"class": "form-select"}),
-    )
 
-class Meta:
+    def __init__(self, *args, user=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        activos_qs = NodoActivo.objects.order_by("nombre")
+        if user:
+            activos_qs = activos_qs.for_user(user)
+        self.fields["equipo"].queryset = activos_qs
+        self.fields["equipo_obligatorio_cumplimiento"].queryset = activos_qs.filter(
+            familia__nombre__iexact="INYECTORA"
+        )
+
+    class Meta:
         model = Novedad
         fields = [
             "fecha",
@@ -142,39 +150,6 @@ class Meta:
             ),
             "estado": forms.RadioSelect(attrs={"class": "estado-radio"}),
         }
-
-@staticmethod
-def _normalizar_texto(valor: str) -> str:
-        if not valor:
-            return ""
-        return (
-            unicodedata.normalize("NFKD", valor)
-            .encode("ascii", "ignore")
-            .decode("ascii")
-            .lower()
-            .strip()
-        )
-
-def clean(self):
-        cleaned_data = super().clean()
-        actividad = cleaned_data.get("actividad")
-        tiempo_empleado = cleaned_data.get("tiempo_empleado_min")
-        equipo_cumplimiento = cleaned_data.get("equipo_obligatorio_cumplimiento")
-        actividad_normalizada = self._normalizar_texto(
-            actividad.nombre if actividad else ""
-        )
-        if actividad_normalizada == "atencion planta":
-            if tiempo_empleado in (None, ""):
-                self.add_error(
-                    "tiempo_empleado_min",
-                    "El tiempo empleado es obligatorio para Atención planta.",
-                )
-            if not equipo_cumplimiento:
-                self.add_error(
-                    "equipo_obligatorio_cumplimiento",
-                    "Selecciona el equipo obligatorio de cumplimiento para Atención planta.",
-                )
-        return cleaned_data
 
 class NovedadDetalleForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):

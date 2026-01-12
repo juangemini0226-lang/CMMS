@@ -213,7 +213,7 @@ def lista_novedades(request):
 @login_required
 def crear_novedad(request):
     if request.method == "POST":
-        form = NovedadForm(request.POST)
+        form = NovedadForm(request.POST, user=request.user)
         formset = NovedadDetalleFormSet(request.POST, request.FILES)
         if form.is_valid() and formset.is_valid():
             novedad = form.save()
@@ -229,7 +229,7 @@ def crear_novedad(request):
             messages.success(request, "Novedad registrada correctamente.")
             return redirect("novedades:novedad_detalle", pk=novedad.pk)
     else:
-        form = NovedadForm(initial={"fecha": timezone.localdate()})
+        form = NovedadForm(initial={"fecha": timezone.localdate()}, user=request.user)
         formset = NovedadDetalleFormSet()
 
     hijos_json = json.dumps(

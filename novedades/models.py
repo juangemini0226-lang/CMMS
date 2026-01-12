@@ -114,30 +114,29 @@ class Meta:
         verbose_name = "Novedad"
         verbose_name_plural = "Novedades"
         ordering = ["-fecha", "-id"]
-
 def __str__(self):
         actividad = self.actividad.nombre if self.actividad else "Sin actividad"
         return f"{self.fecha} - {actividad}"
 
 
 class ActividadNovedad(models.Model):
-    nombre = models.CharField(max_length=150, unique=True, verbose_name="Actividad")
-    activo = models.BooleanField(default=True, verbose_name="Activo")
+        nombre = models.CharField(max_length=150, unique=True, verbose_name="Actividad")
+activo = models.BooleanField(default=True, verbose_name="Activo")
 
-    @classmethod
-    def visibles_para_novedades(cls):
+@classmethod
+def visibles_para_novedades(cls):
         return (
             cls.objects.filter(activo=True)
             .filter(Q(nombre__iexact="Alistamiento") | Q(nombre__iexact="Atención planta"))
             .order_by("nombre")
         )
 
-    class Meta:
+class Meta:
         verbose_name = "Actividad de novedad"
         verbose_name_plural = "Actividades de novedades"
         ordering = ["nombre"]
 
-    def __str__(self):
+def __str__(self):
         return self.nombre
 
 class NovedadDetalle(models.Model):
