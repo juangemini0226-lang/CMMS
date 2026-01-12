@@ -70,10 +70,30 @@ class SubopcionCampo(models.Model):
         return f"{self.campo_hijo} - {self.nombre}"
 
 
+class ActividadNovedad(models.Model):
+    nombre = models.CharField(max_length=150, unique=True, verbose_name="Actividad")
+    activo = models.BooleanField(default=True, verbose_name="Activo")
+
+    @classmethod
+    def visibles_para_novedades(cls):
+        return (
+            cls.objects.filter(activo=True)
+            .filter(Q(nombre__iexact="Alistamiento") | Q(nombre__iexact="Atención planta"))
+            .order_by("nombre")
+        )
+
+    class Meta:
+        verbose_name = "Actividad de novedad"
+        verbose_name_plural = "Actividades de novedades"
+        ordering = ["nombre"]
+
+    def __str__(self):
+        return self.nombre
+
+
 class Novedad(models.Model):
     ESTADOS = [
         ("pendiente", "Pendiente"),
-        
         ("finalizada", "Finalizada"),
     ]
     fecha = models.DateField(
@@ -81,11 +101,11 @@ class Novedad(models.Model):
     )
     actividad = models.ForeignKey(
         "ActividadNovedad",
-            on_delete=models.PROTECT,
-            related_name="novedades",
-            null=True,
-            blank=True,
-            verbose_name="Actividad",
+        on_delete=models.PROTECT,
+        related_name="novedades",
+        null=True,
+        blank=True,
+        verbose_name="Actividad",
     )
     descripcion = models.TextField(blank=True, verbose_name="Descripción")
     estado = models.CharField(
@@ -119,26 +139,6 @@ class Novedad(models.Model):
         actividad = self.actividad.nombre if self.actividad else "Sin actividad"
         return f"{self.fecha} - {actividad}"
 
-
-    class ActividadNovedad(models.Model):
-        nombre = models.CharField(max_length=150, unique=True, verbose_name="Actividad")
-    activo = models.BooleanField(default=True, verbose_name="Activo")
-
-    @classmethod
-    def visibles_para_novedades(cls):
-        return (
-            cls.objects.filter(activo=True)
-            .filter(Q(nombre__iexact="Alistamiento") | Q(nombre__iexact="Atención planta"))
-            .order_by("nombre")
-        )
-
-    class Meta:
-        verbose_name = "Actividad de novedad"
-        verbose_name_plural = "Actividades de novedades"
-        ordering = ["nombre"]
-
-    def __str__(self):
-        return self.nombre
 
 class NovedadDetalle(models.Model):
     novedad = models.ForeignKey(
