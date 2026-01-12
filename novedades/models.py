@@ -101,12 +101,21 @@ class Novedad(models.Model):
         verbose_name="Equipo o molde",
     )
 
-    class Meta:
+equipo_obligatorio_cumplimiento = models.ForeignKey(
+        "activos.NodoActivo",
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="novedades_obligatorio_cumplimiento",
+        verbose_name="Equipo obligatorio de cumplimiento",
+    )
+
+class Meta:
         verbose_name = "Novedad"
         verbose_name_plural = "Novedades"
         ordering = ["-fecha", "-id"]
 
-    def __str__(self):
+def __str__(self):
         actividad = self.actividad.nombre if self.actividad else "Sin actividad"
         return f"{self.fecha} - {actividad}"
 

@@ -263,7 +263,9 @@ def crear_novedad(request):
 @login_required
 def novedad_detalle(request, pk):
     novedad = get_object_or_404(
-        Novedad.objects.select_related("equipo", "actividad").prefetch_related(
+        Novedad.objects.select_related(
+            "equipo", "actividad", "equipo_obligatorio_cumplimiento"
+        ).prefetch_related(
             Prefetch(
                 "detalles",
                 queryset=NovedadDetalle.objects.select_related(

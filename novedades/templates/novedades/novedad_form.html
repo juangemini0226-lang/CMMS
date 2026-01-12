@@ -160,6 +160,11 @@
                 {{ form.tiempo_empleado_min.label_tag }}
                 {{ form.tiempo_empleado_min }}
             </div>
+              <div id="equipo-cumplimiento-wrapper">
+                {{ form.equipo_obligatorio_cumplimiento.label_tag }}
+                {{ form.equipo_obligatorio_cumplimiento }}
+                <span class="helper-text">Disponible solo para Atención planta.</span>
+            </div>
             <div class="field-group">
                 <label for="equipo-search"><strong>Buscar equipo o molde</strong></label>
                 <input
@@ -208,6 +213,10 @@
     const subopcionesPorHijo = {};
     const equipoSearch = document.getElementById('equipo-search');
     const equipoSelect = document.getElementById('id_equipo');
+     const actividadSelect = document.getElementById('id_actividad');
+    const tiempoInput = document.getElementById('id_tiempo_empleado_min');
+    const cumplimientoWrapper = document.getElementById('equipo-cumplimiento-wrapper');
+    const cumplimientoSelect = document.getElementById('id_equipo_obligatorio_cumplimiento');
 
     const hijosData = JSON.parse('{{ hijos_json|escapejs }}');
     const subopcionesData = JSON.parse('{{ subopciones_json|escapejs }}');
@@ -297,6 +306,29 @@
     document.querySelectorAll('.detalle-row').forEach((row) => {
         wireRowEvents(row);
     });
+
+    function normalizarTexto(valor) {
+        return valor
+            ? valor.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim()
+            : '';
+    }
+
+    function actualizarRequisitosAtencionPlanta() {
+        if (!actividadSelect || !tiempoInput || !cumplimientoWrapper || !cumplimientoSelect) return;
+        const actividadTexto = actividadSelect.options[actividadSelect.selectedIndex]?.text || '';
+        const esAtencion = normalizarTexto(actividadTexto) === 'atencion planta';
+        tiempoInput.required = esAtencion;
+        cumplimientoSelect.required = esAtencion;
+        cumplimientoWrapper.style.display = esAtencion ? 'block' : 'none';
+        if (!esAtencion) {
+            cumplimientoSelect.value = '';
+        }
+    }
+
+    if (actividadSelect) {
+        actualizarRequisitosAtencionPlanta();
+        actividadSelect.addEventListener('change', actualizarRequisitosAtencionPlanta);
+    }
 
     if (equipoSearch && equipoSelect) {
         const opciones = Array.from(equipoSelect.options);

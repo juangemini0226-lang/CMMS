@@ -46,7 +46,12 @@
 <div class="page-toolbar">
     <div>
         <h1>{{ novedad.actividad|default:"Sin actividad" }}</h1>
-        <p class="text-muted">Fecha: {{ novedad.fecha }} · Equipo/Molde: {{ novedad.equipo }}</p>
+         <p class="text-muted">
+            Fecha: {{ novedad.fecha }} · Equipo/Molde: {{ novedad.equipo }}
+            {% if novedad.equipo_obligatorio_cumplimiento %}
+                · Equipo obligatorio: {{ novedad.equipo_obligatorio_cumplimiento }}
+            {% endif %}
+        </p>
     </div>
     <div class="toolbar-actions">
         <a class="back-button" href="{% url 'novedades:novedad_list' %}">← Volver al reporte</a>
