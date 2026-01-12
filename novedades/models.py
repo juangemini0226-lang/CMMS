@@ -81,11 +81,11 @@ class Novedad(models.Model):
     )
     actividad = models.ForeignKey(
         "ActividadNovedad",
-        on_delete=models.PROTECT,
-        related_name="novedades",
-        null=True,
-        blank=True,
-        verbose_name="Actividad",
+            on_delete=models.PROTECT,
+            related_name="novedades",
+            null=True,
+            blank=True,
+            verbose_name="Actividad",
     )
     descripcion = models.TextField(blank=True, verbose_name="Descripción")
     estado = models.CharField(
@@ -101,7 +101,7 @@ class Novedad(models.Model):
         verbose_name="Equipo o molde",
     )
 
-equipo_obligatorio_cumplimiento = models.ForeignKey(
+    equipo_obligatorio_cumplimiento = models.ForeignKey(
         "activos.NodoActivo",
         on_delete=models.PROTECT,
         null=True,
@@ -110,33 +110,34 @@ equipo_obligatorio_cumplimiento = models.ForeignKey(
         verbose_name="Equipo obligatorio de cumplimiento",
     )
 
-class Meta:
+    class Meta:
         verbose_name = "Novedad"
         verbose_name_plural = "Novedades"
         ordering = ["-fecha", "-id"]
-def __str__(self):
+
+    def __str__(self):
         actividad = self.actividad.nombre if self.actividad else "Sin actividad"
         return f"{self.fecha} - {actividad}"
 
 
-class ActividadNovedad(models.Model):
+    class ActividadNovedad(models.Model):
         nombre = models.CharField(max_length=150, unique=True, verbose_name="Actividad")
-activo = models.BooleanField(default=True, verbose_name="Activo")
+    activo = models.BooleanField(default=True, verbose_name="Activo")
 
-@classmethod
-def visibles_para_novedades(cls):
+    @classmethod
+    def visibles_para_novedades(cls):
         return (
             cls.objects.filter(activo=True)
             .filter(Q(nombre__iexact="Alistamiento") | Q(nombre__iexact="Atención planta"))
             .order_by("nombre")
         )
 
-class Meta:
+    class Meta:
         verbose_name = "Actividad de novedad"
         verbose_name_plural = "Actividades de novedades"
         ordering = ["nombre"]
 
-def __str__(self):
+    def __str__(self):
         return self.nombre
 
 class NovedadDetalle(models.Model):
