@@ -5,6 +5,7 @@ from .models import (
     CampoPersonalizado,
     ClaseEquipoISO14224,
     DocumentoActivo,
+    FamiliaActivo,
     NivelJerarquia,
     NodoActivo,
     Organizacion,
@@ -75,6 +76,13 @@ class CatalogoParteAdmin(admin.ModelAdmin):
 # ========================================
 # ACTIVOS
 # ========================================
+@admin.register(FamiliaActivo)
+class FamiliaActivoAdmin(admin.ModelAdmin):
+    list_display = ['nombre', 'organizacion', 'descripcion']
+    list_filter = ['organizacion']
+    search_fields = ['nombre', 'descripcion']
+    ordering = ['organizacion', 'nombre']
+
 
 class DocumentoActivoInline(admin.TabularInline):
     model = DocumentoActivo
@@ -107,7 +115,7 @@ class NodoActivoAdmin(TreeAdmin):
     
     fieldsets = (
         ('Jerarquía', {
-            'fields': ('organizacion', 'nivel_jerarquia', 'parent'),
+            'fields': ('organizacion', 'nivel_jerarquia', 'familia', 'parent'),
             'description': 'Define la ubicación del activo en la jerarquía organizacional.'
         }),
         ('Identificación', {
@@ -158,6 +166,12 @@ class NodoActivoAdmin(TreeAdmin):
                 kwargs["queryset"] = NivelJerarquia.objects.filter(
                     organizacion_id=request.GET.get('organizacion')
                 )
+        if db_field.name == "familia":
+            if request.GET.get('organizacion'):
+                kwargs["queryset"] = FamiliaActivo.objects.filter(
+                    organizacion_id=request.GET.get('organizacion')
+                )
+
         if db_field.name == "parent":
             # Solo mostrar activos de la misma organización como posibles padres
             if request.GET.get('organizacion'):
