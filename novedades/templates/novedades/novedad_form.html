@@ -42,6 +42,46 @@
         flex-direction: column;
         gap: 6px;
     }
+
+    .dropdown-results {
+        position: relative;
+    }
+    .dropdown-list {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: 10px;
+        box-shadow: 0 10px 20px rgba(0,0,0,0.08);
+        max-height: 220px;
+        overflow-y: auto;
+        z-index: 10;
+        display: none;
+    }
+    .dropdown-list.show {
+        display: block;
+    }
+    .dropdown-item {
+        padding: 10px 12px;
+        border: none;
+        background: transparent;
+        text-align: left;
+        width: 100%;
+        cursor: pointer;
+    }
+    .dropdown-item:hover,
+    .dropdown-item:focus {
+        background: #f3f4f6;
+        outline: none;
+    }
+    .dropdown-item small {
+        display: block;
+        color: #6b7280;
+        font-size: 0.8rem;
+        margin-top: 2px;
+    }
     .helper-text {
         font-size: 0.85rem;
         color: #6b7280;
@@ -165,21 +205,22 @@
                 {{ form.equipo_obligatorio_cumplimiento }}
                 <span class="helper-text">Disponible solo para Atención planta.</span>
             </div>
-            <div class="field-group">
+             <div class="field-group dropdown-results">
                 <label for="equipo-search"><strong>Buscar equipo o molde</strong></label>
                 <input
                     type="text"
                     id="equipo-search"
                     class="form-control"
-                    placeholder="Escribe para filtrar la lista"
+                    placeholder="Escribe para buscar un activo"
+                    autocomplete="off"
                 />
+                <div id="equipo-results" class="dropdown-list" aria-live="polite"></div>
                 {{ form.equipo.label_tag }}{{ form.equipo }}
-                <span class="helper-text">Usa el buscador para filtrar rápidamente por nombre.</span>
+                <span class="helper-text">Busca el activo y selecciona una coincidencia en el menú desplegable.</span>
             </div>
         </div>
         <div style="margin-top: 12px;">{{ form.descripcion.label_tag }}{{ form.descripcion }}</div>
     </div>
-
     <div class="novedades-card">
         <div class="pill">Campos padre e hijo</div>
         <p class="text-muted">Selecciona qué campo padre e hijo se usa en esta novedad y elige la subopción correspondiente. Deja en blanco los renglones que no necesites.</p>
@@ -213,7 +254,8 @@
     const subopcionesPorHijo = {};
     const equipoSearch = document.getElementById('equipo-search');
     const equipoSelect = document.getElementById('id_equipo');
-     const actividadSelect = document.getElementById('id_actividad');
+    const equipoResults = document.getElementById('equipo-results');
+    const actividadSelect = document.getElementById('id_actividad');
     const tiempoInput = document.getElementById('id_tiempo_empleado_min');
     const cumplimientoWrapper = document.getElementById('equipo-cumplimiento-wrapper');
     const cumplimientoSelect = document.getElementById('id_equipo_obligatorio_cumplimiento');
@@ -221,6 +263,7 @@
     const hijosData = JSON.parse('{{ hijos_json|escapejs }}');
     const subopcionesData = JSON.parse('{{ subopciones_json|escapejs }}');
     const equiposData = JSON.parse('{{ equipos_json|escapejs }}');
+
 
     hijosData.forEach((hijo) => {
         if (!hijosPorPadre[hijo.padre_id]) {
@@ -321,6 +364,7 @@
         tiempoInput.required = esAtencion;
         cumplimientoSelect.required = esAtencion;
         cumplimientoWrapper.style.display = esAtencion ? 'block' : 'none';
+        cumplimientoSelect.disabled = !esAtencion;
         if (!esAtencion) {
             cumplimientoSelect.value = '';
         }
@@ -331,17 +375,72 @@
         actividadSelect.addEventListener('change', actualizarRequisitosAtencionPlanta);
     }
 
-    if (equipoSearch && equipoSelect) {
-        const opciones = Array.from(equipoSelect.options);
-        equipoSearch.addEventListener('input', () => {
-            const filtro = equipoSearch.value.toLowerCase().trim();
-            opciones.forEach((option) => {
-                if (!option.value) return;
-                const familia = (equiposData[option.value] || '').toLowerCase();
-                const texto = option.textContent.toLowerCase();
-                const visible = texto.includes(filtro) || familia.includes(filtro);
-                option.hidden = !visible;
+    if (equipoSearch && equipoSelect && equipoResults) {
+        const opciones = Array.from(equipoSelect.options)
+            .filter((option) => option.value)
+            .map((option) => ({
+                id: option.value,
+                nombre: option.textContent.trim(),
+                familia: equiposData[option.value] || '',
+            }));
+
+        const selectedOption = equipoSelect.options[equipoSelect.selectedIndex];
+        if (selectedOption && selectedOption.value) {
+            equipoSearch.value = selectedOption.textContent.trim();
+        }
+
+        const limpiarResultados = () => {
+            equipoResults.innerHTML = '';
+            equipoResults.classList.remove('show');
+        };
+
+        const renderResultados = (filtro) => {
+            const texto = normalizarTexto(filtro);
+            equipoResults.innerHTML = '';
+            if (!texto) {
+                limpiarResultados();
+                return;
+            }
+            const matches = opciones.filter((option) => {
+                const nombre = normalizarTexto(option.nombre);
+                const familia = normalizarTexto(option.familia);
+                return nombre.includes(texto) || familia.includes(texto);
             });
+            if (!matches.length) {
+                const empty = document.createElement('div');
+                empty.className = 'dropdown-item';
+                empty.textContent = 'Sin coincidencias';
+                equipoResults.appendChild(empty);
+                equipoResults.classList.add('show');
+                return;
+            }
+            matches.forEach((option) => {
+                const item = document.createElement('button');
+                item.type = 'button';
+                item.className = 'dropdown-item';
+                item.dataset.id = option.id;
+                item.innerHTML = `${option.nombre}${option.familia ? `<small>${option.familia}</small>` : ''}`;
+                item.addEventListener('mousedown', (event) => {
+                    event.preventDefault();
+                    equipoSelect.value = option.id;
+                    equipoSearch.value = option.nombre;
+                    limpiarResultados();
+                });
+                equipoResults.appendChild(item);
+            });
+            equipoResults.classList.add('show');
+        };
+
+        equipoSearch.addEventListener('input', () => {
+            renderResultados(equipoSearch.value);
+        });
+
+        equipoSearch.addEventListener('focus', () => {
+            renderResultados(equipoSearch.value);
+        });
+
+        equipoSearch.addEventListener('blur', () => {
+            window.setTimeout(() => limpiarResultados(), 150);
         });
     }
 
