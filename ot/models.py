@@ -3,6 +3,8 @@ from pathlib import Path
 from django.contrib.auth import get_user_model
 from django.db import models
 from django.db.models import Max
+from django.utils import timezone
+
 
 VIDEO_EXTENSIONS = {".mp4", ".webm", ".mov", ".avi", ".mkv", ".m4v"}
 
@@ -72,6 +74,10 @@ class WorkOrder(models.Model):
     fecha_cierre_compromiso = models.DateField(
         null=True, blank=True, verbose_name="Fecha de cierre comprometida"
     )
+    fecha_cierre = models.DateField(
+        null=True, blank=True, verbose_name="Fecha de cierre"
+    )
+
 
     class Meta:
         verbose_name = "Orden de trabajo"
@@ -91,6 +97,19 @@ class WorkOrder(models.Model):
             ultimo = WorkOrder.objects.aggregate(max_consec=Max("consecutivo"))
             siguiente = (ultimo["max_consec"] or 0) + 1
             self.consecutivo = siguiente
+            update_fields = kwargs.get("update_fields")
+        if self.estado == "finalizada" and not self.fecha_cierre:
+            self.fecha_cierre = timezone.localdate()
+            if update_fields is not None:
+                update_fields = set(update_fields)
+                update_fields.add("fecha_cierre")
+                kwargs["update_fields"] = list(update_fields)
+        if self.estado != "finalizada" and self.fecha_cierre:
+            self.fecha_cierre = None
+            if update_fields is not None:
+                update_fields = set(update_fields)
+                update_fields.add("fecha_cierre")
+                kwargs["update_fields"] = list(update_fields)
         super().save(*args, **kwargs)
 
 

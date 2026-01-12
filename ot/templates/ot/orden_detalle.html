@@ -123,6 +123,10 @@
             </strong>
         </div>
         <div class="item">
+            <span>Fecha de cierre</span>
+            <strong>{% if orden.fecha_cierre %}{{ orden.fecha_cierre }}{% else %}Sin cierre{% endif %}</strong>
+        </div>
+        <div class="item">
             <span>Descripción</span>
             <p>{{ orden.descripcion|default:"Sin descripción" }}</p>
         </div>

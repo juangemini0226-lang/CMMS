@@ -5,7 +5,15 @@ from .models import WorkOrder, WorkOrderAdjunto, WorkOrderEvento, WorkOrderEvent
 
 @admin.register(WorkOrder)
 class WorkOrderAdmin(admin.ModelAdmin):
-    list_display = ("codigo", "titulo", "estado", "prioridad", "equipo", "responsable")
+    list_display = (
+        "codigo",
+        "titulo",
+        "estado",
+        "prioridad",
+        "equipo",
+        "responsable",
+        "fecha_cierre",
+    )
     list_filter = ("estado", "prioridad")
     search_fields = ("titulo", "descripcion", "consecutivo")
     readonly_fields = ("consecutivo", "fecha_creacion", "fecha_actualizacion")

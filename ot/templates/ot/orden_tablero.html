@@ -555,6 +555,7 @@
                             {% if orden.novedad_origen %}
                                 <div class="meta">Desde novedad: {{ orden.novedad_origen.titulo }}</div>
                             {% endif %}
+                            <div class="meta">Cierre: {{ orden.fecha_cierre|default:"-" }}</div>
                             <div class="acciones">
                                 <div style="display:flex; gap:10px; flex-wrap: wrap;">
                                     <a href="{% url 'ot:orden_detalle' orden.pk %}">Ver detalle</a>

@@ -35,6 +35,8 @@ def descargar_plantilla_carga_masiva(request):
         "prioridad",
         "fecha_programada",
         "fecha_cierre_compromiso",
+        "fecha_cierre",
+
     ]
     plantilla_df = pd.DataFrame(columns=columnas)
     ejemplo_df = pd.DataFrame(
@@ -50,6 +52,7 @@ def descargar_plantilla_carga_masiva(request):
                 "prioridad": "media",
                 "fecha_programada": "2025-01-15",
                 "fecha_cierre_compromiso": "2025-01-20",
+                "fecha_cierre": "2025-01-22",
             }
         ]
     )
@@ -84,6 +87,12 @@ def descargar_plantilla_carga_masiva(request):
                 "obligatorio": "No",
                 "descripcion": "Formato YYYY-MM-DD",
                 "ejemplo": "2025-01-15",
+            },
+            {
+                "campo": "fecha_cierre",
+                "obligatorio": "No",
+                "descripcion": "Formato YYYY-MM-DD",
+                "ejemplo": "2025-01-22",
             },
         ]
     )
@@ -477,6 +486,14 @@ class WorkOrderBulkUploadView(LoginRequiredMixin, FormView):
             ):
                 continue
 
+            fecha_cierre_final = None
+            fecha_cierre_final = parse_fecha(row.get("fecha_cierre"), "fecha_cierre")
+            if fecha_cierre_final is None and any(
+                msg.startswith(f"Fila {fila}: fecha inválida")
+                for msg in errores
+            ):
+                continue
+
             descripcion = clean_text(row.get("descripcion"))
 
             filas.append(
@@ -490,6 +507,7 @@ class WorkOrderBulkUploadView(LoginRequiredMixin, FormView):
                     "estado": estado,
                     "fecha_programada": fecha_programada,
                     "fecha_cierre_compromiso": fecha_cierre,
+                    "fecha_cierre": fecha_cierre_final,
                 }
             )
 
@@ -551,6 +569,7 @@ class WorkOrderBulkTemplateView(LoginRequiredMixin, View):
             "prioridad",
             "fecha_programada",
             "fecha_cierre_compromiso",
+            "fecha_cierre",
         ]
 
         plantilla_df = pd.DataFrame([{col: "" for col in columnas}])
@@ -572,6 +591,9 @@ class WorkOrderBulkTemplateView(LoginRequiredMixin, View):
             "fecha_cierre_compromiso": (
                 orden.fecha_cierre_compromiso.isoformat() if orden and orden.fecha_cierre_compromiso else ""
             ),
+             "fecha_cierre": (
+                orden.fecha_cierre.isoformat() if orden and orden.fecha_cierre else ""
+            ),
         }
 
         ejemplo_df = pd.DataFrame([ejemplo_data])
@@ -585,6 +607,7 @@ class WorkOrderBulkTemplateView(LoginRequiredMixin, View):
                 {"campo": "prioridad", "valores": "alta, media, baja"},
                 {"campo": "fecha_programada", "valores": "YYYY-MM-DD"},
                 {"campo": "fecha_cierre_compromiso", "valores": "YYYY-MM-DD"},
+                 {"campo": "fecha_cierre", "valores": "YYYY-MM-DD"},
             ]
         )
 
