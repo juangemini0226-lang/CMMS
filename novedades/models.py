@@ -179,6 +179,10 @@ class NovedadDetalle(models.Model):
 
 
 class AtencionPlantaDetalle(models.Model):
+    TIPOS_NOVEDAD = [
+        ("atencion_planta", "Atención planta"),
+        ("alistamiento", "Alistamiento"),
+    ]
     ESTADOS_ATENCION = [
         ("pendiente", "Pendiente"),
         ("finalizada", "Finalizada"),
@@ -191,6 +195,12 @@ class AtencionPlantaDetalle(models.Model):
     )
     novedad_detalle_id = models.PositiveIntegerField(unique=True, db_index=True)
     fecha_novedad = models.DateField(verbose_name="Fecha de la novedad")
+    tipo_novedad = models.CharField(
+        max_length=20,
+        choices=TIPOS_NOVEDAD,
+        default="atencion_planta",
+        verbose_name="Tipo de novedad",
+    )
     equipo = models.ForeignKey(
         "activos.NodoActivo",
         on_delete=models.PROTECT,

@@ -63,12 +63,13 @@ class AtencionPlantaDetalleAdmin(admin.ModelAdmin):
         "novedad",
         "novedad_detalle_id",
         "fecha_novedad",
+        "tipo_novedad",
         "equipo",
         "estado_atencion",
         "fecha_cierre",
         "tiempo_empleado_min",
     )
-    list_filter = ("estado_atencion", "fecha_novedad")
+    list_filter = ("tipo_novedad", "estado_atencion", "fecha_novedad")
     search_fields = (
         "novedad__descripcion",
         "equipo__nombre",

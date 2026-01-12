@@ -16,14 +16,20 @@ def _normalizar_texto(valor: str) -> str:
     return sin_tildes.lower().strip()
 
 
-def _es_atencion_planta(novedad: Novedad) -> bool:
+def _tipo_novedad(novedad: Novedad) -> str | None:
     actividad = novedad.actividad.nombre if novedad.actividad else ""
-    return _normalizar_texto(actividad) == "atencion planta"
+    actividad_normalizada = _normalizar_texto(actividad)
+    if actividad_normalizada == "atencion planta":
+        return "atencion_planta"
+    if actividad_normalizada == "alistamiento":
+        return "alistamiento"
+    return None
 
 
 def _replicar_detalle(detalle: NovedadDetalle) -> None:
     novedad = detalle.novedad
-    if not _es_atencion_planta(novedad):
+    tipo_novedad = _tipo_novedad(novedad)
+    if not tipo_novedad:
         (
             AtencionPlantaDetalle.objects.filter(novedad_detalle_id=detalle.pk)
             .delete()
@@ -36,6 +42,7 @@ def _replicar_detalle(detalle: NovedadDetalle) -> None:
         defaults={
             "novedad": novedad,
             "fecha_novedad": novedad.fecha,
+            "tipo_novedad": tipo_novedad,
             "equipo": novedad.equipo,
             "campo_padre": detalle.campo_padre.nombre,
             "campo_hijo": detalle.campo_hijo.nombre,
@@ -60,7 +67,7 @@ def sincronizar_novedad_atencion_planta(sender, instance, **kwargs):
     detalles = instance.detalles.select_related(
         "campo_padre", "campo_hijo", "subopcion"
     )
-    if not _es_atencion_planta(instance):
+    if not _tipo_novedad(instance):
         AtencionPlantaDetalle.objects.filter(novedad=instance).delete()
         return
     for detalle in detalles:
