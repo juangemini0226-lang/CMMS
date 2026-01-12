@@ -15,6 +15,7 @@ urlpatterns = [
    # Configuración de jerarquía
     path('configurar-jerarquia/', views.configurar_jerarquia, name='configurar_jerarquia'),
     path('configurar-jerarquia/datos/', views.niveles_jerarquia_datos, name='niveles_jerarquia_datos'),
+    path('hoja-vida/', views.hoja_vida_equipo, name='hoja_vida_equipo'),
     path('plantillas/', views.gestionar_plantillas, name='gestionar_plantillas'),
     path('taxonomia-iso/', views.gestionar_taxonomia_iso, name='gestionar_taxonomia_iso'),
     # Gestión de activos

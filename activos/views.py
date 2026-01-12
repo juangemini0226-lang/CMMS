@@ -21,8 +21,11 @@ from .models import (
     FamiliaActivo,
     DependenciaActivo,
 )
+from novedades.models import Novedad
+from ot.models import WorkOrder
 from .utils.manejador_excel import ImportadorExcelActivos
 import json
+
 
 from .forms import (
     SeleccionFamiliaForm,
@@ -1015,6 +1018,62 @@ def detalle_activo(request, activo_id):
     }
 
     return render(request, 'activos/detalle_activo.html', context)
+
+@login_required
+def hoja_vida_equipo(request):
+    """Consulta del histórico de novedades y OT por equipo."""
+    organizacion = Organizacion.objects.first()
+    if not organizacion:
+        messages.error(request, "Debe configurar una organización antes de consultar equipos.")
+        return redirect("activos:dashboard_activos")
+
+    equipo_id = request.GET.get("equipo") or ""
+    filtro_nivel_equipo = Q(nivel_jerarquia__es_nivel_equipo=True) | Q(
+        nivel_jerarquia__corresponde_iso_14224=5
+    ) | Q(nivel_jerarquia__numero_nivel=5)
+    equipos = (
+        NodoActivo.objects.filter(organizacion=organizacion)
+        .filter(filtro_nivel_equipo)
+        .order_by("nombre")
+    )
+
+    equipo = None
+    novedades = []
+    ordenes = []
+    documentos = []
+    if equipo_id:
+        equipo = get_object_or_404(
+            NodoActivo, id=equipo_id, organizacion=organizacion
+        )
+        novedades = (
+            Novedad.objects.filter(equipo=equipo)
+            .select_related("actividad")
+            .prefetch_related("ordenes_trabajo")
+            .order_by("-fecha", "-id")
+        )
+        ordenes = (
+            WorkOrder.objects.filter(equipo=equipo)
+            .select_related("responsable", "actividad", "novedad_origen")
+            .order_by("-fecha_creacion")
+        )
+        documentos = DocumentoActivo.objects.filter(activo=equipo).order_by("-subido_el")
+
+    return render(
+        request,
+        "activos/hoja_vida_equipo.html",
+        {
+            "equipos": equipos,
+            "equipo": equipo,
+            "equipo_filtro": equipo_id,
+            "novedades": novedades,
+            "ordenes": ordenes,
+            "documentos": documentos,
+            "total_novedades": len(novedades),
+            "total_ordenes": len(ordenes),
+            "total_documentos": len(documentos),
+        },
+    )
+
 
 @login_required
 def editar_activo(request, activo_id):

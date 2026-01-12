@@ -1,0 +1,242 @@
+{% extends 'activos/base_activos.html' %}
+
+{% block title %}Hoja de vida del equipo{% endblock %}
+
+{% block extra_css %}
+<style>
+    .hoja-vida-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+
+    .hoja-vida-card {
+        background: #fff;
+        border-radius: 12px;
+        padding: 16px;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+        border: 1px solid #eef2f7;
+    }
+
+    .hoja-vida-card h4 {
+        margin: 0 0 6px;
+        font-size: 15px;
+        color: #4c566a;
+    }
+
+    .hoja-vida-card p {
+        margin: 0;
+        font-size: 18px;
+        font-weight: 600;
+        color: #222;
+    }
+
+    .tabla-hoja-vida {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 24px;
+        background: #fff;
+        border-radius: 12px;
+        overflow: hidden;
+    }
+
+    .tabla-hoja-vida th,
+    .tabla-hoja-vida td {
+        padding: 12px 14px;
+        border-bottom: 1px solid #edf2f7;
+        text-align: left;
+        vertical-align: top;
+        font-size: 14px;
+    }
+
+    .tabla-hoja-vida th {
+        background: #f8fafc;
+        color: #485466;
+        text-transform: uppercase;
+        font-size: 12px;
+        letter-spacing: 0.04em;
+    }
+
+    .tabla-hoja-vida tr:last-child td {
+        border-bottom: none;
+    }
+
+    .info-box {
+        background: #f7f9fc;
+        border-radius: 12px;
+        padding: 16px;
+        margin-bottom: 24px;
+        border: 1px solid #e6ecf5;
+    }
+
+    .info-box h3 {
+        margin-top: 0;
+        margin-bottom: 12px;
+    }
+
+    .pill {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 999px;
+        background: #eef2f7;
+        font-size: 12px;
+        color: #455468;
+        margin-right: 6px;
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumb %}
+<div class="breadcrumb">
+    <a href="{% url 'activos:dashboard_activos' %}">Dashboard</a> /
+    Hoja de vida
+</div>
+{% endblock %}
+
+{% block content %}
+<h1>Hoja de vida del equipo</h1>
+<p class="text-muted">Filtra por equipo para consultar el histórico de novedades, OT y documentación cargada.</p>
+
+<form method="get" class="row" style="margin-bottom: 20px; gap: 12px; align-items: flex-end;">
+    <div style="flex: 1; min-width: 220px;">
+        <label for="equipo" class="form-label"><strong>Equipo</strong></label>
+        <select name="equipo" id="equipo" class="form-select">
+            <option value="">Selecciona un equipo</option>
+            {% for item in equipos %}
+                <option value="{{ item.id }}" {% if equipo_filtro|stringformat:"s" == item.id|stringformat:"s" %}selected{% endif %}>{{ item.nombre }}{% if item.tag %} · {{ item.tag }}{% endif %}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div>
+        <button type="submit" class="btn btn-primary">Ver hoja de vida</button>
+    </div>
+</form>
+
+{% if equipo %}
+    <div class="info-box">
+        <h3>{{ equipo.nombre }}</h3>
+        <div style="margin-bottom: 8px;">
+            {% if equipo.tag %}<span class="pill">TAG: {{ equipo.tag }}</span>{% endif %}
+            <span class="pill">Código: {{ equipo.codigo }}</span>
+            <span class="pill">Estado: {{ equipo.get_estado_display }}</span>
+            {% if equipo.criticidad %}<span class="pill">Criticidad: {{ equipo.get_criticidad_display }}</span>{% endif %}
+        </div>
+        {% if equipo.descripcion %}<p>{{ equipo.descripcion }}</p>{% endif %}
+        <a href="{% url 'activos:detalle_activo' equipo.id %}" class="btn btn-outline-primary btn-sm">Ver detalle del activo</a>
+    </div>
+
+    <div class="hoja-vida-grid">
+        <div class="hoja-vida-card">
+            <h4>Total de novedades</h4>
+            <p>{{ total_novedades }}</p>
+        </div>
+        <div class="hoja-vida-card">
+            <h4>Total de OT</h4>
+            <p>{{ total_ordenes }}</p>
+        </div>
+        <div class="hoja-vida-card">
+            <h4>Documentos cargados</h4>
+            <p>{{ total_documentos }}</p>
+        </div>
+    </div>
+
+    <h2>Novedades registradas</h2>
+    {% if novedades %}
+        <table class="tabla-hoja-vida">
+            <thead>
+                <tr>
+                    <th>Fecha</th>
+                    <th>Actividad</th>
+                    <th>Estado</th>
+                    <th>Descripción</th>
+                    <th>OT asociadas</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for novedad in novedades %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'novedades:novedad_detalle' novedad.id %}">{{ novedad.fecha }}</a>
+                        </td>
+                        <td>{{ novedad.actividad|default:"Sin actividad" }}</td>
+                        <td>{{ novedad.get_estado_display }}</td>
+                        <td>{{ novedad.descripcion|default:"Sin descripción" }}</td>
+                        <td>
+                            {% if novedad.ordenes_trabajo.all %}
+                                {% for orden in novedad.ordenes_trabajo.all %}
+                                    <a href="{% url 'ot:orden_detalle' orden.id %}">{{ orden.codigo }}</a>{% if not forloop.last %}, {% endif %}
+                                {% empty %}
+                                    -
+                                {% endfor %}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No hay novedades registradas para este equipo.</p>
+    {% endif %}
+
+    <h2>Órdenes de trabajo</h2>
+    {% if ordenes %}
+        <table class="tabla-hoja-vida">
+            <thead>
+                <tr>
+                    <th>Código</th>
+                    <th>Título</th>
+                    <th>Estado</th>
+                    <th>Prioridad</th>
+                    <th>Responsable</th>
+                    <th>Creada</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for orden in ordenes %}
+                    <tr>
+                        <td><a href="{% url 'ot:orden_detalle' orden.id %}">{{ orden.codigo }}</a></td>
+                        <td>{{ orden.titulo }}</td>
+                        <td>{{ orden.get_estado_display }}</td>
+                        <td>{{ orden.get_prioridad_display }}</td>
+                        <td>{{ orden.responsable|default:"Sin asignar" }}</td>
+                        <td>{{ orden.fecha_creacion|date:"Y-m-d" }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No hay órdenes de trabajo registradas para este equipo.</p>
+    {% endif %}
+
+    <h2>Documentos y adjuntos</h2>
+    {% if documentos %}
+        <table class="tabla-hoja-vida">
+            <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Tipo</th>
+                    <th>Descripción</th>
+                    <th>Subido</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for doc in documentos %}
+                    <tr>
+                        <td><a href="{{ doc.archivo.url }}" target="_blank" rel="noopener">{{ doc.nombre }}</a></td>
+                        <td>{{ doc.get_tipo_documento_display }}</td>
+                        <td>{{ doc.descripcion|default:"-" }}</td>
+                        <td>{{ doc.subido_el|date:"Y-m-d" }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No hay documentos cargados para este equipo.</p>
+    {% endif %}
+{% else %}
+    <p>Selecciona un equipo para visualizar su histórico completo.</p>
+{% endif %}
+{% endblock %}
