@@ -17,6 +17,8 @@ class TenantAwareQuerySet(models.QuerySet):
     """QuerySet con helpers para aislamiento multi-tenant."""
 
     def for_user(self, user):
+        if user and getattr(user, "is_superuser", False):
+            return self.all()
         organizacion = getattr(getattr(user, "perfil", None), "organizacion", None)
         if not organizacion:
             return self.none()
@@ -45,6 +47,8 @@ class TenantAwareTreeQuerySet(TreeQuerySet):
     """QuerySet con capacidades de árbol y filtrado multi-tenant."""
 
     def for_user(self, user):
+        if user and getattr(user, "is_superuser", False):
+            return self.all()
         organizacion = getattr(getattr(user, "perfil", None), "organizacion", None)
         if organizacion:
             return self.filter(organizacion=organizacion)
