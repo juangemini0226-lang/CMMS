@@ -44,6 +44,7 @@ def _replicar_detalle(detalle: NovedadDetalle) -> None:
             "fecha_novedad": novedad.fecha,
             "tipo_novedad": tipo_novedad,
             "equipo": novedad.equipo,
+             "equipo_obligatorio_cumplimiento": novedad.equipo_obligatorio_cumplimiento,
             "campo_padre": detalle.campo_padre.nombre,
             "campo_hijo": detalle.campo_hijo.nombre,
             "subopcion": subopcion,

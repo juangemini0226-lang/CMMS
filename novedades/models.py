@@ -216,6 +216,14 @@ class AtencionPlantaDetalle(models.Model):
         related_name="detalles_atencion_planta",
         verbose_name="Equipo o molde",
     )
+    equipo_obligatorio_cumplimiento = models.ForeignKey(
+        "activos.NodoActivo",
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="detalles_atencion_planta_obligatorio",
+        verbose_name="Equipo obligatorio de cumplimiento",
+    )
     campo_padre = models.CharField(max_length=150, verbose_name="Campo padre")
     campo_hijo = models.CharField(max_length=150, verbose_name="Campo hijo")
     subopcion = models.CharField(

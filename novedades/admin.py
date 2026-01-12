@@ -65,6 +65,7 @@ class AtencionPlantaDetalleAdmin(admin.ModelAdmin):
         "fecha_novedad",
         "tipo_novedad",
         "equipo",
+        "equipo_obligatorio_cumplimiento",
         "estado_atencion",
         "fecha_cierre",
         "tiempo_empleado_min",
