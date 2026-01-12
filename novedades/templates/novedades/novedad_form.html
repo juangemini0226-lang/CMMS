@@ -220,6 +220,7 @@
 
     const hijosData = JSON.parse('{{ hijos_json|escapejs }}');
     const subopcionesData = JSON.parse('{{ subopciones_json|escapejs }}');
+    const equiposData = JSON.parse('{{ equipos_json|escapejs }}');
 
     hijosData.forEach((hijo) => {
         if (!hijosPorPadre[hijo.padre_id]) {
@@ -336,7 +337,9 @@
             const filtro = equipoSearch.value.toLowerCase().trim();
             opciones.forEach((option) => {
                 if (!option.value) return;
-                const visible = option.textContent.toLowerCase().includes(filtro);
+                const familia = (equiposData[option.value] || '').toLowerCase();
+                const texto = option.textContent.toLowerCase();
+                const visible = texto.includes(filtro) || familia.includes(filtro);
                 option.hidden = !visible;
             });
         });

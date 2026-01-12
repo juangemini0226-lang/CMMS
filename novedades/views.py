@@ -248,6 +248,14 @@ def crear_novedad(request):
         ),
         ensure_ascii=False,
     )
+    equipos_data = {
+        str(item["id"]): item["familia__nombre"] or ""
+        for item in form.fields["equipo"].queryset.select_related("familia").values(
+            "id", "familia__nombre"
+        )
+    }
+    equipos_json = json.dumps(equipos_data, ensure_ascii=False)
+
     return render(
         request,
         "novedades/novedad_form.html",
@@ -256,6 +264,7 @@ def crear_novedad(request):
             "formset": formset,
             "hijos_json": hijos_json,
             "subopciones_json": subopciones_json,
+            "equipos_json": equipos_json,
         },
     )
 

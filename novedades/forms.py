@@ -124,7 +124,7 @@ class NovedadForm(forms.ModelForm):
             activos_qs = activos_qs.for_user(user)
         self.fields["equipo"].queryset = activos_qs
         self.fields["equipo_obligatorio_cumplimiento"].queryset = activos_qs.filter(
-            familia__nombre__iexact="INYECTORA"
+           familia__nombre__icontains="inyectora"
         )
 
     class Meta:
