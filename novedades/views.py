@@ -8,6 +8,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 
 from activos.models import NodoActivo
 from ot.models import WorkOrder
+from django.utils import timezone
 
 from .forms import (
     CampoHijoForm,
@@ -140,7 +141,7 @@ def lista_novedades(request):
         except ValueError:
             return None
 
-    filtro_desde = _parse_date(desde_param) or date.today()
+    filtro_desde = _parse_date(desde_param) or timezone.localdate()
     filtro_hasta = _parse_date(hasta_param) or filtro_desde
     if filtro_desde > filtro_hasta:
         filtro_desde, filtro_hasta = filtro_hasta, filtro_desde
@@ -184,7 +185,7 @@ def lista_novedades(request):
             novedad
         )
 
-    hoy = date.today()
+    hoy = timezone.localdate()
     novedades_hoy = Novedad.objects.filter(fecha=hoy).count()
     ots_hoy = WorkOrder.objects.filter(fecha_creacion__date=hoy).count()
     return render(
@@ -228,7 +229,7 @@ def crear_novedad(request):
             messages.success(request, "Novedad registrada correctamente.")
             return redirect("novedades:novedad_detalle", pk=novedad.pk)
     else:
-        form = NovedadForm()
+        form = NovedadForm(initial={"fecha": timezone.localdate()})
         formset = NovedadDetalleFormSet()
 
     hijos_json = json.dumps(

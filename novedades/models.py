@@ -76,7 +76,9 @@ class Novedad(models.Model):
         
         ("finalizada", "Finalizada"),
     ]
-    fecha = models.DateField(default=timezone.now, verbose_name="Fecha de la novedad")
+    fecha = models.DateField(
+        default=timezone.localdate, verbose_name="Fecha de la novedad"
+    )
     actividad = models.ForeignKey(
         "ActividadNovedad",
         on_delete=models.PROTECT,
