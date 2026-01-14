@@ -147,8 +147,11 @@ def lista_novedades(request):
         filtro_desde, filtro_hasta = filtro_hasta, filtro_desde
 
     novedades_qs = Novedad.objects.filter(fecha__range=(filtro_desde, filtro_hasta))
-    if estado:
+    estados_validos = {key for key, _ in Novedad.ESTADOS}
+    if estado and estado in estados_validos:
         novedades_qs = novedades_qs.filter(estado=estado)
+    else:
+        estado = ""
     if actividad_id:
         novedades_qs = novedades_qs.filter(actividad_id=actividad_id)
     if equipo_id:
@@ -180,10 +183,10 @@ def lista_novedades(request):
 
     estados = [{"id": key, "label": label} for key, label in Novedad.ESTADOS]
     agrupadas = {label: [] for _, label in Novedad.ESTADOS}
+    etiquetas_estado = dict(Novedad.ESTADOS)
     for novedad in novedades:
-        agrupadas[dict(Novedad.ESTADOS).get(novedad.estado, novedad.estado)].append(
-            novedad
-        )
+        etiqueta = etiquetas_estado.get(novedad.estado, "Pendiente")
+        agrupadas.setdefault(etiqueta, []).append(novedad)
 
     hoy = timezone.localdate()
     novedades_hoy = Novedad.objects.filter(fecha=hoy).count()

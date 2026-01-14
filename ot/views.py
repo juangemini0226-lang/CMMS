@@ -258,9 +258,8 @@ class WorkOrderCreateView(LoginRequiredMixin, CreateView):
             descripcion="Orden creada",
             creado_por=self.request.user,
         )
-        if self.object.novedad_origen and self.object.novedad_origen.estado == "pendiente":
-            self.object.novedad_origen.estado = "atendida"
-            self.object.novedad_origen.save(update_fields=["estado"])
+        # No cambiamos el estado de la novedad al crear la OT para evitar
+        # guardar valores obsoletos.
         messages.success(self.request, f"OT {self.object.codigo} creada exitosamente.")
         return response
 
