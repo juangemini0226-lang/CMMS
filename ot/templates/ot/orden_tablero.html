@@ -813,6 +813,14 @@
             });
         };
 
+        const applyLayout = () => {
+            const showBoard = currentLayout === 'board';
+            board.hidden = !showBoard;
+            tableView.hidden = showBoard;
+            board.style.display = showBoard ? '' : 'none';
+            tableView.style.display = showBoard ? 'none' : '';
+        };
+
         viewButtons.forEach(btn => {
             btn.addEventListener('click', () => {
                 currentView = btn.dataset.viewTarget;
@@ -825,8 +833,7 @@
             btn.addEventListener('click', () => {
                 currentLayout = btn.dataset.layout;
                 layoutButtons.forEach(el => el.classList.toggle('active', el === btn));
-                board.hidden = currentLayout !== 'board';
-                tableView.hidden = currentLayout !== 'table';
+                applyLayout();
             });
         });
 
@@ -849,6 +856,7 @@
             });
         });
 
+        applyLayout();
         applyVisibility();
     });
 </script>
