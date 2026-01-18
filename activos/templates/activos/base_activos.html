@@ -124,6 +124,16 @@
             min-height: calc(100vh - 60px);
             position: relative;
         }
+        .table-scroll{
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.table-scroll table{
+  width: 100%;
+  border-collapse: collapse;
+}
+
 
         .sidebar {
             background: linear-gradient(180deg, #fff 0%, #f8fafc 100%);
@@ -546,21 +556,44 @@
         }
 
         @media (max-width: 1080px) {
-            .app-shell {
-                grid-template-columns: 0 1fr;
-            }
-            .sidebar {
-                position: fixed;
-                left: 0;
-                top: 60px;
-                width: 280px;
-                height: calc(100vh - 60px);
-                transform: translateX(-100%);
-            }
-            .page-content {
-                padding: 24px 16px;
-            }
-        }
+  /* ✅ En móvil: una sola columna real */
+  .app-shell {
+    grid-template-columns: 1fr;
+  }
+
+  /* ✅ Si el body quedó con sidebar-hidden, igual no debe “encoger” el layout */
+  .sidebar-hidden .app-shell {
+    grid-template-columns: 1fr;
+  }
+
+  /* Sidebar como overlay */
+  .sidebar {
+    position: fixed;
+    left: 0;
+    top: 60px;
+    width: min(320px, 86vw);
+    height: calc(100vh - 60px);
+    transform: translateX(-105%);
+  }
+
+  .sidebar-open .sidebar {
+    transform: translateX(0);
+  }
+
+  /* Asegura que el contenido no se encoja */
+  .page-content {
+    width: 100%;
+    min-width: 0;
+    padding: 18px 12px;
+  }
+
+  .container {
+    max-width: none;
+    width: 100%;
+    margin: 0;
+  }
+}
+
 
         @media (max-width: 900px) {
             .app-topbar {
@@ -595,67 +628,53 @@
             }
         }
 
-        @media (max-width: 640px) {
-            .sidebar {
-                width: min(320px, 86vw);
-            }
+      @media (max-width: 640px) {
+  html, body {
+    overflow-x: hidden;
+  }
 
-            .page-content {
-                padding: 18px 12px;
-            }
+            
+  /* ✅ ISO cards: 1 columna en móvil */
+  .iso-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+  th.col-accion,
+  td.col-accion {
+    display: none;
+  }
 
-            .topbar-actions .btn {
-                width: 100%;
-                text-align: center;
-            }
+  /* ✅ El bloque "¿Falta...? + botón" deja de ser horizontal (evita overflow) */
+  .form-group[id^="contenedor-nuevo-"] > div:first-child {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
 
-            .app-topbar {
-                align-items: stretch;
-            }
+  /* ✅ Botón + Registrar opción: full width en móvil */
+  .form-group[id^="contenedor-nuevo-"] .btn {
+    width: 100% !important;
+    justify-content: center;
+  }
 
-            .topbar-left {
-                gap: 10px;
-            }
+  /* ✅ Inputs nuevos (campos-nuevo-iso) en 1 columna */
+  .campos-nuevo-iso {
+    grid-template-columns: 1fr !important;
+  }
+  /* ✅ Familias: pasar a 1 columna en móvil */
+.familias-grid{
+  grid-template-columns: 1fr !important;
+  gap: 14px !important;
+  padding: 12px !important;
+}
 
-            .brand {
-                font-size: 0.9rem;
-                line-height: 1.2;
-                white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
-            }
+/* ✅ Header: botón abajo y a full ancho si no cabe */
+.familias-header .btn{
+  width: 100%;
+  justify-content: center;
+}
 
-            .topbar-actions {
-                flex-direction: column;
-                align-items: stretch;
-            }
+}
 
-            .topbar-actions .btn {
-                width: 100%;
-                text-align: center;
-            }
-
-            .topbar-actions .chip {
-                width: 100%;
-                justify-content: center;
-            }
-
-            .card {
-                padding: 18px;
-            }
-
-            .card-header {
-                font-size: 20px;
-            }
-
-
-            table {
-                display: block;
-                width: 100%;
-                overflow-x: auto;
-                -webkit-overflow-scrolling: touch;
-            }
-        }
 
         @media (max-width: 420px) {
             .app-topbar {

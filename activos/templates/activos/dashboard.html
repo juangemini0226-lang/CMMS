@@ -241,6 +241,62 @@
         height: 1px;
         width: 1px;
     }
+    @media (max-width: 900px) {
+        .card-header {
+            flex-direction: column;
+            align-items: flex-start !important;
+        }
+        .actions {
+            flex-direction: column;
+            align-items: stretch;
+            width: 100%;
+        }
+        .actions .btn {
+            width: 100%;
+            text-align: center;
+        }
+        .panel-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        .summary-meta {
+            width: 100%;
+            justify-content: space-between;
+        }
+        .quick-nav__links {
+            flex-direction: column;
+            align-items: stretch;
+        }
+        .quick-nav__links a {
+            width: 100%;
+            text-align: left;
+        }
+    }
+    @media (max-width: 640px) {
+        .dashboard-kpis {
+            grid-template-columns: 1fr;
+        }
+        .kpi-card h3 {
+            font-size: 26px;
+        }
+        .split-grid {
+            grid-template-columns: 1fr;
+        }
+        .recent-item {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 8px;
+        }
+        .panel {
+            padding: 16px;
+        }
+        .collapsible-header {
+            padding: 16px;
+        }
+        .collapsible-body {
+            padding: 0 16px 16px;
+        }
+    }
 </style>
 <div class="card" id="resumen">
     <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">

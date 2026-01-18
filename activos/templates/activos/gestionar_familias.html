@@ -9,14 +9,17 @@
 </div>
 
 <div class="card">
-    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+    <div class="card-header familias-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+
         <span>Familias de activos{% if organizacion %} · {{ organizacion.nombre }}{% endif %}</span>
         <a href="{% url 'activos:seleccionar_familia' %}" class="btn btn-primary btn-sm">Gestionar dependencias</a>
     </div>
-    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 30px; padding: 20px;">
+    <div class="familias-grid" style="display: grid; grid-template-columns: 2fr 1fr; gap: 30px; padding: 20px;">
+
         <div>
             <h3 style="margin-bottom: 15px; color: #333;">Resumen de familias</h3>
             {% if familias %}
+            <div class="table-scroll"></div>
                 <table>
                     <thead>
                         <tr>
@@ -35,13 +38,14 @@
                                 </td>
                                 <td>{{ familia.total_activos }}</td>
                                 <td>{{ familia.total_dependencias }}</td>
-                                <td style="text-align: right;">
+                                <td class="col-accion">
                                     <a href="{% url 'activos:seleccionar_activo' familia.id %}" class="btn btn-secondary btn-sm">Ver activos</a>
                                 </td>
                             </tr>
                         {% endfor %}
                     </tbody>
                 </table>
+                </div>
             {% else %}
                 <p style="color: #999;">Todavía no hay familias registradas. Utiliza el formulario para crear la primera.</p>
             {% endif %}
