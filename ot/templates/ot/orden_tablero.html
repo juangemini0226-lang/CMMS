@@ -446,6 +446,63 @@
         padding: 8px 0;
     }
 
+    .table-view {
+        overflow-x: auto;
+    }
+
+    .tabla-ordenes {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 900px;
+    }
+
+    .tabla-ordenes th,
+    .tabla-ordenes td {
+        padding: 10px 12px;
+        border-bottom: 1px solid #e5e7eb;
+        text-align: left;
+        font-size: 0.95rem;
+    }
+
+    .tabla-ordenes th {
+        background: #f9fafb;
+        font-weight: 800;
+        color: #374151;
+        position: sticky;
+        top: 0;
+        z-index: 1;
+    }
+
+    .tabla-ordenes tbody tr:hover {
+        background: #f8fafc;
+    }
+
+    .estado-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 10px;
+        border-radius: 999px;
+        font-weight: 700;
+        font-size: 0.85rem;
+        border: 1px solid var(--estado-color, #e5e7eb);
+        color: #111827;
+        background: #fff;
+    }
+
+    .tabla-acciones {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        align-items: center;
+    }
+
+    .tabla-acciones a {
+        font-weight: 700;
+        color: #b31217;
+        text-decoration: none;
+    }
+
     @media (max-width: 900px) {
         .filter-card {
             grid-template-columns: 1fr;
@@ -625,6 +682,10 @@
                 <button type="button" class="view-pill" data-view-target="{{ estado.id }}">{{ estado.titulo }}</button>
             {% endfor %}
         </div>
+        <div class="view-switch" id="layoutSwitch">
+            <button type="button" class="view-pill active" data-layout="board">Tablero</button>
+            <button type="button" class="view-pill" data-layout="table">Tabla</button>
+        </div>
         <div class="view-switch">
             <label class="toggle"><input type="checkbox" id="toggleCompact"> Modo compacto</label>
             <label class="toggle"><input type="checkbox" id="toggleEmpty"> Ocultar vacías</label>
@@ -680,11 +741,52 @@
         </div>
         {% endfor %}
     </div>
+<div class="table-view" id="tableView" hidden>
+        <table class="tabla-ordenes">
+            <thead>
+                <tr>
+                    <th>OT</th>
+                    <th>Título</th>
+                    <th>Estado</th>
+                    <th>Prioridad</th>
+                    <th>Equipo</th>
+                    <th>Responsable</th>
+                    <th>Cierre</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for estado in estados_tablero %}
+                    {% for orden in estado.ordenes %}
+                        <tr class="table-row" data-estado="{{ estado.id }}">
+                            <td>{{ orden.codigo }}</td>
+                            <td>{{ orden.titulo }}</td>
+                            <td>
+                                <span class="estado-badge estado-{{ estado.id }}">{{ estado.icono }} {{ estado.titulo }}</span>
+                            </td>
+                            <td>{{ orden.get_prioridad_display }}</td>
+                            <td>{{ orden.equipo }}</td>
+                            <td>{{ orden.responsable|default:"-" }}</td>
+                            <td>{{ orden.fecha_cierre|default:"-" }}</td>
+                            <td>
+                                <div class="tabla-acciones">
+                                    <a href="{% url 'ot:orden_detalle' orden.pk %}">Ver detalle</a>
+                                    <a href="{% url 'ot:orden_editar' orden.pk %}">Editar</a>
+                                </div>
+                            </td>
+                        </tr>
+                    {% empty %}
+                    {% endfor %}
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 </div>
 
 <script>
     document.addEventListener('DOMContentLoaded', () => {
         const board = document.getElementById('board');
+        const tableView = document.getElementById('tableView');
         const viewButtons = document.querySelectorAll('[data-view-target]');
         const columns = document.querySelectorAll('.estado-column');
         const toggleCompact = document.getElementById('toggleCompact');
@@ -692,13 +794,22 @@
         const quickChips = document.querySelectorAll('[data-estado-chip]');
         const estadoSelect = document.querySelector('select[name="estado"]');
         const filterForm = document.getElementById('filterForm');
+        const layoutButtons = document.querySelectorAll('[data-layout]');
+        const tableRows = document.querySelectorAll('.table-row');
+        const emptyStates = new Set([...columns].filter(col => col.dataset.total === '0').map(col => col.dataset.estado));
         let currentView = 'all';
+        let currentLayout = 'board';
 
         const applyVisibility = () => {
             columns.forEach(col => {
                 const matchesView = currentView === 'all' || col.dataset.estado === currentView;
                 const hideEmpty = toggleEmpty.checked && col.dataset.total === '0';
                 col.style.display = matchesView && !hideEmpty ? '' : 'none';
+            });
+            tableRows.forEach(row => {
+                const matchesView = currentView === 'all' || row.dataset.estado === currentView;
+                const hideEmpty = toggleEmpty.checked && emptyStates.has(row.dataset.estado);
+                row.style.display = matchesView && !hideEmpty ? '' : 'none';
             });
         };
 
@@ -707,6 +818,15 @@
                 currentView = btn.dataset.viewTarget;
                 viewButtons.forEach(el => el.classList.toggle('active', el === btn));
                 applyVisibility();
+            });
+        });
+
+        layoutButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                currentLayout = btn.dataset.layout;
+                layoutButtons.forEach(el => el.classList.toggle('active', el === btn));
+                board.hidden = currentLayout !== 'board';
+                tableView.hidden = currentLayout !== 'table';
             });
         });
 
