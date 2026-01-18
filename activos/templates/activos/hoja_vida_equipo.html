@@ -97,6 +97,11 @@
 {% block content %}
 <h1>Hoja de vida del equipo</h1>
 <p class="text-muted">Filtra por equipo para consultar el histórico de novedades, OT y documentación cargada.</p>
+{% if termino_busqueda and not equipo %}
+    <p class="text-muted">
+        Buscando equipos por: <strong>{{ termino_busqueda }}</strong>. Selecciona un equipo para ver el histórico.
+    </p>
+{% endif %}
 
 <form method="get" class="row" style="margin-bottom: 20px; gap: 12px; align-items: flex-end;">
     <div style="flex: 1; min-width: 220px;">
@@ -108,9 +113,30 @@
             {% endfor %}
         </select>
     </div>
+    <div style="flex: 1; min-width: 220px;">
+        <label for="busqueda" class="form-label"><strong>Buscador</strong></label>
+        <input
+            type="text"
+            id="busqueda"
+            name="q"
+            class="form-control"
+            placeholder="Busca en novedades, OT o documentos"
+            value="{{ termino_busqueda }}"
+        />
+    </div>
     <div>
         <button type="submit" class="btn btn-primary">Ver hoja de vida</button>
     </div>
+    {% if equipo %}
+        <div>
+            <a
+                class="btn btn-outline-success"
+                href="?equipo={{ equipo.id }}{% if termino_busqueda %}&q={{ termino_busqueda|urlencode }}{% endif %}&export=1"
+            >
+                Exportar resultados
+            </a>
+        </div>
+    {% endif %}
 </form>
 
 {% if equipo %}
@@ -141,6 +167,11 @@
         </div>
     </div>
 
+    {% if termino_busqueda %}
+        <p class="text-muted">
+            Resultados filtrados por: <strong>{{ termino_busqueda }}</strong>.
+        </p>
+    {% endif %}
     <h2>Novedades registradas</h2>
     {% if novedades %}
         <table class="tabla-hoja-vida">

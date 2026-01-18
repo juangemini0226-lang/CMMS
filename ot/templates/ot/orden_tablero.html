@@ -743,7 +743,7 @@
                             <td>{{ orden.codigo }}</td>
                             <td>{{ orden.titulo }}</td>
                             <td>
-                                <span class="estado-badge estado-{{ estado.id }}">{{ estado.icono }} {{ estado.titulo }}</span>
+                                  <span class="estado-badge estado-{{ estado.id }}">{{ estado.titulo }}</span>
                             </td>
                             <td>{{ orden.get_prioridad_display }}</td>
                             <td>{{ orden.equipo.tag|default:orden.equipo.codigo|default:"-" }}</td>

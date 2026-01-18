@@ -1028,14 +1028,33 @@ def hoja_vida_equipo(request):
         return redirect("activos:dashboard_activos")
 
     equipo_id = request.GET.get("equipo") or ""
+    termino_busqueda = request.GET.get("q", "").strip()
+    exportar = request.GET.get("export") == "1"
     filtro_nivel_equipo = Q(nivel_jerarquia__es_nivel_equipo=True) | Q(
         nivel_jerarquia__corresponde_iso_14224=5
     ) | Q(nivel_jerarquia__numero_nivel=5)
-    equipos = (
-        NodoActivo.objects.filter(organizacion=organizacion)
-        .filter(filtro_nivel_equipo)
-        .order_by("nombre")
+    equipos_qs = NodoActivo.objects.filter(organizacion=organizacion).filter(
+        filtro_nivel_equipo
     )
+    equipos_sugeridos = None
+    if termino_busqueda and not equipo_id:
+        equipos_qs = equipos_qs.filter(
+            Q(nombre__icontains=termino_busqueda)
+            | Q(tag__icontains=termino_busqueda)
+            | Q(codigo__icontains=termino_busqueda)
+            | Q(descripcion__icontains=termino_busqueda)
+        )
+        equipos_sugeridos = equipos_qs
+        equipo_exacto = equipos_qs.filter(
+            Q(nombre__iexact=termino_busqueda)
+            | Q(tag__iexact=termino_busqueda)
+            | Q(codigo__iexact=termino_busqueda)
+        ).first()
+        if equipo_exacto:
+            equipo_id = str(equipo_exacto.id)
+        elif equipos_qs.count() == 1:
+            equipo_id = str(equipos_qs.first().id)
+    equipos = equipos_qs.order_by("nombre")
 
     equipo = None
     novedades = []
@@ -1057,6 +1076,107 @@ def hoja_vida_equipo(request):
             .order_by("-fecha_creacion")
         )
         documentos = DocumentoActivo.objects.filter(activo=equipo).order_by("-subido_el")
+        if termino_busqueda:
+            novedades = novedades.filter(
+                Q(actividad__nombre__icontains=termino_busqueda)
+                | Q(descripcion__icontains=termino_busqueda)
+                | Q(estado__icontains=termino_busqueda)
+            )
+            ordenes = ordenes.filter(
+                Q(titulo__icontains=termino_busqueda)
+                | Q(descripcion__icontains=termino_busqueda)
+                | Q(estado__icontains=termino_busqueda)
+                | Q(responsable__nombre__icontains=termino_busqueda)
+                | Q(responsable__user__first_name__icontains=termino_busqueda)
+                | Q(responsable__user__last_name__icontains=termino_busqueda)
+                | Q(responsable__user__username__icontains=termino_busqueda)
+            )
+            documentos = documentos.filter(
+                Q(nombre__icontains=termino_busqueda)
+                | Q(descripcion__icontains=termino_busqueda)
+                | Q(tipo_documento__icontains=termino_busqueda)
+            )
+            termino_upper = termino_busqueda.upper()
+            if termino_upper.startswith("OT-"):
+                termino_upper = termino_upper[3:]
+            if termino_upper.isdigit():
+                ordenes = ordenes.filter(consecutivo=int(termino_upper))
+
+        if exportar:
+            import csv
+            from django.utils import timezone
+
+            response = HttpResponse(content_type="text/csv")
+            fecha_exportacion = timezone.localdate().strftime("%Y%m%d")
+            response[
+                "Content-Disposition"
+            ] = f'attachment; filename="hoja_vida_{equipo.codigo}_{fecha_exportacion}.csv"'
+            writer = csv.writer(response)
+            writer.writerow(
+                [
+                    "Tipo",
+                    "Fecha",
+                    "Código",
+                    "Título/Nombre",
+                    "Estado",
+                    "Prioridad",
+                    "Responsable",
+                    "Actividad/Tipo",
+                    "Descripción",
+                    "Enlace",
+                ]
+            )
+            for novedad in novedades:
+                writer.writerow(
+                    [
+                        "Novedad",
+                        novedad.fecha.strftime("%Y-%m-%d"),
+                        "",
+                        novedad.actividad.nombre if novedad.actividad else "Sin actividad",
+                        novedad.get_estado_display(),
+                        "",
+                        "",
+                        "",
+                        novedad.descripcion or "",
+                        "",
+                    ]
+                )
+            for orden in ordenes:
+                responsable = orden.responsable.nombre_display if orden.responsable else ""
+                writer.writerow(
+                    [
+                        "OT",
+                        orden.fecha_creacion.strftime("%Y-%m-%d"),
+                        orden.codigo,
+                        orden.titulo,
+                        orden.get_estado_display(),
+                        orden.get_prioridad_display(),
+                        responsable,
+                        orden.actividad.nombre if orden.actividad else "",
+                        orden.descripcion or "",
+                        "",
+                    ]
+                )
+            for doc in documentos:
+                writer.writerow(
+                    [
+                        "Documento",
+                        doc.subido_el.strftime("%Y-%m-%d"),
+                        "",
+                        doc.nombre,
+                        "",
+                        "",
+                        doc.subido_por.get_full_name()
+                        if doc.subido_por_id and doc.subido_por.get_full_name()
+                        else doc.subido_por.username
+                        if doc.subido_por_id
+                        else "",
+                        doc.get_tipo_documento_display(),
+                        doc.descripcion or "",
+                        doc.archivo.url if doc.archivo else "",
+                    ]
+                )
+            return response
 
     return render(
         request,
@@ -1065,6 +1185,8 @@ def hoja_vida_equipo(request):
             "equipos": equipos,
             "equipo": equipo,
             "equipo_filtro": equipo_id,
+            "termino_busqueda": termino_busqueda,
+            "equipos_sugeridos": equipos_sugeridos,
             "novedades": novedades,
             "ordenes": ordenes,
             "documentos": documentos,
