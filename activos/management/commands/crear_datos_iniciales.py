@@ -44,7 +44,7 @@ class Command(BaseCommand):
             respuesta = input('¿Deseas eliminarlos y recrearlos? (s/n): ')
             
             if respuesta.lower() != 's':
-                self.stdout.write(self.style.ERROR('❌ Operación cancelada'))
+                self.stdout.write(self.style.ERROR(' Operación cancelada'))
                 return
             
             NivelJerarquia.objects.filter(organizacion=org).delete()
@@ -117,7 +117,7 @@ class Command(BaseCommand):
                 'tag': True, 
                 'prefijo': 'EQ', 
                 'formato': '{PADRE}-{PREFIJO}-{SECUENCIA}',
-                'descripcion': '⭐ NIVEL PRINCIPAL ISO 14224: Clase de equipo'
+                'descripcion': ' NIVEL PRINCIPAL ISO 14224: Clase de equipo'
             },
             
             # NIVELES 7-9: SUBDIVISIÓN DE EQUIPO
@@ -189,7 +189,7 @@ class Command(BaseCommand):
         # Resumen final
         self.stdout.write('')
         self.stdout.write(self.style.SUCCESS('╔═══════════════════════════════════════════════════════════╗'))
-        self.stdout.write(self.style.SUCCESS('║           ✅ SISTEMA INICIALIZADO EXITOSAMENTE           ║'))
+        self.stdout.write(self.style.SUCCESS('║            SISTEMA INICIALIZADO EXITOSAMENTE           ║'))
         self.stdout.write(self.style.SUCCESS('╚═══════════════════════════════════════════════════════════╝'))
         self.stdout.write('')
         self.stdout.write(self.style.SUCCESS('📌 Credenciales: admin / admin123'))

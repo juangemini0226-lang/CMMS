@@ -394,7 +394,7 @@
 
         @media (max-width: 1080px) {
   .app-shell {
-    grid-template-columns: 1fr;   /* 🔥 una sola columna real */
+    grid-template-columns: 1fr;   /*  una sola columna real */
   }
 
   .sidebar {
@@ -412,11 +412,11 @@
 
   .page-content {
     width: 100%;
-    min-width: 0; /* 🔥 evita encogimiento */
+    min-width: 0; /*  evita encogimiento */
   }
 
   .content {
-    max-width: none; /* 🔥 en móvil que use todo */
+    max-width: none; /*  en móvil que use todo */
     width: 100%;
     margin: 0;
   }
@@ -512,9 +512,9 @@
             <a href="{% url 'home' %}" class="topbar-button">Volver al inicio</a>
             {% if user.is_authenticated %}
                 {% if solo_tarjetas_tecnico %}
-                    <span class="chip chip--compact chip--mode chip--tecnico">🔧 Modo técnico</span>
+                    <span class="chip chip--compact chip--mode chip--tecnico"> Modo técnico</span>
                 {% else %}
-                    <span class="chip chip--compact chip--mode chip--admin">🛡️ Modo administrador</span>
+                    <span class="chip chip--compact chip--mode chip--admin"> Modo administrador</span>
                 {% endif %}
                 <span class="chip chip--compact">Conectado como <strong>{{ user.username }}</strong></span>
             {% endif %}
@@ -567,7 +567,7 @@
             <div class="content">
                 {% block toolbar %}
                 <div class="page-toolbar">
-                    <button type="button" class="back-button" id="back-button">⬅️ Volver</button>
+                    <button type="button" class="back-button" id="back-button">⬅ Volver</button>
                     <div class="toolbar-actions">{% block toolbar_actions %}{% endblock toolbar_actions %}</div>
                 </div>
                 {% endblock toolbar %}

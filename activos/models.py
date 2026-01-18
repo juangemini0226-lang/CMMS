@@ -300,7 +300,7 @@ class NodoActivo(TreeNode):
     creado_el = models.DateTimeField(auto_now_add=True, verbose_name="Creado el")
     actualizado_el = models.DateTimeField(auto_now=True, verbose_name="Actualizado el")
 
-    # ✅ corregido: usamos TreeQuerySet (vía TenantAwareTreeQuerySet)
+    #  corregido: usamos TreeQuerySet (vía TenantAwareTreeQuerySet)
     objects = TenantAwareTreeQuerySet.as_manager(with_tree_fields=True)
 
     class Meta:

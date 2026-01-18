@@ -3,9 +3,9 @@
 <style>
     :root {
         --reportada: #ea7c3c;
-        --por-iniciar: #3b82f6;
+        --por-iniciar: #f6ea3b;
         --en-ejecucion: #16a34a;
-        --en-espera: #d97706;
+        --en-espera: #d90606;
         --finalizada: #6366f1;
         --cancelada: #9ca3af;
     }
@@ -72,15 +72,12 @@
         gap: 12px;
     }
 
-    .resumen-icon {
-        width: 44px;
-        height: 44px;
-        display: grid;
-        place-items: center;
-        border-radius: 14px;
-        background: #f1f5f9;
-        font-size: 1.2rem;
-        color: var(--estado-color, #111827);
+    .resumen-dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 999px;
+        background: var(--estado-color, #111827);
+        box-shadow: 0 0 0 4px rgba(15, 23, 42, 0.06);
     }
 
     .resumen-title {
@@ -612,7 +609,7 @@
 <div class="resumen-grid">
     {% for estado in estados_tablero %}
     <div class="resumen-card estado-{{ estado.id }}">
-        <div class="resumen-icon estado-{{ estado.id }}">{{ estado.icono }}</div>
+        <span class="resumen-dot estado-{{ estado.id }}"></span>
         <div>
             <div class="resumen-title">{{ estado.titulo }}</div>
             <p class="resumen-desc">{{ estado.descripcion }}</p>
@@ -679,7 +676,7 @@
         <div class="estado-column" data-estado="{{ estado.id }}" data-total="{{ estado.total }}">
             <div class="col-head">
                 <div>
-                    <div class="col-title">{{ estado.icono }} {{ estado.titulo }}</div>
+                    <div class="col-title">{{ estado.titulo }}</div>
                     <div class="col-meta">{{ estado.descripcion }}</div>
                 </div>
                  <span class="pill pill-count estado-{{ estado.id }}">{{ estado.total }}</span>
@@ -907,7 +904,8 @@
                     .map(row => row.map(escapeCsv).join(','))
                     .join('\n');
 
-                const blob = new Blob([csvRows], { type: 'text/csv;charset=utf-8;' });
+                const csvContent = `\ufeff${csvRows}`;
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
                 const link = document.createElement('a');
                 const url = URL.createObjectURL(blob);
                 link.setAttribute('href', url);

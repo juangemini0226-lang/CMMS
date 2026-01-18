@@ -226,7 +226,7 @@
 
     @media (max-width: 640px) {
   .home-shell {
-    max-width: none;   /* 🔥 importante en mobile */
+    max-width: none;   /*  importante en mobile */
     padding: 8px;      /* menos aire */
   }
 
@@ -286,17 +286,17 @@
                 {% if solo_tarjetas_tecnico %}
                     <p>Acceso simplificado para que gestiones tus órdenes y novedades sin distracciones.</p>
                     <div class="mini-meta">
-                        <span class="role-pill">🔧 Técnico</span>
-                        <span class="mini-chip">👤 {{ user.username }}</span>
+                        <span class="role-pill"> Técnico</span>
+                        <span class="mini-chip"> {{ user.username }}</span>
                         {% if tecnico_en_sesion %}
-                            <span class="mini-chip">📍 {{ tecnico_en_sesion.especialidad }}</span>
+                            <span class="mini-chip"> {{ tecnico_en_sesion.especialidad }}</span>
                         {% endif %}
                     </div>
                 {% else %}
                     <p>Plataforma de gestión integral de mantenimiento y activos.</p>
                     <p class="meta">Estás autenticado como <strong>{{ user.username }}</strong></p>
                     <div class="mini-meta">
-                        <span class="role-pill admin">🛡️ Administrador</span>
+                        <span class="role-pill admin"> Administrador</span>
                         <span class="mini-chip">👤 {{ user.username }}</span>
                     </div>
                 {% endif %}
@@ -307,14 +307,14 @@
         <div class="cta-stack">
            {% if user.is_authenticated %}
                 {% if solo_tarjetas_tecnico %}
-                    <a class="pill-cta secondary" href="{% url 'panel_tecnico' %}">🧰 Ir a mis órdenes</a>
-                    <a class="pill-cta" href="{% url 'novedades:novedad_list' %}">🗒️ Ver novedades</a>
+                    <a class="pill-cta secondary" href="{% url 'panel_tecnico' %}"> Ir a mis órdenes</a>
+                    <a class="pill-cta" href="{% url 'novedades:novedad_list' %}"> Ver novedades</a>
                 {% else %}
-                    <a class="pill-cta secondary" href="{% url 'activos:dashboard_activos' %}">📦 Ver activos</a>
-                    <a class="pill-cta" href="{% url 'ot:orden_list' %}">🛠️ Órdenes de trabajo</a>
+                    <a class="pill-cta secondary" href="{% url 'activos:dashboard_activos' %}"> Ver activos</a>
+                    <a class="pill-cta" href="{% url 'ot:orden_list' %}"> Órdenes de trabajo</a>
                 {% endif %}
             {% else %}
-                <a class="pill-cta" href="{% url 'login' %}">🔐 Iniciar sesión</a>
+                <a class="pill-cta" href="{% url 'login' %}"> Iniciar sesión</a>
             {% endif %}
         </div>
     </section>
@@ -334,47 +334,47 @@
         <div class="cards">
             {% if solo_tarjetas_tecnico %}
                 <a class="card" href="{% url 'panel_tecnico' %}">
-                    <h3>🧰 Órdenes asignadas</h3>
+                    <h3> Órdenes asignadas</h3>
                     <p>Revisa tus OT pendientes y activas en una vista exclusiva.</p>
                     <span class="tag">Técnicos</span>
                 </a>
                 <a class="card" href="{% url 'novedades:novedad_list' %}">
-                    <h3>🗒️ Novedades</h3>
+                    <h3> Novedades</h3>
                     <p>Accede a las novedades registradas y mantente informado.</p>
                     <span class="tag">Comunicación</span>
                 </a>
             {% else %}
                 <a class="card" href="{% url 'activos:dashboard_activos' %}">
-                    <h3>📦 Gestión de Activos</h3>
+                    <h3> Gestión de Activos</h3>
                     <p>Visualiza activos, familias y estados en un panel centrado.</p>
                     <span class="tag">Inventario</span>
                 </a>
                 {% if tecnico_actual %}
                 <a class="card" href="{% url 'panel_tecnico' %}">
-                    <h3>🧰 Panel de técnico</h3>
+                    <h3> Panel de técnico</h3>
                     <p>Acceso directo a novedades y órdenes asignadas solo para tu perfil.</p>
                     <span class="tag">Técnicos</span>
                 </a>
                 {% endif %}
                 <a class="card" href="{% url 'personal:tecnico_list' %}">
-                    <h3>👷 Gestión de Personal</h3>
+                    <h3> Gestión de Personal</h3>
                     <p>Revisa técnicos, roles y asignaciones de manera ordenada.</p>
                     <span class="tag">Equipo</span>
                 </a>
                 
                 <a class="card" href="{% url 'ot:orden_list' %}">
-                    <h3>🛠️ Órdenes de trabajo</h3>
+                    <h3> Órdenes de trabajo</h3>
                     <p>Consulta y gestiona las órdenes sin perder trazabilidad.</p>
                     <span class="tag">OT</span>
                 </a>
                 <a class="card" href="{% url 'novedades:novedad_list' %}">
-                    <h3>🗒️ Novedades</h3>
+                    <h3> Novedades</h3>
                     <p>Revisa novedades registradas y mantén al equipo informado.</p>
                     <span class="tag">Comunicación</span>
                 </a>
                 {% if user.is_staff %}
                 <a class="card" href="{% url 'admin:index' %}">
-                    <h3>⚙️ Administración</h3>
+                    <h3> Administración</h3>
                     <p>Configura la plataforma y gestiona permisos con control.</p>
                     <span class="tag">Administrar</span>
                 </a>
@@ -383,7 +383,7 @@
         </div>
     </section>
     {% else %}
-        <a class="pill-cta" href="{% url 'login' %}">🔐 Iniciar sesión</a>
+        <a class="pill-cta" href="{% url 'login' %}"> Iniciar sesión</a>
     {% endif %}
 </div>
 {% endblock %}
