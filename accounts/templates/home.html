@@ -7,6 +7,7 @@
     .home-shell {
         display: grid;
         gap: 24px;
+        width: 200%;
     }
 
      .home-hero {
@@ -76,11 +77,12 @@
         gap: 10px;
         border-radius: 14px;
         border: 1px solid #e5e7eb;
-        padding: 12px 16px;
+        padding: 14px 18px;
         background: #ffffff;
         text-decoration: none;
         color: #1f2937;
         font-weight: 600;
+        font-size: 1rem;
         transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
 
@@ -210,79 +212,7 @@
         box-shadow: 0 4px 12px rgba(0,0,0,0.06);
     }
 
-    @media (max-width: 720px) {
-        .home-shell {
-            gap: 20px;
-            justify-items: center;
-        }
-
-        .home-hero {
-            padding: 20px;
-            flex-direction: column;
-            align-items: stretch;
-            text-align: center;
-            width: 100%;
-        }
-
-        .home-hero h1 {
-            font-size: 1.6rem;
-        }
-
-        .home-hero p {
-            font-size: 0.98rem;
-        }
-
-        .cta-stack {
-            width: 100%;
-            justify-items: center;
-        }
-
-        .pill-cta {
-            width: 100%;
-            justify-content: center;
-        }
-
-        .section-header {
-            flex-direction: column;
-            align-items: center;
-            text-align: center;
-            gap: 6px;
-        }
-
-        .cards {
-            grid-template-columns: 1fr;
-            justify-items: center;
-            width: 100%;
-        }
-
-        .card {
-            width: 100%;
-        }
-
-        .mini-meta,
-        .meta {
-            justify-content: center;
-        }
-    }
-
-    @media (max-width: 480px) {
-        .home-hero {
-            padding: 18px;
-            border-radius: 16px;
-        }
-
-        .home-hero h1 {
-            font-size: 1.45rem;
-        }
-
-        .card {
-            padding: 16px 14px;
-        }
-
-        .card h3 {
-            font-size: 1rem;
-        }
-    }
+     
 </style>
 {% endblock %}
 
