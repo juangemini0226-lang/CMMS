@@ -9,12 +9,12 @@
         gap: 24px;
     }
 
-    .home-hero {
-        background: linear-gradient(135deg, #ffffff 0%, #f7f8fa 60%, #f3f5f9 100%);
+     .home-hero {
+        background: #f8fafc;
         border: 1px solid #e5e7eb;
         padding: 32px;
         border-radius: 18px;
-        box-shadow: 0 18px 40px rgba(0, 0, 0, 0.06);
+        box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
         display: flex;
         justify-content: space-between;
         gap: 28px;
@@ -23,21 +23,21 @@
 
 
     .home-hero.tecnico-hero {
-        background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 60%, #eef2ff 100%);
-        border-color: #c7d2fe;
-        box-shadow: 0 18px 40px rgba(49, 46, 129, 0.12);
+        background: #f1f5f9;
+        border-color: #e2e8f0;
+        box-shadow: 0 12px 26px rgba(15, 23, 42, 0.06);
     }
 
     .home-hero.admin-hero {
-        background: linear-gradient(135deg, #fff7ed 0%, #fffbeb 60%, #fef3c7 100%);
-        border-color: #fcd34d;
-        box-shadow: 0 18px 40px rgba(180, 83, 9, 0.12);
+        background: #f8fafc;
+        border-color: #e2e8f0;
+        box-shadow: 0 12px 26px rgba(15, 23, 42, 0.06);
     }
 
 
     .home-hero h1 {
         font-size: 1.85rem;
-        color: #b31217;
+        color: #111827;
         margin-bottom: 8px;
         letter-spacing: 0.01em;
     }
@@ -86,9 +86,9 @@
 
 
      .pill-cta.secondary {
-        background: #0f172a;
+        background: #111827;
         color: #fff;
-        border-color: #0f172a;
+        border-color: #111827;
     }
 
     .pill-cta:hover {
@@ -121,8 +121,8 @@
 
     .card:hover {
         transform: translateY(-3px);
-        box-shadow: 0 18px 32px rgba(0, 0, 0, 0.08);
-        border-color: rgba(179, 18, 23, 0.35);
+        box-shadow: 0 18px 32px rgba(15, 23, 42, 0.08);
+        border-color: rgba(15, 23, 42, 0.2);
     }
 
     .card h3 {
@@ -148,9 +148,9 @@
         border-radius: 10px;
         font-size: 0.85rem;
         font-weight: 600;
-        color: #b31217;
-        background: rgba(179, 18, 23, 0.08);
-        border: 1px solid rgba(179, 18, 23, 0.18);
+         color: #334155;
+        background: #f1f5f9;
+        border: 1px solid #e2e8f0;
         width: fit-content;
     }
 
@@ -175,15 +175,15 @@
         padding: 8px 12px;
         border-radius: 999px;
         font-weight: 700;
-        border: 1px solid #c7d2fe;
+         border: 1px solid #cbd5f5;
         background: #eef2ff;
-        color: #312e81;
+        color: #1f2937;
     }
 
     .role-pill.admin {
-        border-color: #fcd34d;
-        background: #fef9c3;
-        color: #92400e;
+        border-color: #e2e8f0;
+        background: #f8fafc;
+        color: #1f2937;
     }
 
     .mini-meta {
@@ -232,7 +232,7 @@
             <h1>{% if solo_tarjetas_tecnico %}Herramientas del técnico{% else %}Bienvenido a Gestión de Activos{% endif %}</h1>
             {% if user.is_authenticated %}
                 {% if solo_tarjetas_tecnico %}
-                    <p>Acceso simplificado para que gestiones tus órdenes y reportes sin distracciones.</p>
+                    <p>Acceso simplificado para que gestiones tus órdenes y novedades sin distracciones.</p>
                     <div class="mini-meta">
                         <span class="role-pill">🔧 Técnico</span>
                         <span class="mini-chip">👤 {{ user.username }}</span>
@@ -258,8 +258,8 @@
                     <a class="pill-cta secondary" href="{% url 'panel_tecnico' %}">🧰 Ir a mis órdenes</a>
                     <a class="pill-cta" href="{% url 'novedades:novedad_list' %}">🗒️ Ver novedades</a>
                 {% else %}
-                    <a class="pill-cta" href="{% url 'reportes:seleccionar_reporte' %}">📊 Ir a reportes</a>
-                    <a class="pill-cta" href="{% url 'reportes:carga_interactiva' %}">⬆️ Subir datos</a>
+                    <a class="pill-cta secondary" href="{% url 'activos:dashboard_activos' %}">📦 Ver activos</a>
+                    <a class="pill-cta" href="{% url 'ot:orden_list' %}">🛠️ Órdenes de trabajo</a>
                 {% endif %}
             {% else %}
                 <a class="pill-cta" href="{% url 'login' %}">🔐 Iniciar sesión</a>
@@ -309,11 +309,7 @@
                     <p>Revisa técnicos, roles y asignaciones de manera ordenada.</p>
                     <span class="tag">Equipo</span>
                 </a>
-                <a class="card" href="{% url 'reportes:carga_interactiva' %}">
-                    <h3>📁 Cargar reportes y órdenes</h3>
-                    <p>Integra nueva información y mantén actualizada la operación.</p>
-                    <span class="tag">Carga</span>
-                </a>
+                
                 <a class="card" href="{% url 'ot:orden_list' %}">
                     <h3>🛠️ Órdenes de trabajo</h3>
                     <p>Consulta y gestiona las órdenes sin perder trazabilidad.</p>

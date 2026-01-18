@@ -144,7 +144,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "accounts",
     "activos",
-    "reportes",
+    
     "personal",
     
     "novedades",

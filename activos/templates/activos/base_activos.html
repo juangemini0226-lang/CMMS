@@ -719,8 +719,6 @@
                 <a href="{% url 'activos:gestionar_plantillas' %}" class="sidebar-link">Plantillas</a>
                 <a href="{% url 'activos:importar_excel' %}" class="sidebar-link">Importar</a>
                 <a href="{% url 'personal:tecnico_list' %}" class="sidebar-link {% if request.path|slice:':9' == '/personal' %}active{% endif %}">Personal</a>
-                <a href="{% url 'reportes:seleccionar_reporte' %}" class="sidebar-link {% if '/reportes/seleccionar' in request.path %}active{% endif %}">Reportes</a>
-                <a href="{% url 'reportes:carga_interactiva' %}" class="sidebar-link {% if '/reportes/cargas' in request.path %}active{% endif %}">Cargas</a>
                 <a href="{% url 'novedades:novedad_list' %}" class="sidebar-link {% if request.path|slice:':10' == '/novedades' %}active{% endif %}">Novedades</a>
                 <a href="{% url 'ot:orden_list' %}" class="sidebar-link {% if request.path|slice:':4' == '/ot/' or request.path == '/ot' %}active{% endif %}">Órdenes de trabajo</a>
                 {% if user.is_staff %}
