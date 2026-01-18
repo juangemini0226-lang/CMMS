@@ -393,21 +393,35 @@
         }
 
         @media (max-width: 1080px) {
-            .app-shell {
-                grid-template-columns: 0 1fr;
-            }
-            .sidebar {
-                position: fixed;
-                left: 0;
-                top: 60px;
-                width: 280px;
-                height: calc(100vh - 60px);
-                transform: translateX(-100%);
-            }
-            .page-content {
-                padding: 24px 16px;
-            }
-        }
+  .app-shell {
+    grid-template-columns: 1fr;   /* 🔥 una sola columna real */
+  }
+
+  .sidebar {
+    position: fixed;
+    left: 0;
+    top: 60px;
+    width: min(320px, 86vw);
+    height: calc(100vh - 60px);
+    transform: translateX(-105%);
+  }
+
+  .sidebar-open .sidebar {
+    transform: translateX(0);
+  }
+
+  .page-content {
+    width: 100%;
+    min-width: 0; /* 🔥 evita encogimiento */
+  }
+
+  .content {
+    max-width: none; /* 🔥 en móvil que use todo */
+    width: 100%;
+    margin: 0;
+  }
+}
+
 
         @media (max-width: 900px) {
             .app-topbar {
@@ -443,20 +457,9 @@
         }
 
         @media (max-width: 640px) {
-            .sidebar {
-                width: min(320px, 86vw);
-            }
+  .page-content { padding: 12px 8px; }
+  .content { padding: 0; }
 
-            .page-content {
-                padding: 16px 10px;
-            }
-
-            .content {
-                max-width: none;
-                width: 100%;
-                margin: 0;
-                padding: 0 4px 24px;
-            }
 
             .back-button,
             .toolbar-actions > a,

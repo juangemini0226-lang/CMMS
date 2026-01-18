@@ -5,10 +5,22 @@
 {% block extra_head %}
 <style>
     .home-shell {
-        display: grid;
-        gap: 24px;
-        width: 200%;
-    }
+  display: grid;
+  gap: 24px;
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 16px;
+  box-sizing: border-box;
+
+  justify-items: stretch; /* 🔥 clave: evita que el contenido se "encoga" */
+}
+.home-shell > section { 
+  width: 100%;           /* 🔥 cada section ocupa el ancho */
+}
+.home-hero {
+  width: 100%;           /* 🔥 el hero siempre full width */
+}
 
      .home-hero {
         background: #f8fafc;
@@ -211,6 +223,48 @@
         gap: 8px;
         box-shadow: 0 4px 12px rgba(0,0,0,0.06);
     }
+
+    @media (max-width: 640px) {
+  .home-shell {
+    max-width: none;   /* 🔥 importante en mobile */
+    padding: 8px;      /* menos aire */
+  }
+
+  .home-hero {
+    width: 100%;
+    padding: 16px;
+  }
+
+
+  .cta-stack {
+    width: 100%;
+  }
+
+  .pill-cta {
+    width: 100%;
+    justify-content: center;
+    padding: 14px 16px;
+  }
+
+  .home-hero h1 {
+    font-size: 1.35rem;
+    line-height: 1.2;
+  }
+
+  .cards {
+    grid-template-columns: 1fr;
+  }
+
+  .mini-meta {
+    gap: 8px;
+  }
+
+  .mini-chip, .role-pill {
+    padding: 6px 10px;
+    font-size: 0.9rem;
+  }
+}
+
 
      
 </style>
