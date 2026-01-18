@@ -2,10 +2,10 @@
 {% block content %}
 <style>
     :root {
-        --reportada: #f97316;
-        --por-iniciar: #0ea5e9;
-        --en-ejecucion: #22c55e;
-        --en-espera: #eab308;
+        --reportada: #ea7c3c;
+        --por-iniciar: #3b82f6;
+        --en-ejecucion: #16a34a;
+        --en-espera: #d97706;
         --finalizada: #6366f1;
         --cancelada: #9ca3af;
     }
@@ -18,16 +18,16 @@
     .estado-cancelada { --estado-color: var(--cancelada); }
 
     .page-hero {
-        background: linear-gradient(135deg, #fff2f2, #fff9f0);
-        border: 1px solid #ffe0dc;
-        border-radius: 18px;
-        padding: 20px 24px;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 18px 20px;
         display: flex;
         align-items: center;
         justify-content: space-between;
         gap: 16px;
         margin-bottom: 18px;
-        box-shadow: 0 10px 30px rgba(229, 45, 39, 0.08);
+        box-shadow: 0 8px 18px rgba(15, 23, 42, 0.05);
     }
 
     .page-hero h1 {
@@ -45,12 +45,12 @@
     }
 
     .hero-badge {
-        background: #fff;
-        border: 1px dashed #f59e0b;
-        color: #b45309;
-        padding: 8px 12px;
-        border-radius: 14px;
-        font-weight: 600;
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        color: #475569;
+        padding: 6px 12px;
+        border-radius: 999px;
+        font-weight: 700;
     }
 
     .resumen-grid {
@@ -64,8 +64,8 @@
         background: #fff;
         border-radius: 16px;
         padding: 14px;
-        border: 1px solid #e5e7eb;
-        box-shadow: 0 8px 20px rgba(0,0,0,0.04);
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 8px 18px rgba(15, 23, 42, 0.04);
         display: grid;
         grid-template-columns: auto 1fr auto;
         align-items: center;
@@ -78,7 +78,7 @@
         display: grid;
         place-items: center;
         border-radius: 14px;
-        background: #f8fafc;
+        background: #f1f5f9;
         font-size: 1.2rem;
         color: var(--estado-color, #111827);
     }
@@ -99,17 +99,17 @@
         font-weight: 700;
         color: #0f172a;
         background: #fff;
-        border: 1px solid var(--estado-color, #e5e7eb);
+        border: 1px solid #e2e8f0;
         min-width: 48px;
         text-align: center;
     }
 
     .filter-card {
         background: #fff;
-        border: 1px solid #e5e7eb;
+        border: 1px solid #e2e8f0;
         border-radius: 16px;
         padding: 14px;
-        box-shadow: 0 10px 20px rgba(0,0,0,0.04);
+        box-shadow: 0 10px 20px rgba(15, 23, 42, 0.04);
         margin-bottom: 18px;
         display: grid;
         grid-template-columns: 2fr 1fr;
@@ -131,8 +131,8 @@
     .filter-card select {
         padding: 11px 12px;
         border-radius: 12px;
-        border: 1px solid #d1d5db;
-        background: #f9fafb;
+        border: 1px solid #e2e8f0;
+        background: #f8fafc;
         font-size: 0.95rem;
     }
 
@@ -149,8 +149,8 @@
     }
 
     .chip {
-        border: 1px solid #e5e7eb;
-        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        background: #f1f5f9;
         color: #111827;
         padding: 6px 12px;
         border-radius: 999px;
@@ -163,9 +163,9 @@
     }
 
     .chip[data-active="true"] {
-        background: #111827;
+        background: #0f172a;
         color: #fff;
-        border-color: #111827;
+        border-color: #0f172a;
     }
 
     .chip .dot {
@@ -185,8 +185,8 @@
     }
 
     .secondary-btn {
-        border: 1px solid #e5e7eb;
-        background: #fff;
+        border: 1px solid #e2e8f0;
+        background: #f8fafc;
         padding: 9px 14px;
         border-radius: 12px;
         font-weight: 700;
@@ -196,22 +196,22 @@
 
     .primary-btn {
         border: none;
-        background: linear-gradient(135deg, #e52d27 0%, #b31217 100%);
+        background: #b31217;
         color: white;
         padding: 10px 16px;
         border-radius: 12px;
         font-weight: 700;
         cursor: pointer;
-        box-shadow: 0 8px 18px rgba(179, 18, 23, 0.25);
+        box-shadow: 0 8px 16px rgba(179, 18, 23, 0.2);
     }
 
     .novedades-panel {
-        background: linear-gradient(135deg, #fff7ed, #fff);
-        border: 1px solid #fed7aa;
+        background: #fff7ed;
+        border: 1px solid #fdba74;
         border-radius: 16px;
         padding: 14px;
         margin-bottom: 16px;
-        box-shadow: 0 8px 16px rgba(0,0,0,0.04);
+        box-shadow: 0 8px 16px rgba(15, 23, 42, 0.03);
     }
 
     .novedades-panel h3 {
@@ -250,8 +250,8 @@
     .board-wrapper {
         background: #fff;
         border-radius: 18px;
-        border: 1px solid #e5e7eb;
-        box-shadow: 0 12px 28px rgba(0,0,0,0.05);
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 12px 28px rgba(15, 23, 42, 0.05);
         padding: 14px;
     }
 
@@ -272,8 +272,8 @@
 
     .view-pill {
         padding: 8px 12px;
-        background: #f8fafc;
-        border: 1px solid #e5e7eb;
+        background: #f1f5f9;
+        border: 1px solid #e2e8f0;
         color: #111827;
         border-radius: 12px;
         font-weight: 700;
@@ -281,9 +281,9 @@
     }
 
     .view-pill.active {
-        background: #111827;
+        background: #0f172a;
         color: #fff;
-        border-color: #111827;
+        border-color: #0f172a;
     }
 
     .toggle {
@@ -305,8 +305,8 @@
     }
 
     .estado-column {
-        background: #f9fafb;
-        border: 1px solid #e5e7eb;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
         border-radius: 16px;
         padding: 12px;
         display: flex;
@@ -345,9 +345,9 @@
     }
 
     .pill-count {
-        background-color: var(--estado-color, #e5e7eb);
+        background-color: #f1f5f9;
         color: #111827;
-        border: 1px solid var(--estado-color, #e5e7eb);
+        border: 1px solid #e2e8f0;
     }
 
     .column-cards {
@@ -369,10 +369,10 @@
 
     .card {
         background: #fff;
-        border: 1px solid #e5e7eb;
+        border: 1px solid #e2e8f0;
         border-radius: 14px;
         padding: 12px;
-        box-shadow: 0 6px 14px rgba(0,0,0,0.04);
+        box-shadow: 0 6px 14px rgba(15, 23, 42, 0.04);
     }
 
     .card-header {
@@ -417,7 +417,7 @@
     .acciones a {
         text-decoration: none;
         font-weight: 700;
-        color: #b31217;
+        color: #9f1239;
     }
 
     .acciones form {
@@ -429,11 +429,11 @@
     .acciones select, .acciones button {
         padding: 6px 10px;
         border-radius: 10px;
-        border: 1px solid #d1d5db;
+        border: 1px solid #e2e8f0;
     }
 
     .acciones button {
-        background: linear-gradient(135deg, #e52d27, #b31217);
+        background: #b31217;
         color: white;
         border: none;
         cursor: pointer;
@@ -459,13 +459,13 @@
     .tabla-ordenes th,
     .tabla-ordenes td {
         padding: 10px 12px;
-        border-bottom: 1px solid #e5e7eb;
+        border-bottom: 1px solid #e2e8f0;
         text-align: left;
         font-size: 0.95rem;
     }
 
     .tabla-ordenes th {
-        background: #f9fafb;
+        background: #f8fafc;
         font-weight: 800;
         color: #374151;
         position: sticky;
@@ -474,7 +474,7 @@
     }
 
     .tabla-ordenes tbody tr:hover {
-        background: #f8fafc;
+        background: #f1f5f9;
     }
 
     .estado-badge {
@@ -485,7 +485,7 @@
         border-radius: 999px;
         font-weight: 700;
         font-size: 0.85rem;
-        border: 1px solid var(--estado-color, #e5e7eb);
+        border: 1px solid #e2e8f0;
         color: #111827;
         background: #fff;
     }
@@ -499,8 +499,33 @@
 
     .tabla-acciones a {
         font-weight: 700;
-        color: #b31217;
+        color: #9f1239;
         text-decoration: none;
+    }
+
+    .toolbar-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .ghost-btn {
+        border: 1px solid #e2e8f0;
+        background: #fff;
+        padding: 8px 12px;
+        border-radius: 10px;
+        font-weight: 700;
+        color: #0f172a;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .ghost-btn:hover {
+        border-color: #cbd5f5;
+        box-shadow: 0 6px 14px rgba(15, 23, 42, 0.08);
     }
 
     @media (max-width: 900px) {
@@ -509,60 +534,15 @@
         }
     }
 
-    .page-hero{
-  background: #fff;
-  border: 1px solid #e5e7eb;
-  border-radius: 16px;
-  padding: 18px 18px;
-  display:flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 14px;
-}
-
-.page-hero h1{
-  margin:0;
-  font-size: 1.35rem;
-  letter-spacing: -0.2px;
-  color:#111827;
-}
-
-.page-hero .meta{
-  margin-top: 6px;
-  color:#6b7280;
-  font-weight: 600;
-  line-height: 1.4;
-}
-
-.hero-actions{
-  display:flex;
-  gap:10px;
-  flex-wrap: wrap;         /* ✅ no se montan */
-  justify-content: flex-end;
-  align-items: center;
-}
-
-.hero-badge{
-  display:inline-flex;
-  align-items:center;
-  padding: 8px 12px;
-  border-radius: 999px;
-  font-weight: 800;
-  font-size: .85rem;
-  border: 1px solid #e5e7eb;
-  background: #f9fafb;
-  color:#6b7280;
-}
-
-.btn-hero{
+    .btn-hero{
   display:inline-flex;
   align-items:center;
   justify-content:center;
   gap: 8px;
   padding: 10px 12px;
   border-radius: 999px;
-  border: 1px solid #e5e7eb;
-  background: #fff;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
   color:#111827;
   text-decoration:none;
   font-weight: 800;
@@ -578,11 +558,10 @@
 }
 
 .btn-hero-primary{
-  background: linear-gradient(135deg, #b31217 0%, #8e0e12 100%);
+  background: #b31217;
   border-color: transparent;
   color:#fff;
 }
-
 /* ✅ Mobile / Tablet */
 @media (max-width: 768px){
   .page-hero{
@@ -686,6 +665,10 @@
             <button type="button" class="view-pill active" data-layout="board">Tablero</button>
             <button type="button" class="view-pill" data-layout="table">Tabla</button>
         </div>
+        <div class="toolbar-actions">
+            <button type="button" class="ghost-btn" id="openExcelView">🗂️ Vista Excel (pendientes)</button>
+            <button type="button" class="ghost-btn" id="exportExcel">⬇️ Exportar Excel</button>
+        </div>
         <div class="view-switch">
             <label class="toggle"><input type="checkbox" id="toggleCompact"> Modo compacto</label>
             <label class="toggle"><input type="checkbox" id="toggleEmpty"> Ocultar vacías</label>
@@ -749,6 +732,7 @@
                     <th>Título</th>
                     <th>Estado</th>
                     <th>Prioridad</th>
+                    <th>Equipo ID</th>
                     <th>Equipo</th>
                     <th>Responsable</th>
                     <th>Cierre</th>
@@ -765,7 +749,8 @@
                                 <span class="estado-badge estado-{{ estado.id }}">{{ estado.icono }} {{ estado.titulo }}</span>
                             </td>
                             <td>{{ orden.get_prioridad_display }}</td>
-                            <td>{{ orden.equipo }}</td>
+                            <td>{{ orden.equipo.tag|default:orden.equipo.codigo|default:"-" }}</td>
+                            <td>{{ orden.equipo.nombre|default:orden.equipo|default:"-" }}</td>
                             <td>{{ orden.responsable|default:"-" }}</td>
                             <td>{{ orden.fecha_cierre|default:"-" }}</td>
                             <td>
@@ -796,9 +781,29 @@
         const filterForm = document.getElementById('filterForm');
         const layoutButtons = document.querySelectorAll('[data-layout]');
         const tableRows = document.querySelectorAll('.table-row');
+        const openExcelView = document.getElementById('openExcelView');
+        const exportExcel = document.getElementById('exportExcel');
+        const excelEstados = new Set(['reportada', 'por_iniciar', 'en_ejecucion', 'en_espera']);
         const emptyStates = new Set([...columns].filter(col => col.dataset.total === '0').map(col => col.dataset.estado));
         let currentView = 'all';
         let currentLayout = 'board';
+
+        const getExcelRows = () => [...tableRows].filter(row => excelEstados.has(row.dataset.estado));
+
+        const getTableHeaders = () => {
+            const headerCells = document.querySelectorAll('.tabla-ordenes thead th');
+            return [...headerCells].map(cell => cell.textContent.trim());
+        };
+
+        const getRowValues = (row) => {
+            const cells = row.querySelectorAll('td');
+            return [...cells].map(cell => cell.textContent.trim());
+        };
+
+        const escapeCsv = (value) => {
+            const escaped = value.replace(/"/g, '""');
+            return `"${escaped}"`;
+        };
 
         const applyVisibility = () => {
             columns.forEach(col => {
@@ -855,6 +860,64 @@
                 }
             });
         });
+ if (openExcelView) {
+            openExcelView.addEventListener('click', () => {
+                const rows = getExcelRows();
+                const headers = getTableHeaders();
+                const newWindow = window.open('', '_blank');
+                if (!newWindow) return;
+
+                const tableRowsHtml = rows.map(row => {
+                    const values = getRowValues(row);
+                    return `<tr>${values.map(value => `<td>${value}</td>`).join('')}</tr>`;
+                }).join('');
+
+                const bodyContent = rows.length
+                    ? `<table><thead><tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr></thead><tbody>${tableRowsHtml}</tbody></table>`
+                    : `<p>No hay órdenes pendientes para mostrar.</p>`;
+
+                newWindow.document.write(`
+                    <html>
+                        <head>
+                            <title>Órdenes pendientes</title>
+                            <style>
+                                body { font-family: 'Inter', Arial, sans-serif; padding: 24px; color: #0f172a; }
+                                h1 { font-size: 20px; margin-bottom: 12px; }
+                                p { color: #475569; }
+                                table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+                                th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid #e2e8f0; font-size: 14px; }
+                                th { background: #f8fafc; font-weight: 700; }
+                            </style>
+                        </head>
+                        <body>
+                            <h1>Órdenes pendientes (por iniciar, en ejecución, reportada, en espera)</h1>
+                            ${bodyContent}
+                        </body>
+                    </html>
+                `);
+                newWindow.document.close();
+            });
+        }
+
+        if (exportExcel) {
+            exportExcel.addEventListener('click', () => {
+                const rows = getExcelRows();
+                const headers = getTableHeaders();
+                const csvRows = [headers, ...rows.map(getRowValues)]
+                    .map(row => row.map(escapeCsv).join(','))
+                    .join('\n');
+
+                const blob = new Blob([csvRows], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement('a');
+                const url = URL.createObjectURL(blob);
+                link.setAttribute('href', url);
+                link.setAttribute('download', 'ordenes_pendientes.csv');
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+            });
+        }
 
         applyLayout();
         applyVisibility();
