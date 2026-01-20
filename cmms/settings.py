@@ -296,7 +296,8 @@ STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 # MEDIA FILES
 # ----------------------------
 MEDIA_URL = os.getenv("MEDIA_URL", "/media/")
-MEDIA_ROOT = BASE_DIR / "media"
+MEDIA_ROOT = Path(os.getenv("MEDIA_ROOT")) if os.getenv("MEDIA_ROOT") else BASE_DIR / "media"
+MEDIA_ROOT.mkdir(parents=True, exist_ok=True)
 
 
 # ----------------------------
