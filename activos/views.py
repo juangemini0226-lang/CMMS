@@ -1064,6 +1064,9 @@ def hoja_vida_equipo(request):
         equipo = get_object_or_404(
             NodoActivo, id=equipo_id, organizacion=organizacion
         )
+        termino_equipo = ""
+        if termino_busqueda:
+            termino_equipo = termino_busqueda.lower()
         novedades = (
             Novedad.objects.filter(equipo=equipo)
             .select_related("actividad")
@@ -1076,7 +1079,16 @@ def hoja_vida_equipo(request):
             .order_by("-fecha_creacion")
         )
         documentos = DocumentoActivo.objects.filter(activo=equipo).order_by("-subido_el")
-        if termino_busqueda:
+        if termino_busqueda and (
+            not equipo
+            or termino_equipo
+            not in (
+                (equipo.nombre or "").lower(),
+                (equipo.tag or "").lower(),
+                (equipo.codigo or "").lower(),
+                (equipo.descripcion or "").lower(),
+            )
+        ):
             novedades = novedades.filter(
                 Q(actividad__nombre__icontains=termino_busqueda)
                 | Q(descripcion__icontains=termino_busqueda)
