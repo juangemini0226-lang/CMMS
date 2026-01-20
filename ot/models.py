@@ -93,11 +93,12 @@ class WorkOrder(models.Model):
         return f"OT-{consecutivo:05d}"
 
     def save(self, *args, **kwargs):
+        update_fields = kwargs.get("update_fields")
         if not self.consecutivo:
             ultimo = WorkOrder.objects.aggregate(max_consec=Max("consecutivo"))
             siguiente = (ultimo["max_consec"] or 0) + 1
             self.consecutivo = siguiente
-            update_fields = kwargs.get("update_fields")
+           
         if self.estado == "finalizada" and not self.fecha_cierre:
             self.fecha_cierre = timezone.localdate()
             if update_fields is not None:
